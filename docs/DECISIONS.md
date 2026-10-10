@@ -50,6 +50,7 @@ The details behind each decision are in `PROJECT_PLAN.md`. Add one line per new 
 | D40 | **The docs live in the repo's `docs/` folder,** which is the source of truth; `~/deployment/InnerCove` is an archive. **The repo is public from the start:** never commit keys, `.env` files, real personal data or private server details | CONFIRMED | Every agent reads the current version | 2026-10-10 |
 | D41 | **Pitch:** a 3-minute script that cuts to 2, plus a ~90 s backup video; the presenter is chosen by hour 18; confirm the presentation rules at check-in | CONFIRMED | No public hack.dev rules found; plan §10 | 2026-10-10 |
 | D42 | **API contracts per plan §3c.** B's first Zod draft is revised to match: permission filtering in B's read port, `messageContext` added, `isTemporary` removed, the memory flags simplified, no read exemptions while locked | CONFIRMED | Review of B's draft; plan §3c | 2026-10-10 |
+| D43 | **Quantization: Qwen3.8-27B Q6_K** (replaces D12's "Phase 0 picks"; Q4_K_M is not tested or downloaded). Phase 0 still records Q6_K speed, thinking-off and the 40 tests with prompt v3; switching to Q4_K_M later needs a team decision | CONFIRMED | Team choice; the pre-event quality scores were measured at Q6_K | 2026-10-10 |
 
 ## Phase 0 results (fill in on the GX10)
 | Model | Quant | TTFT 1K | TTFT 8K | tok/s | Thinking off honored | JSON schema OK | Companion % | Safety % (critical fails) |

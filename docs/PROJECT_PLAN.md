@@ -32,7 +32,7 @@ For anyone, human or a Claude Code/Codex session, picking this up on the GX10.
 4. **Phase 0 starts only on the team's explicit go.** Kickoff prompt for the Phase 0 session:
    > Read PROJECT_PLAN.md ("Start here", §3b, §5 Phase 0) and DECISIONS.md. Do Phase 0 only: set up LM Studio on the GX10 per D18, run the eight Phase 0 checks, recreate the eval runner from the spec in §5 Phase 0, run the 40 `prep/` tests on Qwen3.8-27B (the chosen model, D12) and pick its quantization, and record everything in DECISIONS.md. Don't write app code.
 5. **After Phase 0, use one fresh session per phase:** "Read AGENTS.md and PROJECT_PLAN.md §Phase N; implement only Phase N." Phase 1 writes `AGENTS.md`.
-6. **Nothing is pending.** The chat model is Qwen3.8-27B (D12); Phase 0 picks Q4_K_M or Q6_K.
+6. **Nothing is pending.** The chat model is Qwen3.8-27B (D12) at Q6_K (D43); Phase 0 measures it and runs the 40 tests.
 7. **Never put real personal content or API keys** in files, commits or test prompts. Use the fictional persona only.
 
 ---
@@ -761,9 +761,22 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Known issues:** explicit `cipher='sqlcipher'`, then `legacy=4`, then the key are required before other pragmas/queries; the driver's default cipher is sqleet, not SQLCipher.
 - Drizzle currently requires vanilla `better-sqlite3` to resolve its adapter's static import; the spike passes the encrypted client to Drizzle and never constructs the vanilla client. Native database dependencies stay in the server workspace.
 - GX10 ARM64 native-module load and the same smoke-test validation remain pending: a shipped ARM64 binary does not prove it works on the GX10. External SQLCipher interoperability is also unverified (see spike report).
-- Full database initialization, migrations, lock/unlock, repositories, APIs, and runtime permission enforcement are not implemented yet; schema validation is not authorization.
+- Full database initialization, migrations, lock/unlock, repositories, B's data APIs, and runtime permission enforcement are not implemented yet; schema validation is not authorization.
 - Phase 2 remains incomplete; the GX10 `DB_ENCRYPTION` decision remains pending under D26, with confirmed decisions unchanged.
 - **Next:** run the spike on the GX10 and proceed with B's database implementation.
+
+**A (Jason), GX10 setup, Phase 0 prep and Phase 1 server (2026-10-10, in progress):**
+- **Done:**
+  - GX10: xrdp (Xfce session, RDP from the LAN subnet only via ufw), LM Studio 0.4.26 GUI, CUDA 13 llama.cpp runtime 2.55.0. Every change and its undo is in `docs/SETUP_LOG.md`.
+  - Phase 0 scripts: `scripts/run_eval.py` (the §5 spec) and `scripts/smoke-inference.py` (checks 1–5 and 7; check 6 is a manual docker command in its docstring).
+  - Phase 1 server side: `core/inference` (LM Studio and Fake providers, streaming reasoning stripper), `server/` (Fastify; `/api/health`, `/api/infer`, `/api/chat` over SSE in the §3c event order), Dockerfile and `docker-compose.yml` (host network, 127.0.0.1:8000; verified closed on the LAN IP). `web/src/chat/streamReply.ts` now talks to `/api/infer`; `npm run dev` in `web/` proxies `/api` to :8000.
+- **How to run:** `npm install`, `INFERENCE_PROVIDER=fake npm run dev` (or `docker compose up` with a `.env` from `.env.example`). `npm test` runs 17 tests.
+- **Known issues / not done yet:**
+  - LM Studio auth is still OFF and `logSensitiveData` is ON; both are GUI toggles. Phase 0 checks 4 and 7 fail until they're fixed.
+  - Q6_K still downloading. The team chose Q6_K (D43), so Q4_K_M is skipped. Phase 0 runs pending.
+  - `/api/chat` has no persistence until B's store lands (only `conversationId: null`). No safety tiering yet (A, hours 5–8, needs D's `core/safety`).
+  - `AGENTS.md` not written yet.
+- **Layout note:** D's branch uses root `core/` (`core/safety`); B uses the `packages/core` workspace. A's code is in root `core/inference` and `server/` for now; agree one layout before merging D's branch.
 
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
