@@ -1,0 +1,35 @@
+{
+  "country": "US",
+  "emergency": {
+    "label": "Emergency services",
+    "phone": "911",
+    "guidance": "If you or someone else is in immediate danger, call 911 now."
+  },
+  "resources": [
+    {
+      "label": "988 Suicide & Crisis Lifeline",
+      "phone": "988",
+      "url": "https://988lifeline.org",
+      "guidance": "Call, text, or chat 988 for free, confidential crisis support."
+    },
+    {
+      "label": "Crisis Text Line",
+      "phone": "Text HOME to 741741",
+      "url": "https://www.crisistextline.org",
+      "guidance": "Text with a trained crisis counselor."
+    },
+    {
+      "label": "Poison Control",
+      "phone": "1-800-222-1222",
+      "url": "https://www.poison.org",
+      "guidance": "For a possible poisoning or overdose, call 911 first if there is immediate danger; Poison Control can also help."
+    },
+    {
+      "label": "National Domestic Violence Hotline",
+      "phone": "1-800-799-7233",
+      "url": "https://www.thehotline.org",
+      "guidance": "Call, text START to 88788, or chat for confidential support when it is safe to do so."
+    }
+  ],
+  "note": "InnerCove is not emergency care and cannot contact services for you."
+}

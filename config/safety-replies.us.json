@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "replies": {
+    "explicit_self_harm": "I'm really glad you told me. Please move away from anything you could use to hurt yourself and contact 988 now by call, text, or chat. If you might act on this right now, call 911 or ask someone nearby to stay with you.",
+    "method_seeking": "I can't help with ways to hurt yourself. You deserve support right now—please call or text 988, or contact someone you trust and ask them to stay with you.",
+    "overdose": "Call 911 now, or ask someone nearby to call for you. If you can, move away from any more medication or substances and stay with another person while help is on the way.",
+    "self_harm_ideation": "I'm really sorry you're carrying this. You deserve support right now—could you move away from anything you might use to hurt yourself and reach out to someone you trust? You can also call or text 988 for immediate support.",
+    "harm_to_others": "I can't help with hurting someone. Please put distance between yourself and the person, move away from anything that could be used to hurt them, and call 911 or a crisis service now if anyone may be in danger.",
+    "abuse": "You don't deserve to be hurt or threatened. If you are in immediate danger, call 911 now. If it is safe, you can contact someone you trust or the National Domestic Violence Hotline at 1-800-799-7233."
+  }
+}

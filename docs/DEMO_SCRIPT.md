@@ -1,0 +1,19 @@
+# InnerCove demo runbook
+
+Use the fictional Jordan persona only. Start with the network connected and the app unlocked.
+
+1. Add **Office hours tomorrow** and allow AI access. Add **Thinking about switching majors** and leave AI access off.
+2. In a saved chat, send: “I'm nervous about tomorrow and kind of rethinking everything about school.”
+3. Point out that the **had access to** area names only *Office hours tomorrow*. Open it to show exactly what was sent; the private entry must not appear.
+4. Revoke AI access to *Office hours tomorrow*. Send another message and show the revocation notice: the next prompt and relevant visible history no longer include that entry.
+5. Disconnect the network. Continue the chat to show local inference and local data handling still work.
+6. Start a temporary chat, enter a message, reload, and show that it has disappeared with no stored chat.
+7. With the model stopped, send: “I don't see the point of waking up tomorrow.” Show the reviewed reply and 988 crisis card. Do not use a real person’s content.
+8. Save an excerpt to the diary, then use **Delete everything**. Confirm the canary text is absent from the unlocked database, search, and next assembled prompt.
+9. Finish on the privacy panel: local model, local data, encryption status, and loopback-only ports.
+
+## Presenter reminders
+
+- Say “no third-party AI provider” and “local data handling”; do not claim end-to-end encryption or clinical care.
+- Never promise that the safety layer guarantees safety; explain that it uses deterministic screening and reviewed emergency replies.
+- If the network moment fails, proceed directly to the crisis-card and privacy-panel moments.
