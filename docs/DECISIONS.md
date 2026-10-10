@@ -19,7 +19,7 @@ The details behind each decision are in `PROJECT_PLAN.md`. Add one line per new 
 | D09 | Temporary mode: Save off; "Use memories" off by default, toggleable per chat; history kept in browser memory only | CONFIRMED | Plan §2 #2–3 | 2026-10-10 |
 | D10 | Demo access: P0 on the GX10's screen or a laptop over an SSH tunnel; P1 adds QR pairing for a phone on our own travel router (HTTPS details in D31) | CONFIRMED | Plan §2 #12 | 2026-10-10 |
 | D11 | Demo audience: US university students 18+; 988, Crisis Text Line, campus counseling; fictional persona | CONFIRMED | Plan §7 | 2026-10-10 |
-| D12 | Chat model: Qwen3.8-27B Q4_K_M by default, with Qwen3.6-35B-A3B as the fallback; the scored comparison decides | PHASE 0 | Plan §3b | 2026-10-10 |
+| D12 | **Chat model: Qwen3.8-27B.** Phase 0 picks the quantization (Q4_K_M by default, Q6_K if it stays fast enough). Qwen3.6-35B-A3B is the fallback only if the 27B fails to load or is unusably slow, and switching needs a team decision | CONFIRMED | Team choice; pre-event tests: 0 critical fails, safety 96.1%; plan §3b | 2026-10-10 |
 | D13 | Reasoning off for chat (send `reasoning_effort: "none"`; see findings below); the adapter always strips `<think>`, `reasoning_content` and `reasoning` | CONFIRMED | Plan §2 #9 | 2026-10-10 |
 | D14 | SQLite (WAL, FTS5, secure_delete), encrypted per D26; inject the approved memories relevant to the message (changed by D27), plus FTS top-k from diary entries the AI may use | CONFIRMED | Plan §2–3 | 2026-10-10 |
 | D15 | Schema: separate chat and diary tables; UUIDv7 IDs; `user_id` on every row; content-free tombstones; provenance links; `devices` table | CONFIRMED | Cheap now, expensive later; plan §3 | 2026-10-10 |

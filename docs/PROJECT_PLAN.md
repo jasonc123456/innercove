@@ -6,7 +6,7 @@ Legend: ✅ verified (sources at end) · ⚠️ assumption/unverified · 🧪 me
 ## Context
 InnerCove is a privacy-first local AI wellness companion. It combines chat, a diary, permission-controlled memory and an app-level safety layer, and it runs on an ASUS GX10 for a 24-hour hackathon. The product is built around a **hub**: one computer (a home PC, a GX10, or later an organization's server) holds the diary and runs the main model. Browsers, and later an Android companion app, connect to it (§3a). This document sets the architecture, the MVP scope and the phased plan before any code is written.
 
-**Status:** the event has started and code is in progress in the repo ([github.com/jasonc123456/innercove](https://github.com/jasonc123456/innercove); these docs live in its `docs/` folder, D40). **Every decision is confirmed except the chat model (D12)**, which Phase 0 measurements will settle (see `DECISIONS.md`, D01–D42). An external review (2026-10-10) added D31–D34 and tightened the safety, revocation and deletion tests. Pre-event tests of Qwen3.8-27B on the team's own server are recorded in `DECISIONS.md` (prompt v2: companion 89.8%, safety 96.1%, no critical fails). Under D08, all code is written after the official start. Phase 0 starts only when the team explicitly says go.
+**Status:** the event has started and code is in progress in the repo ([github.com/jasonc123456/innercove](https://github.com/jasonc123456/innercove); these docs live in its `docs/` folder, D40). **Every decision is confirmed, including the chat model: Qwen3.8-27B (D12).** Phase 0 only picks its quantization and confirms it runs (see `DECISIONS.md`, D01–D42). An external review (2026-10-10) added D31–D34 and tightened the safety, revocation and deletion tests. Pre-event tests of Qwen3.8-27B on the team's own server are recorded in `DECISIONS.md` (prompt v2: companion 89.8%, safety 96.1%, no critical fails). Under D08, all code is written after the official start. Phase 0 starts only when the team explicitly says go.
 **Last updated 2026-10-10:** added the hub-and-companion model, desktop packaging, model strategy, remote access, connecting your own model server, SQLCipher encryption from day one, crisis comfort and support notes (D29, D30), the pre-event model tests, the eval runner spec (§5 Phase 0), the "Start here" section, the API contracts (§3c), the demo persona and the pitch plan (§10).
 
 Environment note: the planning workstation is x86_64. Phase 0 must run on the GX10.
@@ -29,9 +29,9 @@ For anyone, human or a Claude Code/Codex session, picking this up on the GX10.
    - `prep/results/`: two pre-event runs (prompt v1 and v2), each with `raw.jsonl`, `replies.md` and scored CSVs.
    - `prep/demo-persona.json`: the fictional persona "Jordan", 4 memories, 8 diary entries, and the text typed live in the demo journey.
 3. **Phase 0 starts only on the team's explicit go.** Kickoff prompt for the Phase 0 session:
-   > Read PROJECT_PLAN.md ("Start here", §3b, §5 Phase 0) and DECISIONS.md. Do Phase 0 only: set up LM Studio on the GX10 per D18, run the eight Phase 0 checks, recreate the eval runner from the spec in §5 Phase 0, run the 40 `prep/` tests on Qwen3.8-27B (other candidates only if §3b's rule calls for them), and record everything in DECISIONS.md. Don't write app code.
+   > Read PROJECT_PLAN.md ("Start here", §3b, §5 Phase 0) and DECISIONS.md. Do Phase 0 only: set up LM Studio on the GX10 per D18, run the eight Phase 0 checks, recreate the eval runner from the spec in §5 Phase 0, run the 40 `prep/` tests on Qwen3.8-27B (the chosen model, D12) and pick its quantization, and record everything in DECISIONS.md. Don't write app code.
 4. **After Phase 0, use one fresh session per phase:** "Read AGENTS.md and PROJECT_PLAN.md §Phase N; implement only Phase N." Phase 1 writes `AGENTS.md`.
-5. **Nothing is pending** except D12 (the chat model), which Phase 0 decides.
+5. **Nothing is pending.** The chat model is Qwen3.8-27B (D12); Phase 0 picks Q4_K_M or Q6_K.
 6. **Never put real personal content or API keys** in files, commits or test prompts. Use the fictional persona only.
 
 ---
@@ -106,7 +106,7 @@ The team accepted every recommendation below **except #15: the diary is encrypte
 | 13 | Mobile framework | Capacitor companion app (reuses the web UI), with a llama.cpp or LiteRT plugin for offline mode, after a spike | React Native + `llama.rn` (UI is rewritten) | UI reuse vs. on-device LLM maturity | No (after the hackathon) |
 | 14 | Remote access away from home | v1: home Wi-Fi only. v2: an end-to-end encrypted relay by default, with **port forwarding as an opt-in advanced option**. Both use the same pinned TLS and per-device keys (§3a) | Port forwarding as the default | Works for everyone (behind CGNAT, no router setup) vs. no relay for us to run | No (roadmap) |
 | 15 | Encryption at rest | **Chosen: SQLCipher from day one** (§3, "Encryption at rest") | Disk encryption only during the hackathon | Stronger privacy story vs. ~1–1.5 h on the critical path | Yes, Phase 2 |
-| 16 | Final chat model | Decided by the Phase 0 comparison (§3b). Default: Qwen3.8-27B Q4_K_M | Qwen3.6-35B-A3B | Quality vs. speed | Yes, at the end of Phase 0 |
+| 16 | Final chat model | **Decided: Qwen3.8-27B (D12)**; Phase 0 picks the quantization | Qwen3.6-35B-A3B | Quality vs. speed | Yes, at the end of Phase 0 |
 | 17 | Desktop app shell | **Electron**: one window plus a tray icon, bundling the server and llama.cpp | Tauri (smaller, but the TS server needs a Node sidecar) | Simplicity vs. installer size (irrelevant next to multi-GB models) | No (roadmap) |
 
 ---
@@ -359,13 +359,13 @@ No model size makes this a validated mental health tool. The app-level safety la
 | Offline and phone-only scripted mode | 0.8–4B (e.g. Qwen3.5-0.8B; GGUF and `.litertlm` builds exist) | Phone (roadmap) |
 | Laptop-tier hub | 4–9B | The user's laptop (roadmap) |
 
-**Phase 0 model check (time-boxed, ~30 min):**
+**Phase 0 model check (time-boxed, ~30 min).** The model is decided: **Qwen3.8-27B (D12)**. This check confirms it runs and picks the quantization.
 - **Run order:**
   1. Run the full 40 tests on **Qwen3.8-27B Q4_K_M**, the default. At ~11 tok/s and the ~130-token average reply measured pre-event, that's about 8–10 minutes.
-  2. **If its speed is acceptable** (time to first visible word ≲ 2 s and ≳ 8 tok/s), keep it and skip the comparison.
-  3. **Only if the 27B feels slow,** run a smoke test of Qwen3.6-35B-A3B (5 companion and 10 safety cases), choose provisionally, and run its full suite in the background while Phase 1 continues.
-  4. Qwen3.5-9B is optional, only as a talking point for the pitch.
-- **Candidates:** Qwen3.8-27B Q4_K_M, Qwen3.6-35B-A3B, and Qwen3.5-9B as the small baseline (⚠️ confirm the exact repo IDs).
+  2. **If Q4_K_M reaches ≳ 10 tok/s,** also try Q6_K and keep it if it stays ≳ 8 tok/s with time to first visible word ≲ 2 s. Otherwise keep Q4_K_M.
+  3. **Only if the 27B fails to load or is unusably slow** (≲ 5 tok/s), the team decides whether to switch to the fallback Qwen3.6-35B-A3B; run its smoke test (5 companion and 10 safety cases) first.
+  4. No other models are compared.
+- **Models:** Qwen3.8-27B at Q4_K_M and Q6_K; Qwen3.6-35B-A3B only as the fallback (⚠️ confirm the exact repo ID).
 - **Method:** the same 10 scripted messages, the same system prompt and a short fake memory block for every model.
 - **Files:** `prep/system-prompt.txt`, `prep/companion-tests.json` (messages, context block, criteria), `prep/companion-scoring.csv`. Safety phrases are in `prep/safety-tests.json` with `prep/safety-scoring.csv`.
 - **Score each reply 0–2 on the criteria that apply to it.** Not every criterion applies to every message, so compare models by the percentage of available points:
@@ -502,7 +502,7 @@ Estimates are uncertain. P0 is about **18–25 engineer-hours, or 8–10 wall-cl
   5. Port 1234 is unreachable from another LAN machine.
   6. A container using host networking can reach it.
   7. A canary string sent in a prompt doesn't appear in the LM Studio log directories.
-  8. The §3b model check is scored, and the chat model is picked (decision #16). Follow §3b's run order; don't run all candidates by default.
+  8. The 40 tests are scored on Qwen3.8-27B, and its quantization is chosen (D12). Follow §3b's run order.
 - **Eval runner spec.** Recreate it at the event; it's ~120 lines of stdlib Python, kept out of the repo before the event per D08.
   - **Usage:** `run_eval.py PREP_DIR OUT_DIR [all|companion|safety] [LIMIT]`, configured by the env vars `LOCAL_AI_BASE_URL`, `LOCAL_AI_API_KEY` and `LOCAL_AI_MODEL`. Never write the key to a file.
   - **Request:** a streaming POST to `{BASE}/chat/completions` with `temperature` 0.7, `top_p` 0.8, `presence_penalty` 1.5, `max_tokens` 2048, `top_k` 20 and `reasoning_effort: "none"`. If the server returns HTTP 400, 422 or 500, retry without `top_k` and `reasoning_effort`, and record that it did.
@@ -631,14 +631,14 @@ Every default below was accepted (Q5 was resolved earlier). The answers are reco
 ## 8. Recommended first phase: Phase 0
 - **Why first:** every downstream choice depends on unverified runtime facts: whether the runtime supports `qwen35`, tok/s on the GB10, whether the thinking toggle is honored, structured output, auth, and logging behavior. It's time-boxed to ~1.5 hours and it's the only phase that needs the GX10 exclusively.
 - **What it covers:** the 8 checks in Phase 0, including the ~30-minute model check (§3b run order). Phase 1 starts in parallel against `FakeProvider` as soon as Q1 is answered.
-- **Done when:** all 8 checks are recorded in `DECISIONS.md`, the chat model and quantization are chosen, and the fallback model is named.
+- **Done when:** all 8 checks are recorded in `DECISIONS.md`, the quantization of Qwen3.8-27B is chosen, and the fallback model is confirmed to load.
 - **What waits:** everything that touches the DB, UI polish, and all P1 work.
 
 **Before the event (no code, per D08; confirm with the organizers that non-code prep is allowed):**
 - **Copy to a USB SSD:**
   - Qwen3.8-27B GGUF at Q4_K_M and Q6_K.
   - Qwen3.6-35B-A3B.
-  - Qwen3.5-9B.
+  - (Qwen3.5-9B is no longer needed.)
   - The LM Studio Linux ARM64 installer.
 - **Also copy this whole folder to the SSD:** `PROJECT_PLAN.md`, `DECISIONS.md` and `prep/`.
 - **Write as plain text:**
@@ -711,7 +711,7 @@ Other 2026 student hackathons give 2–4 minutes plus about 2 minutes of questio
 **Likely questions** (short answers to rehearse):
 - **"Is it a therapist?"** No. It's a non-clinical companion; the crisis help is fixed, and nothing is monitored.
 - **"What if the rules miss something?"** We test 30 phrases and claim only what we test; the model also follows a safety prompt. We don't claim to detect risk.
-- **"Why a 27B on-device?"** Smaller models are generally weaker at empathy and rule-following. Our 27B had no critical fails on 30 safety phrases, and the GX10's 128 GB makes it practical. Cite the 9B result only if Phase 0 actually ran it.
+- **"Why a 27B on-device?"** Smaller models are generally weaker at empathy and rule-following. Our 27B had no critical fails on 30 safety phrases, and the GX10's 128 GB makes it practical.
 - **"Where's my data?"** In one encrypted SQLite file on this machine, with the path shown in the panel.
 
 Fill in the ASUS feedback survey before judging ends (D, early).
@@ -744,6 +744,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
   - C: a mobile-first chat UI against a mock stream (`web/`).
   - B: a first Zod contract draft in `packages/core` (not yet pushed).
   - Plan: the API contracts (§3c), D35–D42, the demo persona and the pitch plan (§10).
+  - **D12 confirmed: the chat model is Qwen3.8-27B**; Phase 0 picks the quantization.
 - **Known issues:** B's draft must be revised to §3c. Its key gaps are permission filtering in the read port, `messageContext`, removing `isTemporary`, the memory flags and no read exemptions while locked.
 - **Next:**
   - B revises the schemas.
