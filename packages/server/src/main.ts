@@ -3,6 +3,7 @@ import { createProvider } from "./inference/index.js";
 import { buildApp } from "./app.js";
 import { fromRoot } from "./paths.js";
 import { noSafety } from "./chat/safety.js";
+import { DatabaseStore } from "./store/db.js";
 
 const env = process.env;
 const host = env.HOST ?? "127.0.0.1";
@@ -19,7 +20,12 @@ const promptPath = [env.SYSTEM_PROMPT_PATH, "config/prompts/system-prompt.txt", 
   .find((p) => existsSync(p));
 if (!promptPath) throw new Error("No system prompt found; set SYSTEM_PROMPT_PATH");
 
+if (env.DB_ENCRYPTION && env.DB_ENCRYPTION !== "sqlcipher") {
+  throw new Error("This database foundation supports SQLCipher only; plaintext fallback is not implemented");
+}
+const database = new DatabaseStore(fromRoot(env.DB_PATH ?? "data/innercove.db"));
 const app = await buildApp({
+  database,
   provider: createProvider(env),
   // TODO(A): swap for D's core/safety once codex/safety-content is merged.
   safety: noSafety,
@@ -28,5 +34,18 @@ const app = await buildApp({
   webDist: fromRoot(env.WEB_DIST ?? "web/dist"),
 });
 
-await app.listen({ host, port });
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+  process.once(signal, () => {
+    void app.close().catch(() => {
+      app.log.error({ event: "shutdown_failed" }, "Server shutdown failed");
+      process.exitCode = 1;
+    });
+  });
+}
+try {
+  await app.listen({ host, port });
+} catch (error) {
+  await app.close();
+  throw error;
+}
 app.log.info({ provider: env.INFERENCE_PROVIDER ?? "lmstudio", promptPath }, "InnerCove server ready");

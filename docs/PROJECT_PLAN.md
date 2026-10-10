@@ -782,6 +782,19 @@ Fill in the ASUS feedback survey before judging ends (D, early).
   - **Layout settled (D44):** A's code moved into the workspaces: chat contracts → `packages/core/src/api/chat.ts`; Fastify app, inference and chat pipeline → `packages/server/src/`. Root `core/` and `server/` are gone. **D:** when rebasing `codex/safety-content`, move `core/safety` → `packages/core/src/safety` (export it from `packages/core/src/index.ts`); `config/` stays at the root.
 - **Next (A):** finish Phase 0 once the model is loaded; wire D's engine; Phase 3 retrieval and prompt assembly with D33 against B's read port.
 
+**B (Angela), Phase 2 database foundation (2026-10-10; Phase 2 incomplete):**
+- **Done:** encrypted setup/reopen with actual-read credential verification, native connection cleanup, and serialized setup/unlock/lock/shutdown; five failed unlocks impose a 30-second cooldown.
+- **Schema:** Drizzle mappings and transactional versioned SQL migrations (hash/version ledger), seeded UUIDv7 user/settings, conversations/messages/diary/memories/devices/provenance/message_context/content-free tombstones, constraints and user indexes.
+- **FTS:** diary/memory insert/update/delete triggers; FTS secure-delete support checked as enabled, alongside WAL, foreign_keys, SQLite secure_delete and temp_store=MEMORY. Deleted-source IDs remain content-free for D16/D33; owner deletion removes links.
+- **Key derivation:** explicit SQLCipher v4, PBKDF2-HMAC-SHA512 / 256000 iterations and file salt, via domain-prefixed Buffer key API; mutable credentials wiped and native cipher contexts closed. No key sidecar or silent plaintext fallback; `DB_ENCRYPTION=off` is explicitly unsupported in this slice.
+- **API:** shared setup/unlock/lock/status contracts, exact method/route locked allowlist (423 elsewhere), actual health lock state, static help preserved; request leases drain active handlers/SSE (including disconnected clients) before close; signal shutdown wired.
+- **Files:** `packages/server/src/store/{cipher,db,migrate,schema}.ts`, `store/migrations/**`, `store/README.md`, `api/lock.ts`, app/health/main wiring, focused tests, migration-copy/runtime-smoke scripts, Dockerfile and `.env.example`.
+- **Tests:** WSL Linux x64 / Node 22.22.1 only: 53 tests, 52 schema checks, core/server typechecks and builds, SQLCipher spike 18/18, compiled-entrypoint HTTP/setup/lock/unlock/SIGTERM/encrypted-reopen/plaintext-rejection smoke all pass (exit 0).
+- **Commands:** `npm run typecheck --workspace=@innercove/core`, `npm run typecheck`, `npm run validate`, `npm test`, `npm run build`, `npm run spike:sqlcipher --workspace=@innercove/server`, `npm run smoke:db --workspace=@innercove/server`.
+- **Decisions/contracts:** no payload shapes or confirmed decisions changed; clarified the tombstone comment to retain source IDs needed for unresolved-source/history filtering. Runtime permission filtering beyond locking is still pending.
+- **Docker/GX10:** migration assets packaged and data-directory ownership prepared; Docker unavailable locally (`docker --version` exit 1). This new foundation's Docker and GX10 ARM64 validation remain pending. A's earlier GX10 spike reports above are preserved; this local run does not settle the target encryption decision or external SQLCipher interoperability.
+- **Remaining/next:** implement B's conversation/diary repositories and `/api/conversations` + `/api/diary` (user-scoping, CRUD/search/deletion tests); then coordinate A's saved-chat persistence. Memory APIs, retrieval ranking, UI and D's safety remain with their planned tasks.
+
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
 1. Write diary entries A and B. Allow AI access to A only.

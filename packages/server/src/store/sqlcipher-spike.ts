@@ -51,6 +51,7 @@ import { mkdtempSync, readFileSync, existsSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import Database from "better-sqlite3-multiple-ciphers";
+import { configureCipher } from "./cipher.js";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
@@ -72,12 +73,13 @@ function record(label: string, pass: boolean, detail?: string) {
 
 function openSqlcipherCompatible(path: string, key: string) {
   const db = new Database(path);
-  // Order matters (README): cipher, then legacy, then key -- all
-  // before any other pragma or query touches the file.
-  db.pragma(`cipher='sqlcipher'`);
-  db.pragma(`legacy=4`);
-  db.pragma(`key='${key}'`);
-  return db;
+  try {
+    configureCipher(db, key);
+    return db;
+  } catch (error) {
+    db.close();
+    throw error;
+  }
 }
 
 async function main() {
