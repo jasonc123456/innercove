@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { createProvider } from "./inference/index.js";
 import { buildApp } from "./app.js";
 import { fromRoot } from "./paths.js";
+import { InMemoryChatStore, seedDemoPersona } from "./chat/in-memory-store.js";
 import { loadSafetyConfigs, rulesSafety } from "./chat/rules-safety.js";
 
 const env = process.env;
@@ -19,13 +20,21 @@ const promptPath = [env.SYSTEM_PROMPT_PATH, "config/prompts/system-prompt.txt", 
   .find((p) => existsSync(p));
 if (!promptPath) throw new Error("No system prompt found; set SYSTEM_PROMPT_PATH");
 
+// DEV_STORE=demo: unencrypted in-memory store seeded with the fictional persona, until B's store lands (Phase 2).
+let store: InMemoryChatStore | undefined;
+if (env.DEV_STORE === "demo") {
+  store = new InMemoryChatStore();
+  seedDemoPersona(store, JSON.parse(readFileSync(fromRoot("docs/prep/demo-persona.json"), "utf8")));
+}
+
 const app = await buildApp({
   provider: createProvider(env),
   safety: rulesSafety(loadSafetyConfigs()),
   systemPrompt: readFileSync(promptPath, "utf8").trim(),
   stats: { lastReply: null },
   webDist: fromRoot(env.WEB_DIST ?? "web/dist"),
+  ...(store ? { store } : {}),
 });
 
 await app.listen({ host, port });
-app.log.info({ provider: env.INFERENCE_PROVIDER ?? "lmstudio", promptPath }, "InnerCove server ready");
+app.log.info({ provider: env.INFERENCE_PROVIDER ?? "lmstudio", promptPath, store: store ? "demo (in-memory)" : "none" }, "InnerCove server ready");

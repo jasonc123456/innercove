@@ -26,6 +26,6 @@ COPY --from=server /app/node_modules node_modules
 COPY --from=server /app/packages packages
 COPY --from=web /app/web/dist web/dist
 COPY config config
-COPY docs/prep/system-prompt.txt docs/prep/system-prompt.txt
+COPY docs/prep/system-prompt.txt docs/prep/demo-persona.json docs/prep/
 USER node
 CMD ["node", "packages/server/dist/main.js"]
