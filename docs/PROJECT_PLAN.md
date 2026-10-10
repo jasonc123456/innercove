@@ -752,6 +752,19 @@ Fill in the ASUS feedback survey before judging ends (D, early).
   - A replaces `web/src/chat/streamReply.ts` with the §3c SSE client.
   - Phase 0 on the GX10.
 
+**Part B handoff (2026-10-10), Phase 2 in progress:**
+- **Done:** shared contracts revised to §3c through `ef4596c`, including strict-validation and support-note privacy fixes; SQLCipher-compatible database spike in `393a371`.
+- **Files:** `packages/core/**`, `packages/server/src/store/sqlcipher-spike.ts`; detailed findings and limitations in `packages/server/SQLCIPHER_SPIKE.md`.
+- **Tests:** core typecheck passes; 52 schema checks pass. SQLCipher spike passes 18/18 checks on WSL Linux x64, Node `22.22.1` (local workstation only).
+- **Dependencies (resolved):** `better-sqlite3-multiple-ciphers` `13.0.3`, vanilla `better-sqlite3` `13.0.3`, `drizzle-orm` `0.45.4`; bundled SQLite3 Multiple Ciphers `2.4.0` (see spike report).
+- **How to run:** from the repo root, `npm run typecheck`, `npm run validate`, and `npm run spike:sqlcipher --workspace=@innercove/server`.
+- **Known issues:** explicit `cipher='sqlcipher'`, then `legacy=4`, then the key are required before other pragmas/queries; the driver's default cipher is sqleet, not SQLCipher.
+- Drizzle currently requires vanilla `better-sqlite3` to resolve its adapter's static import; the spike passes the encrypted client to Drizzle and never constructs the vanilla client. Native database dependencies stay in the server workspace.
+- GX10 ARM64 native-module load and the same smoke-test validation remain pending: a shipped ARM64 binary does not prove it works on the GX10. External SQLCipher interoperability is also unverified (see spike report).
+- Full database initialization, migrations, lock/unlock, repositories, APIs, and runtime permission enforcement are not implemented yet; schema validation is not authorization.
+- Phase 2 remains incomplete; the GX10 `DB_ENCRYPTION` decision remains pending under D26, with confirmed decisions unchanged.
+- **Next:** run the spike on the GX10 and proceed with B's database implementation.
+
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
 1. Write diary entries A and B. Allow AI access to A only.
