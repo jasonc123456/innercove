@@ -98,7 +98,7 @@ Pre-event findings (2026-10-10, Qwen3.8-27B through Open WebUI → LM Studio beh
 
 Other checks:
 - [x] A request without a token gets 401. **PASS 2026-10-10:** `/v1/models` → 401 without the token, 200 with it (LM Studio 0.4.26, Require Authentication on).
-- [ ] Port 1234 is unreachable from the LAN. **Partial 2026-10-10:** `ss -ltnp` shows 1234 bound to 127.0.0.1 only, and a connect to the GX10's LAN IP is refused; still to confirm from another LAN machine.
+- [x] Port 1234 is unreachable from the LAN. **PASS 2026-10-10:** `ss -ltnp` shows 1234 bound to 127.0.0.1 only; from a Windows laptop on 192.168.2.0/24, `Test-NetConnection 192.168.2.151 -Port 1234` → ping OK, TCP failed.
 - [x] A host-network container reaches LM Studio. **PASS 2026-10-10:** `docker run --network host innercove-app` → `/v1/models` 200 with the token, 401 without.
 - [x] The canary string is absent from the LM Studio logs. **PASS 2026-10-10:** `scripts/smoke-inference.py` sent a random canary; not found under `~/.lmstudio` (models excluded) or `~/.cache/lm-studio`. Settings: Redact Content on, verbose and file logging off.
 - [x] LM Studio server hardening. **PASS 2026-10-10:** Just-in-Time model loading off; "Allow per-request MCPs" off server-wide (a `/api/v1/chat` request with an `ephemeral_mcp` integration gets "Permission denied", even though the token's own MCP permission still reads allowAll); plugins denied.
