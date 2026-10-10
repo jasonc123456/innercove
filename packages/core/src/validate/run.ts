@@ -65,6 +65,7 @@ import {
   ApiErrorResponseSchema,
   ApiErrorCodeSchema,
   mostRestrictiveAccess,
+  type UserSettingsRecord,
 } from "../index.js";
 import * as examples from "../examples/index.js";
 
@@ -113,16 +114,42 @@ check("memories (user-origin approved / ai_proposal proposed-approved-rejected) 
   MemoryRecordSchema.parse(examples.exampleApprovedAiProposalMemory);
   MemoryRecordSchema.parse(examples.exampleRejectedAiProposalMemory);
 });
-check("generic provenance parses for BOTH derivedType branches (memory AND diary_entry)", () => {
+check("generic provenance parses for BOTH derivedType branches (memory AND diary_entry), retaining every field", () => {
   const derivedTypes = new Set<string>();
   for (const p of examples.exampleProvenanceLinks) {
-    const parsed = ProvenanceLinkRecordSchema.parse(p) as { derivedType: string };
-    derivedTypes.add(parsed.derivedType);
+    const parsed = ProvenanceLinkRecordSchema.parse(p) as Record<string, unknown>;
+    derivedTypes.add(parsed.derivedType as string);
+    // Regression guard for the cross-operand z.intersection strictness
+    // bug (fixed in this revision): every field from BOTH the
+    // userId-only side and the derivedType/sourceType side must
+    // survive the parse, not just whichever side "won".
+    for (const key of ["userId", "derivedType", "derivedId", "sourceType", "sourceId"]) {
+      assert.ok(key in parsed, `expected "${key}" to survive parsing ${JSON.stringify(p)}`);
+    }
   }
   assert.deepEqual(derivedTypes, new Set(["memory", "diary_entry"]));
 });
-check("messageContext records parse", () => {
-  for (const c of examples.exampleMessageContext) MessageContextRecordSchema.parse(c);
+check("ProvenanceLinkRecord REJECTS an unknown field (regression: used to silently pass, see provenance.ts)", () => {
+  assert.throws(() => ProvenanceLinkRecordSchema.parse({ ...examples.exampleProvenanceLinks[0], hacked: true }));
+});
+check("ProvenanceLinkRecord REJECTS an invalid discriminant and an invalid id", () => {
+  assert.throws(() =>
+    ProvenanceLinkRecordSchema.parse({ ...examples.exampleProvenanceLinks[0], derivedType: "not_a_real_type" }),
+  );
+  assert.throws(() =>
+    ProvenanceLinkRecordSchema.parse({ ...examples.exampleProvenanceLinks[0], derivedId: "not-a-uuidv7" }),
+  );
+});
+check("messageContext records parse, retaining every field (userId + messageId + source ref)", () => {
+  for (const c of examples.exampleMessageContext) {
+    const parsed = MessageContextRecordSchema.parse(c) as Record<string, unknown>;
+    for (const key of ["userId", "messageId", "sourceType", "sourceId"]) {
+      assert.ok(key in parsed, `expected "${key}" to survive parsing ${JSON.stringify(c)}`);
+    }
+  }
+});
+check("MessageContextRecord REJECTS an unknown field (regression: used to silently pass)", () => {
+  assert.throws(() => MessageContextRecordSchema.parse({ ...examples.exampleMessageContext[0], hacked: true }));
 });
 check("messageContext create input parses, and has no 'manual' sourceType (unlike provenance)", () => {
   MessageContextCreateInputSchema.parse({
@@ -134,11 +161,27 @@ check("messageContext create input parses, and has no 'manual' sourceType (unlik
     MessageContextSourceRefSchema.parse({ sourceType: "manual", sourceId: null }),
   );
 });
+check("MessageContextCreateInput REJECTS an unknown field (regression: used to silently pass)", () => {
+  assert.throws(() =>
+    MessageContextCreateInputSchema.parse({
+      messageId: examples.exampleMessages[1]!.id,
+      sourceType: "memory",
+      sourceId: examples.exampleMemoryId,
+      hacked: true,
+    }),
+  );
+});
 check("exampleDevice parses", () => {
   DeviceRecordSchema.parse(examples.exampleDevice);
 });
-check("exampleTombstone parses", () => {
-  TombstoneRecordSchema.parse(examples.exampleTombstone);
+check("exampleTombstone parses, retaining every field", () => {
+  const parsed = TombstoneRecordSchema.parse(examples.exampleTombstone) as Record<string, unknown>;
+  for (const key of ["id", "userId", "entityType", "entityId", "reason", "deletedAt"]) {
+    assert.ok(key in parsed, `expected "${key}" to survive parsing`);
+  }
+});
+check("TombstoneRecord REJECTS an unknown (content-shaped) field (regression: used to silently pass)", () => {
+  assert.throws(() => TombstoneRecordSchema.parse({ ...examples.exampleTombstone, content: "leaked!" }));
 });
 check("settings / privacy status (locked, unlocked, encryption-off) parse", () => {
   UserSettingsRecordSchema.parse(examples.exampleUserSettings);
@@ -251,6 +294,36 @@ check("DiaryEntryCreateInput defaults a support note's includeInHandoff to true 
     includeInHandoff: boolean;
   };
   assert.equal(out.includeInHandoff, true);
+});
+check("D30: an omitted support-note accessLevel is forced private, UNCONDITIONALLY -- independent of diaryDefaultAccessLevel", () => {
+  // Construct the exact scenario the task calls out: the user's
+  // configurable setting is "ai_eligible" (D36 allows changing the
+  // default), and a NEW support note's create request omits
+  // accessLevel entirely. This schema never reads UserSettingsRecord
+  // at all -- the point of this check is that the note's resolved
+  // accessLevel is "private" regardless, proving the two mechanisms
+  // (D36's general, configurable default vs. D30's note-specific,
+  // unconditional one) are independent, not that one overrides the
+  // other at runtime (that's the handler's job -- see README.md).
+  const settingsWithAiEligibleDefault: UserSettingsRecord = {
+    ...examples.exampleUserSettings,
+    diaryDefaultAccessLevel: "ai_eligible",
+  };
+  assert.equal(settingsWithAiEligibleDefault.diaryDefaultAccessLevel, "ai_eligible"); // sanity on the fixture
+  const out = DiaryEntryCreateInputSchema.parse(examples.exampleCreateSupportNoteRequest) as {
+    origin: string;
+    accessLevel: string | undefined;
+  };
+  assert.equal(out.origin, "support_note");
+  assert.equal(out.accessLevel, "private");
+});
+check("D30: an EXPLICIT accessLevel on a support note is still respected (the default, not a forced override)", () => {
+  const out = DiaryEntryCreateInputSchema.parse({
+    origin: "support_note",
+    content: "the user explicitly turned this on",
+    accessLevel: "ai_eligible",
+  }) as { accessLevel: string | undefined };
+  assert.equal(out.accessLevel, "ai_eligible");
 });
 check("DiaryEntryCreateInput defaults a manual entry's includeInHandoff to false when omitted", () => {
   const out = DiaryEntryCreateInputSchema.parse(examples.exampleCreateManualEntryRequest) as {

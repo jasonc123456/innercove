@@ -36,12 +36,18 @@ export const TombstoneEntityRefSchema = z.discriminatedUnion("entityType", [
 ]);
 export type TombstoneEntityRef = z.infer<typeof TombstoneEntityRefSchema>;
 
-const TombstoneBaseSchema = z.object({
-  id: TombstoneIdSchema,
-  userId: UserIdSchema,
-  reason: TombstoneReasonSchema,
-  deletedAt: z.string().datetime(),
-});
+// `.strict()` is REQUIRED here, not cosmetic: in zod 4.6.5,
+// `z.intersection` of a non-strict object with an otherwise-strict
+// schema silently stops enforcing strictness for the whole composite
+// (verified by direct repro -- see provenance.ts's matching comment).
+const TombstoneBaseSchema = z
+  .object({
+    id: TombstoneIdSchema,
+    userId: UserIdSchema,
+    reason: TombstoneReasonSchema,
+    deletedAt: z.string().datetime(),
+  })
+  .strict();
 
 export const TombstoneRecordSchema = z.intersection(TombstoneBaseSchema, TombstoneEntityRefSchema);
 export type TombstoneRecord = z.infer<typeof TombstoneRecordSchema>;
