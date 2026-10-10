@@ -38,11 +38,13 @@ async function stream(
   const send = openSse(reply.raw);
   const stats = await runTurn({
     provider: deps.provider,
+    safety: deps.safety,
     systemPrompt: deps.systemPrompt,
     history,
     message,
     signal: controller.signal,
     send,
+    onScreenBlock: (tier, reasons) => request.log.info({ event: "output_screened", tier, reasons }, "output screen blocked a reply"),
   });
   if (stats) deps.stats.lastReply = stats;
   if (controller.signal.aborted) request.log.info("chat stream aborted by client");

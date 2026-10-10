@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { createProvider } from "../core/inference/index.js";
 import { buildApp } from "./app.js";
+import { noSafety } from "./chat/safety.js";
 
 const env = process.env;
 const host = env.HOST ?? "127.0.0.1";
@@ -18,6 +19,8 @@ if (!promptPath) throw new Error("No system prompt found; set SYSTEM_PROMPT_PATH
 
 const app = await buildApp({
   provider: createProvider(env),
+  // TODO(A): swap for D's core/safety once codex/safety-content is merged.
+  safety: noSafety,
   systemPrompt: readFileSync(promptPath, "utf8").trim(),
   stats: { lastReply: null },
   webDist: env.WEB_DIST ?? "web/dist",

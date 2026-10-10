@@ -3,6 +3,7 @@ import path from "node:path";
 import fastifyStatic from "@fastify/static";
 import Fastify, { type FastifyServerOptions } from "fastify";
 import type { InferenceProvider } from "../core/inference/index.js";
+import type { SafetyLayer } from "./chat/safety.js";
 import type { ReplyStats } from "./chat/turn.js";
 import { sendError } from "./errors.js";
 import { chatRoutes } from "./routes/chat.js";
@@ -10,6 +11,7 @@ import { healthRoutes } from "./routes/health.js";
 
 export interface AppDeps {
   provider: InferenceProvider;
+  safety: SafetyLayer;
   systemPrompt: string;
   /** Speed of the last reply, for the privacy panel (plan §3c, A's fields). In memory only. */
   stats: { lastReply: ReplyStats | null };
