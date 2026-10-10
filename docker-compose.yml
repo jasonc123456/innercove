@@ -1,0 +1,15 @@
+# D18: host networking with a loopback bind. Never publish ports with `ports:`;
+# Docker's port publishing binds 0.0.0.0 and bypasses ufw.
+services:
+  app:
+    build: .
+    network_mode: host
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HOST: 127.0.0.1
+      PORT: "8000"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

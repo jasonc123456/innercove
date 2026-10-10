@@ -32,16 +32,27 @@ export function ChatPage() {
     const controller = new AbortController();
     abortRef.current = controller;
 
+    const history = messages
+      .filter((message) => message.content !== "")
+      .map(({ role, content }) => ({ role, content }));
+    const setReply = (update: (content: string) => string) =>
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === assistantId
+            ? { ...message, content: update(message.content) }
+            : message,
+        ),
+      );
+
     try {
-      await streamAssistantReply((chunk) => {
-        setMessages((current) =>
-          current.map((message) =>
-            message.id === assistantId
-              ? { ...message, content: message.content + chunk }
-              : message,
-          ),
-        );
-      }, controller.signal);
+      await streamAssistantReply(
+        { message: text, history },
+        {
+          onDelta: (chunk) => setReply((content) => content + chunk),
+          onReplace: (replacement) => setReply(() => replacement),
+        },
+        controller.signal,
+      );
     } catch (error) {
       if (!(error instanceof DOMException && error.name === "AbortError")) {
         setFailed(true);
