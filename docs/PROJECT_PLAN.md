@@ -32,7 +32,7 @@ For anyone, human or a Claude Code/Codex session, picking this up on the GX10.
 4. **Phase 0 starts only on the team's explicit go.** Kickoff prompt for the Phase 0 session:
    > Read PROJECT_PLAN.md ("Start here", §3b, §5 Phase 0) and DECISIONS.md. Do Phase 0 only: set up LM Studio on the GX10 per D18, run the eight Phase 0 checks, recreate the eval runner from the spec in §5 Phase 0, run the 40 `prep/` tests on Qwen3.8-27B (the chosen model, D12) and pick its quantization, and record everything in DECISIONS.md. Don't write app code.
 5. **After Phase 0, use one fresh session per phase:** "Read AGENTS.md and PROJECT_PLAN.md §Phase N; implement only Phase N." Phase 1 writes `AGENTS.md`.
-6. **Nothing is pending.** The chat model is Qwen3.8-27B (D12); Phase 0 picks Q4_K_M or Q6_K.
+6. **Nothing is pending.** The chat model is Qwen3.8-27B (D12) at Q6_K (D43); Phase 0 measures it and runs the 40 tests.
 7. **Never put real personal content or API keys** in files, commits or test prompts. Use the fictional persona only.
 
 ---
@@ -760,7 +760,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **How to run:** `npm install`, `INFERENCE_PROVIDER=fake npm run dev` (or `docker compose up` with a `.env` from `.env.example`). `npm test` runs 17 tests.
 - **Known issues / not done yet:**
   - LM Studio auth is still OFF and `logSensitiveData` is ON; both are GUI toggles. Phase 0 checks 4 and 7 fail until they're fixed.
-  - Models still downloading (Q6_K); Q4_K_M not downloaded yet. Phase 0 runs and quantization choice pending.
+  - Q6_K still downloading. The team chose Q6_K (D43), so Q4_K_M is skipped. Phase 0 runs pending.
   - `/api/chat` has no persistence until B's store lands (only `conversationId: null`). No safety tiering yet (A, hours 5–8, needs D's `core/safety`).
   - `AGENTS.md` not written yet.
 - **Layout note:** D's branch uses root `core/` (`core/safety`); B uses the `packages/core` workspace. A's code is in root `core/inference` and `server/` for now; agree one layout before merging D's branch.
