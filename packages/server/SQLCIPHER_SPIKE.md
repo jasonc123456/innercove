@@ -1,6 +1,6 @@
-# SQLCipher + FTS5 compatibility spike — result (local, x86_64)
+# SQLCipher + FTS5 compatibility spike — WSL and GX10 results
 
-**Machine:** `HongAsus202605`, Linux 6.18.33.1-microsoft-standard-WSL2, `x86_64` (Node reports `linux x64`). **This is NOT the GX10** — all results below are LOCAL-ONLY. GX10 (ARM64) validation is still pending; see "Remaining target-machine validation" below.
+**Machine:** `HongAsus202605`, Linux 6.18.33.1-microsoft-standard-WSL2, `x86_64` (Node reports `linux x64`). **Historical WSL result:** this machine is not the GX10. The original checks below passed locally; successful GX10 host/container verification is recorded separately below.
 
 **Rerun with:** `npm run spike:sqlcipher --workspace=@innercove/server` (from the repo root).
 
@@ -17,7 +17,7 @@
 **Prebuilt binary, not source-compiled** — confirmed, not assumed:
 - `better-sqlite3-multiple-ciphers`'s own `package.json` sets `"gypfile": false` and has no `install` script, so npm never triggers a native build for it.
 - `node_modules/.../build/` contains only `.stamp`/`.mk`/`.gypi` metadata shipped in the npm tarball itself — no compiled `.o` files or `.node` binary exist there.
-- The real binary loaded is one of `prebuilds/{linux-x64,linux-arm64,linuxmusl-x64,linuxmusl-arm64,darwin-x64,darwin-arm64,win32-x64,win32-arm64}.node`, shipped directly inside the package. On this machine, `linux-x64.node` was used. **A matching `linux-arm64.node` prebuild exists in the same installed package** — relevant evidence that the GX10 (assuming a glibc-based Linux, not musl) should not need on-device compilation either, though this is not yet confirmed by actually running on that hardware.
+- The real binary loaded is one of `prebuilds/{linux-x64,linux-arm64,linuxmusl-x64,linuxmusl-arm64,darwin-x64,darwin-arm64,win32-x64,win32-arm64}.node`, shipped directly inside the package. On this machine, `linux-x64.node` was used. **A matching `linux-arm64.node` prebuild exists in the same installed package** — relevant evidence that the GX10 (assuming a glibc-based Linux, not musl) should not need on-device compilation either, though this historical local inspection alone did not prove it loads on the GX10. The later runs below establish runtime compatibility, without identifying whether a particular binary was prebuilt or compiled.
 
 ## Confirmed finding: the driver's DEFAULT cipher is NOT SQLCipher
 
@@ -60,13 +60,19 @@ Read directly from the installed `13.0.3` package's own `README.md` (not assumed
 
 **Explicit honesty note (per task instructions):** check #17 (string absence after close) is a **weak** signal by itself — a string's absence proves nothing about *why* it's absent. Check #9 (the live `-wal` file, inspected before any clean close could checkpoint it away) and check #18 (the scrambled file header) are the actually-informative checks here: #9 proves there was real on-disk content to inspect and it wasn't plaintext; #18 proves the file doesn't even have a valid unencrypted SQLite structure. Neither of these is a cryptographic proof that the *correct* cipher/key-derivation parameters were used — only that the output is not plaintext SQLite.
 
-## Remaining target-machine (GX10, ARM64) validation
+## GX10 host and ARM64 Docker verification — 2026-10-10
 
-Not yet done, out of scope for this local spike:
-- Confirm the shipped `prebuilds/linux-arm64.node` actually loads on the GX10's specific OS/libc (DGX OS) without falling back to a source build.
-- Re-run this exact smoke test on the GX10 and confirm the same 18/18 result.
-- If source compilation turns out to be needed there, confirm `node-gyp`/a C++ toolchain is available in whatever Docker build image Phase 1 settles on.
+Actual runs reported by the operator at checkout `8e96d52`:
 
-## Can we proceed with encrypted database initialization, migrations, and lock/unlock?
+| Environment | Runtime | Results |
+|---|---|---|
+| GX10 host | Linux aarch64; Node v24.15.0; npm 11.12.1 | Spike 18/18, production database smoke PASS, `npm test` 99/99 across 8 files; each exit 0 |
+| Separate `innercove-db-verify:8e96d52` image | linux arm64; Node v22.23.3 | Spike 18/18 and production database smoke PASS; combined exit 0 |
 
-**Yes, locally, with one caveat.** The driver delivers real SQLCipher-*compatible* encryption (not its default sqleet) with WAL, FTS5, and the D26-required pragmas, and composes with Drizzle once the `better-sqlite3` import quirk is worked around. The caveat: actual interop with an external SQLCipher consumer (DB Browser, a future Android SQLCipher build) is still an open, unverified risk per the driver's own documented limitation — worth a cheap, explicit check (e.g. opening a spike-created file in DB Browser for SQLite) before anything depends on that specific claim. **GX10 (ARM64) confirmation is still required** before this is proven for the actual hackathon hardware, not just this machine; no evidence found yet suggesting it will fail there (a matching prebuild ships in the package), but it has not been run there. If the GX10 run fails, D26's own documented fallback applies: `DB_ENCRYPTION=off`, decide by about hour 6, privacy panel reports "Diary encryption: OFF" honestly — this spike does not change that decision point, and no application configuration was touched.
+The image was built separately; the existing running Compose service was not replaced. Production smoke (`npm run smoke:db --workspace=@innercove/server`) covers setup/lock/unlock, packaged migrations, SIGTERM shutdown, encrypted reopen and plaintext rejection. These runs establish native-driver/FTS5 and database-foundation compatibility on GX10 ARM64, without proving full Compose deployment, UI or inference acceptance. They do not establish which native artifact was loaded or whether compilation was necessary.
+
+## Remaining interoperability and implementation work
+
+External SQLCipher interoperability (including DB Browser and Android SQLCipher) remains unverified, as described above. Opening a database with this same driver on two architectures does not establish cross-implementation format compatibility.
+
+Encrypted initialization, migrations and lock/unlock are implemented and their production smoke now passes on WSL x64, GX10 host and the isolated ARM64 image. Phase 2 remains incomplete: conversation/diary repositories and APIs, SQL-backed persistent chat/history integration and runtime permission enforcement beyond locking remain work for B. Explicit cipher configuration remains required; the default is not SQLCipher, and Drizzle's vanilla dependency only resolves its adapter import. No plaintext fallback is enabled and no runtime encryption configuration was changed by verification.

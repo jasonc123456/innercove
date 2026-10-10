@@ -31,3 +31,4 @@ Every system change on the borrowed GX10, one line each, with its exact undo ste
 | 13 | 2026-10-10 | `~/.config/innercove/` (0700) with `lmstudio.token` (0600) holding the LM Studio API token | `rm -r ~/.config/innercove` |
 | 14 | 2026-10-10 | LM Studio GUI (by Jason): server Require Authentication ON, one API token created | Delete the token in LM Studio Developer → server settings; removed anyway with `apt purge lm-studio` + `rm -r ~/.lmstudio` |
 | 15 | 2026-10-10 | (by Jason) `usermod -a -G docker asus` (docker group = root-equivalent) | `sudo gpasswd -d asus docker` |
+| 16 | 2026-10-10 | Built separate ARM64 database verification image `innercove-db-verify:8e96d52` from checkout `8e96d52`; linux arm64 / Node v22.23.3; spike 18/18 and production database smoke passed (combined exit 0). Existing running Compose service not replaced | `docker image rm innercove-db-verify:8e96d52` |
