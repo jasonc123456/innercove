@@ -1,0 +1,22 @@
+{
+  "name": "@innercove/server",
+  "version": "0.0.0",
+  "private": true,
+  "description": "InnerCove app server (api/core/store/inference, per plan §3). Currently contains only the SQLCipher+FTS5 compatibility spike (store/) -- no schema, routes, or pipeline yet.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "spike:sqlcipher": "npm run build && node dist/store/sqlcipher-spike.js"
+  },
+  "dependencies": {
+    "better-sqlite3-multiple-ciphers": "^13.0.3",
+    "better-sqlite3": "^13.0.3",
+    "drizzle-orm": "^0.45.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "@types/node": "^22.0.0",
+    "@types/better-sqlite3": "^9.6.0"
+  }
+}
