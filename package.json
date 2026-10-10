@@ -1,0 +1,13 @@
+{
+  "name": "innercove",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=@innercove/core",
+    "typecheck": "npm run typecheck --workspace=@innercove/core",
+    "validate": "npm run validate --workspace=@innercove/core"
+  }
+}
