@@ -752,6 +752,19 @@ Fill in the ASUS feedback survey before judging ends (D, early).
   - A replaces `web/src/chat/streamReply.ts` with the §3c SSE client.
   - Phase 0 on the GX10.
 
+**A (Jason), GX10 setup, Phase 0 prep and Phase 1 server (2026-10-10, in progress):**
+- **Done:**
+  - GX10: xrdp (Xfce session, RDP from the LAN subnet only via ufw), LM Studio 0.4.26 GUI, CUDA 13 llama.cpp runtime 2.55.0. Every change and its undo is in `docs/SETUP_LOG.md`.
+  - Phase 0 scripts: `scripts/run_eval.py` (the §5 spec) and `scripts/smoke-inference.py` (checks 1–5 and 7; check 6 is a manual docker command in its docstring).
+  - Phase 1 server side: `core/inference` (LM Studio and Fake providers, streaming reasoning stripper), `server/` (Fastify; `/api/health`, `/api/infer`, `/api/chat` over SSE in the §3c event order), Dockerfile and `docker-compose.yml` (host network, 127.0.0.1:8000; verified closed on the LAN IP). `web/src/chat/streamReply.ts` now talks to `/api/infer`; `npm run dev` in `web/` proxies `/api` to :8000.
+- **How to run:** `npm install`, `INFERENCE_PROVIDER=fake npm run dev` (or `docker compose up` with a `.env` from `.env.example`). `npm test` runs 17 tests.
+- **Known issues / not done yet:**
+  - LM Studio auth is still OFF and `logSensitiveData` is ON; both are GUI toggles. Phase 0 checks 4 and 7 fail until they're fixed.
+  - Models still downloading (Q6_K); Q4_K_M not downloaded yet. Phase 0 runs and quantization choice pending.
+  - `/api/chat` has no persistence until B's store lands (only `conversationId: null`). No safety tiering yet (A, hours 5–8, needs D's `core/safety`).
+  - `AGENTS.md` not written yet.
+- **Layout note:** D's branch uses root `core/` (`core/safety`); B uses the `packages/core` workspace. A's code is in root `core/inference` and `server/` for now; agree one layout before merging D's branch.
+
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
 1. Write diary entries A and B. Allow AI access to A only.
