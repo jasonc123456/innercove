@@ -28,11 +28,12 @@ For anyone, human or a Claude Code/Codex session, picking this up on the GX10.
    - `prep/*-scoring.csv`: blank scoring templates.
    - `prep/results/`: two pre-event runs (prompt v1 and v2), each with `raw.jsonl`, `replies.md` and scored CSVs.
    - `prep/demo-persona.json`: the fictional persona "Jordan", 4 memories, 8 diary entries, and the text typed live in the demo journey.
-3. **Phase 0 starts only on the team's explicit go.** Kickoff prompt for the Phase 0 session:
+3. **First set up the GX10** with the prompt in `GX10_SETUP_PROMPT.md` (LM Studio, xrdp, server settings). It logs every change in `SETUP_LOG.md` so the machine can be restored before it's returned.
+4. **Phase 0 starts only on the team's explicit go.** Kickoff prompt for the Phase 0 session:
    > Read PROJECT_PLAN.md ("Start here", §3b, §5 Phase 0) and DECISIONS.md. Do Phase 0 only: set up LM Studio on the GX10 per D18, run the eight Phase 0 checks, recreate the eval runner from the spec in §5 Phase 0, run the 40 `prep/` tests on Qwen3.8-27B (the chosen model, D12) and pick its quantization, and record everything in DECISIONS.md. Don't write app code.
-4. **After Phase 0, use one fresh session per phase:** "Read AGENTS.md and PROJECT_PLAN.md §Phase N; implement only Phase N." Phase 1 writes `AGENTS.md`.
-5. **Nothing is pending.** The chat model is Qwen3.8-27B (D12); Phase 0 picks Q4_K_M or Q6_K.
-6. **Never put real personal content or API keys** in files, commits or test prompts. Use the fictional persona only.
+5. **After Phase 0, use one fresh session per phase:** "Read AGENTS.md and PROJECT_PLAN.md §Phase N; implement only Phase N." Phase 1 writes `AGENTS.md`.
+6. **Nothing is pending.** The chat model is Qwen3.8-27B (D12); Phase 0 picks Q4_K_M or Q6_K.
+7. **Never put real personal content or API keys** in files, commits or test prompts. Use the fictional persona only.
 
 ---
 
