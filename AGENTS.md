@@ -3,7 +3,7 @@ Local-first wellness companion for the GX10 hackathon. Read `docs/TEAM_PLAN.md` 
 
 ## Run and test
 - `npm install` at the root (npm workspaces; `web/` has its own `npm install`).
-- `INFERENCE_PROVIDER=fake npm run dev`: builds `@innercove/core`, then runs the API on 127.0.0.1:8000 with the fake model. `cd web && npm run dev` proxies `/api` to it.
+- `INFERENCE_PROVIDER=fake npm run dev`: builds `@innercove/core`, then runs the API on 127.0.0.1:8000 with the fake model. Add `DEV_STORE=demo` for an in-memory store seeded with the fictional persona (memories, chips, D33) until B's store lands. `cd web && npm run dev` proxies `/api` to it.
 - Real model: copy `.env.example` to `.env` (untracked), set `LOCAL_AI_API_KEY` from `~/.config/innercove/lmstudio.token`, set `INFERENCE_PROVIDER=lmstudio`.
 - `npm test` (vitest), `npm run typecheck`, `npm run validate` (B's contract checks). `@innercove/core` resolves to its `dist/`, so these scripts build it first.
 - `sudo docker compose up -d --build`: the demo build (web + API in one container, host network, 127.0.0.1:8000).
@@ -16,7 +16,7 @@ Local-first wellness companion for the GX10 hackathon. Read `docs/TEAM_PLAN.md` 
 | `packages/core/src/api/chat.ts` | `/api/chat` + `/api/infer` request schemas and SSE event types | A |
 | `packages/core/src/safety/` | Safety tiers, output screen, reviewed tier-2 replies, golden helpers | D |
 | `packages/server/src/{app,main}.ts`, `api/chat.ts`, `api/health.ts` | Fastify app, chat and health routes | A |
-| `packages/server/src/chat/`, `inference/` | Turn pipeline (D32 screening via `rules-safety.ts`; retrieval/prompt in Phase 3), LM Studio + Fake providers | A |
+| `packages/server/src/chat/`, `inference/` | Turn pipeline: D32 screening (`rules-safety.ts`), retrieval (D27), prompt assembly, D33 history (`history.ts`), store ports; LM Studio + Fake providers | A |
 | `packages/server/src/store/`, data routes in `api/` | SQLCipher DB, schema, migrations, repos | B |
 | `config/`, `tests/*.json` | Safety rules, crisis resources, tier-2 replies, prompts; golden test cases | D |
 | `web/` | React SPA; `App.tsx` and the router are C's | C |

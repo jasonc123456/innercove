@@ -15,7 +15,7 @@ const cwd = fileURLToPath(new URL("../", import.meta.url));
 function launch(encryption = "sqlcipher") {
   const child = spawn(process.execPath, ["dist/main.js"], { cwd, env: {
     ...process.env, INFERENCE_PROVIDER: "fake", HOST: "127.0.0.1", PORT: "0",
-    DB_PATH: file, DB_ENCRYPTION: encryption, WEB_DIST: path.join(dir, "no-web"),
+    DB_PATH: file, DB_ENCRYPTION: encryption, DEV_STORE: "", WEB_DIST: path.join(dir, "no-web"),
   }, stdio: ["ignore", "pipe", "pipe"] });
   let output = "";
   child.stdout.on("data", (chunk) => { output += chunk.toString(); });

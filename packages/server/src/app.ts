@@ -3,6 +3,7 @@ import path from "node:path";
 import fastifyStatic from "@fastify/static";
 import Fastify, { type FastifyServerOptions } from "fastify";
 import type { InferenceProvider } from "./inference/index.js";
+import type { ChatStore } from "./chat/ports.js";
 import type { SafetyLayer } from "./chat/safety.js";
 import type { ReplyStats } from "./chat/turn.js";
 import { sendError } from "./api/errors.js";
@@ -18,6 +19,8 @@ export interface AppDeps {
   /** Speed of the last reply, for the privacy panel (plan §3c, A's fields). In memory only. */
   stats: { lastReply: ReplyStats | null };
   database: DatabaseStore;
+  /** B's store (Phase 2), or the in-memory dev store. Without it, chats have no memories and nothing is saved. */
+  store?: ChatStore;
   webDist?: string;
 }
 

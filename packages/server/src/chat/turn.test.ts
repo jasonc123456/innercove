@@ -29,7 +29,6 @@ async function turn(reply: string[], message = "hello") {
     provider,
     safety,
     systemPrompt: "SYSTEM",
-    history: [],
     message,
     signal: new AbortController().signal,
     send: (name, data) => events.push({ name, data }),

@@ -59,5 +59,9 @@ verified locally on WSL Linux x64 / Node 22.22.1. Its Docker build/runtime and
 GX10 ARM64 validation remain pending; teammate reports for the earlier spike
 are not evidence for this new foundation.
 
+A's opt-in `DEV_STORE=demo` and Phase 3 test store remain in-memory and do not
+persist to SQLCipher. They are gated by the same database lifecycle; production
+`ChatStore`/history/permission ports still need B's repositories.
+
 Next: conversation/diary repositories and APIs, with user-scoping and deletion
 checks, then A's saved-chat persistence integration. Phase 2 is incomplete.
