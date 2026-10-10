@@ -361,7 +361,7 @@ No model size makes this a validated mental health tool. The app-level safety la
 | Laptop-tier hub | 4–9B | The user's laptop (roadmap) |
 
 **Phase 0 model check (time-boxed, ~30 min).** The model is decided: **Qwen3.8-27B (D12)**. This check confirms it runs and picks the quantization.
-- **Run order:**
+- **Run order** (⚠️ superseded by D43: the team chose **Q6_K**, so run the 40 tests on Q6_K only; Q4_K_M isn't downloaded):
   1. Run the full 40 tests on **Qwen3.8-27B Q4_K_M**, the default. At ~11 tok/s and the ~130-token average reply measured pre-event, that's about 8–10 minutes.
   2. **If Q4_K_M reaches ≳ 10 tok/s,** also try Q6_K and keep it if it stays ≳ 8 tok/s with time to first visible word ≲ 2 s. Otherwise keep Q4_K_M.
   3. **Only if the 27B fails to load or is unusably slow** (≲ 5 tok/s), the team decides whether to switch to the fallback Qwen3.6-35B-A3B; run its smoke test (5 companion and 10 safety cases) first.
@@ -496,14 +496,14 @@ Estimates are uncertain. P0 is about **18–25 engineer-hours, or 8–10 wall-cl
 - **Objective:** prove the runtime contract the app depends on.
 - **Files:** `scripts/smoke-inference.*`; results go in `DECISIONS.md`.
 - **Acceptance:**
-  1. Time to first visible word (after reasoning stripping) and tok/s recorded for 1K- and 8K-token prompts at Q4, and at Q6 if time allows.
+  1. Time to first visible word (after reasoning stripping) and tok/s recorded for 1K- and 8K-token prompts at Q6_K (D43).
   2. Thinking is off. Send `reasoning_effort: "none"` first, since it was the only switch that worked pre-event through Open WebUI → LM Studio. Also check whether `chat_template_kwargs.enable_thinking=false` works against LM Studio directly. There's no reasoning in `content`, and we know whether `reasoning_content` or `reasoning` comes back separately.
   3. `response_format` json_schema returns valid JSON.
   4. A request without a token gets 401.
   5. Port 1234 is unreachable from another LAN machine.
   6. A container using host networking can reach it.
   7. A canary string sent in a prompt doesn't appear in the LM Studio log directories.
-  8. The 40 tests are scored on Qwen3.8-27B, and its quantization is chosen (D12). Follow §3b's run order.
+  8. The 40 tests are scored on Qwen3.8-27B Q6_K (D43 fixed the quantization).
 - **Eval runner spec.** Recreate it at the event; it's ~120 lines of stdlib Python, kept out of the repo before the event per D08.
   - **Usage:** `run_eval.py PREP_DIR OUT_DIR [all|companion|safety] [LIMIT]`, configured by the env vars `LOCAL_AI_BASE_URL`, `LOCAL_AI_API_KEY` and `LOCAL_AI_MODEL`. Never write the key to a file.
   - **Request:** a streaming POST to `{BASE}/chat/completions` with `temperature` 0.7, `top_p` 0.8, `presence_penalty` 1.5, `max_tokens` 2048, `top_k` 20 and `reasoning_effort: "none"`. If the server returns HTTP 400, 422 or 500, retry without `top_k` and `reasoning_effort`, and record that it did.
@@ -765,19 +765,20 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - Phase 2 remains incomplete; the GX10 `DB_ENCRYPTION` decision remains pending under D26, with confirmed decisions unchanged.
 - **Next:** run the spike on the GX10 and proceed with B's database implementation.
 
-**A (Jason), GX10 setup, Phase 0 prep and Phase 1 server (2026-10-10, in progress):**
+**A (Jason), GX10 setup, Phase 0, Phase 1 server and D32 (2026-10-10, in progress):**
 - **Done:**
-  - GX10: xrdp (Xfce session, RDP from the LAN subnet only via ufw), LM Studio 0.4.26 GUI, CUDA 13 llama.cpp runtime 2.55.0. Every change and its undo is in `docs/SETUP_LOG.md`.
+  - GX10: xrdp (Xfce session; RDP from 192.168.2.0/24 only via ufw), LM Studio 0.4.26 GUI with the CUDA 13 llama.cpp runtime 2.55.0, server on 127.0.0.1:1234 with **auth on** (token in `~/.config/innercove/lmstudio.token`). Every change and its undo is in `docs/SETUP_LOG.md`.
   - Phase 0 scripts: `scripts/run_eval.py` (the §5 spec) and `scripts/smoke-inference.py` (checks 1–5 and 7; check 6 is a manual docker command in its docstring).
-  - Phase 1 server side: `core/inference` (LM Studio and Fake providers, streaming reasoning stripper), `server/` (Fastify; `/api/health`, `/api/infer`, `/api/chat` over SSE in the §3c event order), Dockerfile and `docker-compose.yml` (host network, 127.0.0.1:8000; verified closed on the LAN IP). `web/src/chat/streamReply.ts` now talks to `/api/infer`; `npm run dev` in `web/` proxies `/api` to :8000.
-- **How to run:** `npm install`, `INFERENCE_PROVIDER=fake npm run dev` (or `docker compose up` with a `.env` from `.env.example`). `npm test` runs 17 tests.
+  - Phase 0 checks so far: #4 (401 without token) **pass**; #5 (LAN) loopback-only per `ss` and refused on the LAN IP, still to confirm from a laptop. **B's SQLCipher spike: 18/18 on the GX10** (aarch64, host Node 24); still to check inside the Node 22 container.
+  - Phase 1 server side: `core/inference` (LM Studio and Fake providers, streaming reasoning stripper), `server/` (Fastify; `/api/health`, `/api/infer`, `/api/chat` over SSE in the §3c event order), Dockerfile and `docker-compose.yml` (host network, 127.0.0.1:8000; verified closed on the LAN IP), `AGENTS.md` + `CLAUDE.md`. `web/src/chat/streamReply.ts` now talks to `/api/infer`; `npm run dev` in `web/` proxies `/api` to :8000.
+  - Screen-before-display (D32) behind a `SafetyLayer` seam (`server/chat/safety.ts`, `turn.ts`): tier 0 releases screened sentences, tier 1 is buffered then screened, tier 2 sends the reviewed reply with no model call. Tested with a planted method detail split across chunks.
+- **How to run:** `npm install`, `INFERENCE_PROVIDER=fake npm run dev`, or `sudo docker compose up -d --build` with a `.env` from `.env.example`. `npm test` runs 23 tests. The container is running on the GX10 with the fake provider.
 - **Known issues / not done yet:**
-  - LM Studio auth is still OFF and `logSensitiveData` is ON; both are GUI toggles. Phase 0 checks 4 and 7 fail until they're fixed.
-  - Q6_K still downloading. The team chose Q6_K (D43), so Q4_K_M is skipped. Phase 0 runs pending.
+  - Model: Q6_K (D43) still downloading; Phase 0 checks 1–3, 6, 7 and the 40 tests wait for it. LM Studio "Log sensitive data" is still ON (fails check 7) and the JIT auto-unload TTL (60 min) is still on; both are GUI toggles.
+  - D's engine isn't wired in yet: `codex/safety-content` conflicts with `main` and must be rebased first. Until then the server runs with `noSafety` (dev only).
   - `/api/chat` has no persistence until B's store lands (only `conversationId: null`).
-  - **Screen-before-display (D32) is built** behind a `SafetyLayer` seam (`server/chat/safety.ts`, `turn.ts`): tier 0 releases screened sentences, tier 1 is buffered then screened, tier 2 sends the reviewed reply with no model call; tested with a planted method detail. **Not yet connected to D's engine:** `codex/safety-content` conflicts with `main` (package files, PROJECT_PLAN) and must be rebased on `main` before A wires it in; until then the server runs with `noSafety`.
-  - `AGENTS.md` and `CLAUDE.md` written.
-- **Layout note:** D's branch uses root `core/` (`core/safety`); B uses the `packages/core` workspace. A's code is in root `core/inference` and `server/` for now; agree one layout before merging D's branch.
+  - ⚠️ **Layout clash to settle:** B's `packages/server` is described as the app server (api/core/store/inference), A's Fastify app is in root `server/` + `core/inference`, and D's branch uses root `core/safety`. Proposal: move A's and D's code into `packages/server/src/{api,inference,safety}` (or `packages/core` for pure logic) so there's one server and one core.
+- **Next (A):** finish Phase 0 once the model is loaded; wire D's engine; Phase 3 retrieval and prompt assembly with D33 against B's read port.
 
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**

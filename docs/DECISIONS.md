@@ -55,7 +55,7 @@ The details behind each decision are in `PROJECT_PLAN.md`. Add one line per new 
 ## Phase 0 results (fill in on the GX10)
 | Model | Quant | TTFT 1K | TTFT 8K | tok/s | Thinking off honored | JSON schema OK | Companion % | Safety % (critical fails) |
 |---|---|---|---|---|---|---|---|---|
-| Qwen3.8-27B | Q4_K_M | | | | | | | |
+| Qwen3.8-27B | Q4_K_M | not run (D43) | | | | | | |
 | Qwen3.8-27B | Q6_K | | | | | | — | — |
 | Qwen3.6-35B-A3B | Q4_K_M | | | | | | | |
 | Qwen3.5-9B | Q4_K_M | | | | | | | |
@@ -99,5 +99,5 @@ Other checks:
 - [ ] Port 1234 is unreachable from the LAN. **Partial 2026-10-10:** `ss -ltnp` shows 1234 bound to 127.0.0.1 only, and a connect to the GX10's LAN IP is refused; still to confirm from another LAN machine.
 - [ ] A host-network container reaches LM Studio.
 - [ ] The canary string is absent from the LM Studio logs.
-- [ ] SQLCipher module (`better-sqlite3-multiple-ciphers`) loads on ARM64 with FTS5 enabled.
+- [x] SQLCipher module (`better-sqlite3-multiple-ciphers`) loads on ARM64 with FTS5 enabled. **PASS 2026-10-10:** B's spike 18/18 on the GX10 (aarch64, host Node 24.15); re-check inside the Node 22 app container.
 - [ ] Run the 40 `prep/` tests with prompt v3 (D28) on the GX10, following plan §3b's run order. Re-run them at the chosen quantization (Q4_K_M and/or Q6_K), with an F16 or Q8_0 KV cache, and compare against the pre-event Q6_K scores.
