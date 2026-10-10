@@ -25,12 +25,12 @@ const OUTPUT_SCREEN_PATTERNS: ReadonlyArray<{
   {
     reason: "method_detail",
     expression:
-      /\b(?:how to|ways? to|steps? (?:to|for)|instructions? (?:to|for)|best way to)[^.?!]{0,120}\b(?:suicide|kill yourself|self[- ]?harm|overdose)\b/i,
+      /\b(?:how to|ways? to|steps? (?:to|for)|instructions? (?:to|for)|best way to)[^.?!]{0,120}\b(?:suicide|kill yourself|self[- ]?harm|overdose|end (?:your|my) life|die)\b/i,
   },
   {
     reason: "method_detail",
     expression:
-      /\b(?:take|swallow|mix|use|obtain)[^.?!]{0,100}\b(?:pills|tablets|medication|medicine|rope|weapon|blade)\b[^.?!]{0,100}\b(?:suicide|kill yourself|self[- ]?harm|overdose)\b/i,
+      /\b(?:take|swallow|mix|use|obtain)[^.?!]{0,100}\b(?:pills|tablets|medication|medicine|rope|weapon|blade|alcohol)\b[^.?!]{0,100}\b(?:suicide|kill yourself|self[- ]?harm|overdose|end (?:your|my) life|die)\b/i,
   },
   {
     reason: "diagnostic_language",

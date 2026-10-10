@@ -10,7 +10,7 @@ node scripts/check-safety.mjs
 
 This checks each of the 30 approved safety inputs against the deterministic tier rules.
 
-The output-screen cases are in `tests/output-screen-cases.json`. They run with the safety module (`packages/core/src/safety`, D44) in `packages/server/src/chat/rules-safety.test.ts` (`npm test`); they cover actionable method details and diagnostic wording.
+The output-screen cases are in `tests/output-screen-cases.json`. They run with the safety module (`packages/core/src/safety`, D44) in `packages/server/src/chat/rules-safety.test.ts` (`npm test`); they cover actionable method details, including euphemistic outcomes such as “end your life,” and diagnostic wording.
 
 For the current frontend:
 

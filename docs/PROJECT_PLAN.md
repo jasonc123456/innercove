@@ -790,6 +790,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Files:** `packages/core/src/safety/**`, root `config/**`, `tests/safety-cases.json`, `tests/output-screen-cases.json`, and `docs/DEMO_SCRIPT.md`.
 - **Integration:** `packages/server/src/chat/rules-safety.ts` loads static config at startup; tier 2 never calls the model, and tiers 0–1 are screened before display.
 - **Tests:** `npm test` runs the 30 tier cases and output-screen cases through `/api/chat`; `node scripts/check-safety.mjs` remains a quick config check. Live fake-provider `/api/infer` verification returned tier 2 and `modelId: reviewed-reply` for an explicit-risk test message.
+- **Phase 3 audit:** expanded the output screen’s method-detail coverage to block euphemistic outcomes such as "end your life" after an actionable medication instruction (golden case O05).
 - **Next:** C verifies the crisis card and support-note UX against the static config; the team runs the offline demo script after the real model is ready.
 
 ## End-to-end verification (the Phase 6 demo script)
