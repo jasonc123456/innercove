@@ -87,7 +87,7 @@ export class LMStudioProvider implements InferenceProvider {
         method: "POST",
         headers: { ...this.headers(), "Content-Type": "application/json" },
         body: JSON.stringify(body),
-        signal,
+        ...(signal ? { signal } : {}),
       });
     } catch (error) {
       if (signal?.aborted) throw error;

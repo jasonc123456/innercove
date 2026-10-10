@@ -1,6 +1,6 @@
 import { Writable } from "node:stream";
 import { describe, expect, it } from "vitest";
-import { FakeProvider, ModelUnavailableError, type InferenceProvider } from "../core/inference/index.js";
+import { FakeProvider, ModelUnavailableError, type InferenceProvider } from "./inference/index.js";
 import { buildApp } from "./app.js";
 import { noSafety } from "./chat/safety.js";
 

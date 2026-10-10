@@ -51,6 +51,7 @@ The details behind each decision are in `PROJECT_PLAN.md`. Add one line per new 
 | D41 | **Pitch:** a 3-minute script that cuts to 2, plus a ~90 s backup video; the presenter is chosen by hour 18; confirm the presentation rules at check-in | CONFIRMED | No public hack.dev rules found; plan §10 | 2026-10-10 |
 | D42 | **API contracts per plan §3c.** B's first Zod draft is revised to match: permission filtering in B's read port, `messageContext` added, `isTemporary` removed, the memory flags simplified, no read exemptions while locked | CONFIRMED | Review of B's draft; plan §3c | 2026-10-10 |
 | D43 | **Quantization: Qwen3.8-27B Q6_K** (replaces D12's "Phase 0 picks"; Q4_K_M is not tested or downloaded). Phase 0 still records Q6_K speed, thinking-off and the 40 tests with prompt v3; switching to Q4_K_M later needs a team decision | CONFIRMED | Team choice; the pre-event quality scores were measured at Q6_K | 2026-10-10 |
+| D44 | **Repo layout: two npm workspaces.** `packages/core` holds pure shared code (B's Zod contracts, A's chat contract in `src/api/chat.ts`, D's safety engine in `src/safety`); `packages/server/src` holds the Fastify app (`api/`, `chat/` pipeline, `inference/`, B's `store/`). `config/` (D), `web/` (C), `scripts/` and `docs/` stay at the root. The plan's `core/<x>` and `store/<x>` paths map onto these | CONFIRMED | Three parallel layouts appeared (root `core/` + `server/`, `packages/*`); one server and one core avoids duplicate builds; mobile can reuse `packages/core` | 2026-10-10 |
 
 ## Phase 0 results (fill in on the GX10)
 | Model | Quant | TTFT 1K | TTFT 8K | tok/s | Thinking off honored | JSON schema OK | Companion % | Safety % (critical fails) |
@@ -99,5 +100,5 @@ Other checks:
 - [ ] Port 1234 is unreachable from the LAN. **Partial 2026-10-10:** `ss -ltnp` shows 1234 bound to 127.0.0.1 only, and a connect to the GX10's LAN IP is refused; still to confirm from another LAN machine.
 - [ ] A host-network container reaches LM Studio.
 - [ ] The canary string is absent from the LM Studio logs.
-- [x] SQLCipher module (`better-sqlite3-multiple-ciphers`) loads on ARM64 with FTS5 enabled. **PASS 2026-10-10:** B's spike 18/18 on the GX10 (aarch64, host Node 24.15); re-check inside the Node 22 app container.
+- [x] SQLCipher module (`better-sqlite3-multiple-ciphers`) loads on ARM64 with FTS5 enabled. **PASS 2026-10-10:** B's spike 18/18 on the GX10 (aarch64, host Node 24.15); also 18/18 inside the Node 22 app container (compiled from source; no prebuilt arm64 binary for Node 22).
 - [ ] Run the 40 `prep/` tests with prompt v3 (D28) on the GX10, following plan §3b's run order. Re-run them at the chosen quantization (Q4_K_M and/or Q6_K), with an F16 or Q8_0 KV cache, and compare against the pre-event Q6_K scores.

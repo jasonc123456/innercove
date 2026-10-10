@@ -2,12 +2,12 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import fastifyStatic from "@fastify/static";
 import Fastify, { type FastifyServerOptions } from "fastify";
-import type { InferenceProvider } from "../core/inference/index.js";
+import type { InferenceProvider } from "./inference/index.js";
 import type { SafetyLayer } from "./chat/safety.js";
 import type { ReplyStats } from "./chat/turn.js";
-import { sendError } from "./errors.js";
-import { chatRoutes } from "./routes/chat.js";
-import { healthRoutes } from "./routes/health.js";
+import { sendError } from "./api/errors.js";
+import { chatRoutes } from "./api/chat.js";
+import { healthRoutes } from "./api/health.js";
 
 export interface AppDeps {
   provider: InferenceProvider;

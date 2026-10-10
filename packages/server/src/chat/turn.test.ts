@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { FakeProvider } from "../../core/inference/index.js";
-import type { ChatEvents } from "../../core/chat/schemas.js";
+import { FakeProvider } from "../inference/index.js";
+import type { ChatEvents } from "@innercove/core";
 import { SentenceGate, type SafetyLayer } from "./safety.js";
 import { REVIEWED_REPLY_MODEL_ID, runTurn } from "./turn.js";
 

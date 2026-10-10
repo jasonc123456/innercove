@@ -3,25 +3,28 @@ Local-first wellness companion for the GX10 hackathon. Read `docs/TEAM_PLAN.md` 
 
 ## Run and test
 - `npm install` at the root (npm workspaces; `web/` has its own `npm install`).
-- `INFERENCE_PROVIDER=fake npm run dev`: API on 127.0.0.1:8000 with the fake model. `cd web && npm run dev` proxies `/api` to it.
+- `INFERENCE_PROVIDER=fake npm run dev`: builds `@innercove/core`, then runs the API on 127.0.0.1:8000 with the fake model. `cd web && npm run dev` proxies `/api` to it.
 - Real model: copy `.env.example` to `.env` (untracked), set `LOCAL_AI_API_KEY` from `~/.config/innercove/lmstudio.token`, set `INFERENCE_PROVIDER=lmstudio`.
-- `npm test` (vitest), `npm run typecheck`, `npm run validate` (B's contract checks).
+- `npm test` (vitest), `npm run typecheck`, `npm run validate` (B's contract checks). `@innercove/core` resolves to its `dist/`, so these scripts build it first.
 - `sudo docker compose up -d --build`: the demo build (web + API in one container, host network, 127.0.0.1:8000).
 - Phase 0 scripts: `scripts/run_eval.py`, `scripts/smoke-inference.py` (stdlib Python; env as above).
 
-## Layout and owners
+## Layout and owners (D44)
 | Path | What | Owner |
 |---|---|---|
-| `packages/core/` | Zod contracts, data-layer ports (`@innercove/core`) | B |
-| `core/inference/` | Provider interface, LM Studio + Fake providers, reasoning stripper | A |
-| `core/chat/` | `/api/chat` and `/api/infer` request and SSE event types | A |
-| `core/safety/`, `config/` | Safety rules, crisis resources, reviewed tier-2 replies, prompts | D |
-| `server/` | Fastify app; `routes/chat.ts`, `routes/health.ts` are A's, data routes are B's | A, B |
-| `store/` | SQLCipher DB, schema, migrations, repos (Phase 2) | B |
+| `packages/core/src/` | Pure shared code (`@innercove/core`): Zod contracts and data-layer ports | B |
+| `packages/core/src/api/chat.ts` | `/api/chat` + `/api/infer` request schemas and SSE event types | A |
+| `packages/core/src/safety/` | Safety tiers, output screen, reviewed tier-2 replies (pending D's rebase) | D |
+| `packages/server/src/{app,main}.ts`, `api/chat.ts`, `api/health.ts` | Fastify app, chat and health routes | A |
+| `packages/server/src/chat/`, `inference/` | Turn pipeline (D32 screening; retrieval/prompt in Phase 3), LM Studio + Fake providers | A |
+| `packages/server/src/store/`, data routes in `api/` | SQLCipher DB, schema, migrations, repos | B |
+| `config/` | Safety rules, crisis resources, tier-2 replies, prompts (JSON/text) | D |
 | `web/` | React SPA; `App.tsx` and the router are C's | C |
-| `docs/` | Plan, decisions, team split, GX10 setup log | everyone |
+| `scripts/`, `docs/` | Phase 0 eval scripts; plan, decisions, team split, GX10 setup log | A / everyone |
 
-Single owners for hot files: `packages/core` types (B), schema and migrations (B), the chat pipeline (A), `App.tsx`/router (C). Ask before editing someone else's.
+The plan's `core/<x>` paths map to `packages/core/src/<x>` (pure logic) or `packages/server/src/<x>` (server code); `store/<x>` to `packages/server/src/store/<x>`.
+
+Single owners for hot files: `packages/core` contracts (B), schema and migrations (B), the chat pipeline (A), `App.tsx`/router (C). Ask before editing someone else's.
 
 ## Privacy rules (never break these)
 - Never log request or response bodies, prompts, replies or diary text. Errors never echo input. Log event types and IDs only.

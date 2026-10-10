@@ -2,8 +2,8 @@ import {
   ModelUnavailableError,
   type ChatMessage,
   type InferenceProvider,
-} from "../../core/inference/index.js";
-import type { SendEvent } from "../sse.js";
+} from "../inference/index.js";
+import type { SendEvent } from "../api/sse.js";
 import { SAFE_FALLBACK, SentenceGate, type SafetyLayer } from "./safety.js";
 
 export interface ReplyStats {

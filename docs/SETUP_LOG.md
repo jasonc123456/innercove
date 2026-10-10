@@ -30,3 +30,4 @@ Every system change on the borrowed GX10, one line each, with its exact undo ste
 | 12 | 2026-10-10 | Docker image `innercove-app` built (plus `node:22-bookworm-slim` base pulled); container `innercove-app-1` running via `docker compose up -d` (host network, 127.0.0.1:8000, `restart: unless-stopped`) | `cd ~/innercove && sudo docker compose down --rmi all && sudo docker image rm node:22-bookworm-slim && sudo docker builder prune -f` |
 | 13 | 2026-10-10 | `~/.config/innercove/` (0700) with `lmstudio.token` (0600) holding the LM Studio API token | `rm -r ~/.config/innercove` |
 | 14 | 2026-10-10 | LM Studio GUI (by Jason): server Require Authentication ON, one API token created | Delete the token in LM Studio Developer → server settings; removed anyway with `apt purge lm-studio` + `rm -r ~/.lmstudio` |
+| 15 | 2026-10-10 | (by Jason) `usermod -a -G docker asus` (docker group = root-equivalent) | `sudo gpasswd -d asus docker` |

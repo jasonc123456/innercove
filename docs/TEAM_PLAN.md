@@ -35,7 +35,7 @@ Compared with the original plan, retrieval and prompt assembly move from D to A,
 ### B: data and APIs
 | Hours | Task |
 |---|---|
-| 0–1 | Agree the zod schemas in `core/types` with C. |
+| 0–1 | Agree the zod schemas in `packages/core` with C. |
 | 1–3 | Check first that `better-sqlite3-multiple-ciphers` builds on ARM64 with FTS5. Decide on `DB_ENCRYPTION` by **hour 6**. |
 | 3–8 | **Phase 2:** opening the SQLCipher database, key derivation, lock and unlock (`423` while locked), the schema and migrations (including `devices`, and `user_id` on every table), the conversation and diary repos, FTS with `secure-delete` (or `optimize` after deletes), `/api/unlock`, `/api/conversations` and `/api/diary`. |
 | 8–12 | **Phase 3, API side:** the memory repo, provenance, `/api/memories` and revoke propagation. Also the **permission and user-scoping tests**. |
@@ -58,7 +58,7 @@ Compared with the original plan, retrieval and prompt assembly move from D to A,
 |---|---|---|
 | 0–2 | Review Claude's first-pass scores for the Phase 0 model comparison and recommend the chat model together with A. | A |
 | 1–2 | **Fill in the ASUS feedback survey.** It's required before judging ends, so do it early. | Anyone |
-| 2–7 | **Phase 4 core:** `config/safety-rules.json`, `config/crisis-resources.us.json` and `tests/safety-cases.json` (converted from `prep/safety-tests.json`). `core/safety`: the tier function (a pure function with golden tests) and the output-screen rules (method details, diagnostic wording). `config/safety-replies.us.json`: **reviewed static tier-2 replies** by category (explicit, method-seeking, overdose with "call 911 now" first, harm to others, abuse), warm and short. **Give A the function's interface by hour 5.** | A |
+| 2–7 | **Phase 4 core:** `config/safety-rules.json`, `config/crisis-resources.us.json` and `tests/safety-cases.json` (converted from `prep/safety-tests.json`). `packages/core/src/safety` (D44; was `core/safety`): the tier function (a pure function with golden tests) and the output-screen rules (method details, diagnostic wording). `config/safety-replies.us.json`: **reviewed static tier-2 replies** by category (explicit, method-seeking, overdose with "call 911 now" first, harm to others, abuse), warm and short. **Give A the function's interface by hour 5.** | A |
 | 7–9 | Copy `prep/system-prompt.txt` (v3, D28 already applied) into `config/prompts/`. **Review** the fictional persona and diary entries Claude drafted in `prep/demo-persona.json`, which B's seed script loads. A first draft of the demo script. | B (seed data), C (script) |
 | By 10 | A handoff note of at most 15 lines in the `PROJECT_PLAN.md` Phase log. **Then D is done.** | — |
 | Optional | Rehearse the demo or present at judging. | — |
@@ -82,7 +82,8 @@ If people sleep, stagger A/B and C so someone is always on the critical path.
 ## Working rules
 - **Merge to `main` every 2–3 hours.** `main` must always pass `docker compose up`.
 - **Single owners for files people often edit at the same time:**
-  - `core/types`: B.
+  - `packages/core` contracts: B (except `src/api/chat.ts`: A).
+  - Repo layout: see D44 and `AGENTS.md`.
   - The schema and migrations: B.
   - The chat pipeline: A.
   - `App.tsx` and the router: C.

@@ -7,25 +7,24 @@ COPY web/ ./
 RUN npm run build
 
 FROM node:22-bookworm-slim AS server
+# No prebuilt better-sqlite3-multiple-ciphers binary for Node 22 on arm64: compile it here.
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY packages/core/package.json packages/core/
 COPY packages/server/package.json packages/server/
 RUN npm ci --no-audit --no-fund
-COPY tsconfig.json tsconfig.build.json tsconfig.base.json ./
+COPY tsconfig.base.json ./
 COPY packages packages
-COPY core core
-COPY server server
 RUN npm run build && npm prune --omit=dev
 
 FROM node:22-bookworm-slim
-ENV NODE_ENV=production HOST=127.0.0.1 PORT=8000 WEB_DIST=/app/web/dist
+ENV NODE_ENV=production HOST=127.0.0.1 PORT=8000 INNERCOVE_ROOT=/app WEB_DIST=web/dist
 WORKDIR /app
 COPY package.json ./
 COPY --from=server /app/node_modules node_modules
-COPY --from=server /app/dist dist
 COPY --from=server /app/packages packages
 COPY --from=web /app/web/dist web/dist
 COPY docs/prep/system-prompt.txt docs/prep/system-prompt.txt
 USER node
-CMD ["node", "dist/server/main.js"]
+CMD ["node", "packages/server/dist/main.js"]

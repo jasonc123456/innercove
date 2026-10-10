@@ -492,6 +492,8 @@ If the client aborts, the server stops generating. In a saved chat the user's me
 ## 5. Development phases
 Estimates are uncertain. P0 is about **18–25 engineer-hours, or 8–10 wall-clock hours with four people**, including SQLCipher. The biggest swing factor is whether the LM Studio runtime handles the `qwen35` architecture.
 
+> **Paths (D44):** in the file lists below, `core/<x>` means `packages/core/src/<x>` for pure shared logic (types, safety) or `packages/server/src/<x>` for server code (inference, retrieval, prompt); `store/<x>` means `packages/server/src/store/<x>`; `api/` routes live in `packages/server/src/api/`. `config/` stays at the repo root.
+
 **Phase 0 — Inference verification on the GX10.** Owner A (D reviews the scores) · **time-boxed to ~1.5 h** · Prerequisites: GX10 access, and the three candidate models on the USB SSD.
 - **Objective:** prove the runtime contract the app depends on.
 - **Files:** `scripts/smoke-inference.*`; results go in `DECISIONS.md`.
@@ -593,9 +595,9 @@ Estimates are uncertain. P0 is about **18–25 engineer-hours, or 8–10 wall-cl
 - **C, frontend/UX:** app shell, streaming chat UI, the diary, memory and settings pages, the crisis card and the privacy panel.
 - **D, core logic, safety, QA and demo:** the safety engine and golden tests, retrieval policy, prompts, permission tests, the demo script and the pitch.
 
-**Dependencies:** B and C agree the zod schemas in `core/types` during the first hour, and C builds against mocks or `FakeProvider`. D's safety and retrieval code is pure functions, so it can be tested without the server.
+**Dependencies:** B and C agree the zod schemas in `packages/core` during the first hour, and C builds against mocks or `FakeProvider`. D's safety and retrieval code is pure functions, so it can be tested without the server.
 
-**Merge-conflict hotspots and their single owners:** `core/types` (B), schema and migrations (B only), the chat pipeline (D, while A owns the provider), and `App.tsx`/the router (C).
+**Merge-conflict hotspots and their single owners:** `packages/core` contracts (B), schema and migrations (B only), the chat pipeline (D, while A owns the provider), and `App.tsx`/the router (C).
 
 **Git workflow:**
 - One monorepo, trunk-based, with short branches named `p<N>-<topic>`.
@@ -769,15 +771,15 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Done:**
   - GX10: xrdp (Xfce session; RDP from 192.168.2.0/24 only via ufw), LM Studio 0.4.26 GUI with the CUDA 13 llama.cpp runtime 2.55.0, server on 127.0.0.1:1234 with **auth on** (token in `~/.config/innercove/lmstudio.token`). Every change and its undo is in `docs/SETUP_LOG.md`.
   - Phase 0 scripts: `scripts/run_eval.py` (the §5 spec) and `scripts/smoke-inference.py` (checks 1–5 and 7; check 6 is a manual docker command in its docstring).
-  - Phase 0 checks so far: #4 (401 without token) **pass**; #5 (LAN) loopback-only per `ss` and refused on the LAN IP, still to confirm from a laptop. **B's SQLCipher spike: 18/18 on the GX10** (aarch64, host Node 24); still to check inside the Node 22 container.
-  - Phase 1 server side: `core/inference` (LM Studio and Fake providers, streaming reasoning stripper), `server/` (Fastify; `/api/health`, `/api/infer`, `/api/chat` over SSE in the §3c event order), Dockerfile and `docker-compose.yml` (host network, 127.0.0.1:8000; verified closed on the LAN IP), `AGENTS.md` + `CLAUDE.md`. `web/src/chat/streamReply.ts` now talks to `/api/infer`; `npm run dev` in `web/` proxies `/api` to :8000.
-  - Screen-before-display (D32) behind a `SafetyLayer` seam (`server/chat/safety.ts`, `turn.ts`): tier 0 releases screened sentences, tier 1 is buffered then screened, tier 2 sends the reviewed reply with no model call. Tested with a planted method detail split across chunks.
+  - Phase 0 checks so far: #4 (401 without token) **pass**; #5 (LAN) loopback-only per `ss` and refused on the LAN IP, still to confirm from a laptop. **B's SQLCipher spike: 18/18 on the GX10**, both on the host (Node 24) and inside the Node 22 app container (the module compiles from source there; the Dockerfile's build stage has python3/make/g++).
+  - Phase 1 server side: `packages/server/src/inference` (LM Studio and Fake providers, streaming reasoning stripper), `packages/server/src/{app,main}.ts` + `api/` (Fastify; `/api/health`, `/api/infer`, `/api/chat` over SSE in the §3c event order), Dockerfile and `docker-compose.yml` (host network, 127.0.0.1:8000; verified closed on the LAN IP), `AGENTS.md` + `CLAUDE.md`. `web/src/chat/streamReply.ts` now talks to `/api/infer`; `npm run dev` in `web/` proxies `/api` to :8000.
+  - Screen-before-display (D32) behind a `SafetyLayer` seam (`packages/server/src/chat/safety.ts`, `turn.ts`): tier 0 releases screened sentences, tier 1 is buffered then screened, tier 2 sends the reviewed reply with no model call. Tested with a planted method detail split across chunks.
 - **How to run:** `npm install`, `INFERENCE_PROVIDER=fake npm run dev`, or `sudo docker compose up -d --build` with a `.env` from `.env.example`. `npm test` runs 23 tests. The container is running on the GX10 with the fake provider.
 - **Known issues / not done yet:**
   - Model: Q6_K (D43) still downloading; Phase 0 checks 1–3, 6, 7 and the 40 tests wait for it. LM Studio "Log sensitive data" is still ON (fails check 7) and the JIT auto-unload TTL (60 min) is still on; both are GUI toggles.
   - D's engine isn't wired in yet: `codex/safety-content` conflicts with `main` and must be rebased first. Until then the server runs with `noSafety` (dev only).
   - `/api/chat` has no persistence until B's store lands (only `conversationId: null`).
-  - ⚠️ **Layout clash to settle:** B's `packages/server` is described as the app server (api/core/store/inference), A's Fastify app is in root `server/` + `core/inference`, and D's branch uses root `core/safety`. Proposal: move A's and D's code into `packages/server/src/{api,inference,safety}` (or `packages/core` for pure logic) so there's one server and one core.
+  - **Layout settled (D44):** A's code moved into the workspaces: chat contracts → `packages/core/src/api/chat.ts`; Fastify app, inference and chat pipeline → `packages/server/src/`. Root `core/` and `server/` are gone. **D:** when rebasing `codex/safety-content`, move `core/safety` → `packages/core/src/safety` (export it from `packages/core/src/index.ts`); `config/` stays at the root.
 - **Next (A):** finish Phase 0 once the model is loaded; wire D's engine; Phase 3 retrieval and prompt assembly with D33 against B's read port.
 
 ## End-to-end verification (the Phase 6 demo script)

@@ -20,5 +20,6 @@ export * from "./api/diary.js";
 export * from "./api/memories.js";
 export * from "./api/settings.js";
 export * from "./api/delete-all.js";
+export * from "./api/chat.js";
 
 export * from "./data-layer/index.js";

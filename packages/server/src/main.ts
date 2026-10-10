@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
-import { createProvider } from "../core/inference/index.js";
+import { createProvider } from "./inference/index.js";
 import { buildApp } from "./app.js";
+import { fromRoot } from "./paths.js";
 import { noSafety } from "./chat/safety.js";
 
 const env = process.env;
@@ -12,9 +13,10 @@ if (host !== "127.0.0.1" && host !== "::1" && env.ALLOW_NON_LOOPBACK !== "1") {
   throw new Error(`Refusing to bind ${host}; the app binds 127.0.0.1 only (D18)`);
 }
 
-const promptPath = [env.SYSTEM_PROMPT_PATH, "config/prompts/system-prompt.txt", "docs/prep/system-prompt.txt"].find(
-  (p): p is string => !!p && existsSync(p),
-);
+const promptPath = [env.SYSTEM_PROMPT_PATH, "config/prompts/system-prompt.txt", "docs/prep/system-prompt.txt"]
+  .filter((p): p is string => !!p)
+  .map(fromRoot)
+  .find((p) => existsSync(p));
 if (!promptPath) throw new Error("No system prompt found; set SYSTEM_PROMPT_PATH");
 
 const app = await buildApp({
@@ -23,7 +25,7 @@ const app = await buildApp({
   safety: noSafety,
   systemPrompt: readFileSync(promptPath, "utf8").trim(),
   stats: { lastReply: null },
-  webDist: env.WEB_DIST ?? "web/dist",
+  webDist: fromRoot(env.WEB_DIST ?? "web/dist"),
 });
 
 await app.listen({ host, port });

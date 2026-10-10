@@ -1,5 +1,5 @@
 import type { ServerResponse } from "node:http";
-import type { ChatEvents } from "../core/chat/schemas.js";
+import type { ChatEvents } from "@innercove/core";
 
 export type SendEvent = <K extends keyof ChatEvents>(name: K, data: ChatEvents[K]) => void;
 

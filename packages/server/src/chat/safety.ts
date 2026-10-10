@@ -1,4 +1,4 @@
-import type { SafetyTier } from "../../core/chat/schemas.js";
+import type { SafetyTier } from "@innercove/core";
 
 export interface Assessment {
   tier: SafetyTier;
