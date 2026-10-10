@@ -2,11 +2,18 @@
  * Phase 3 acceptance (plan §5): FakeProvider tests assert on the assembled prompt.
  */
 import type { MemoryId, UserId } from "@innercove/core";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { DatabaseStore } from "../store/db.js";
 import { buildApp } from "../app.js";
 import { FakeProvider } from "../inference/index.js";
 import { InMemoryChatStore } from "./in-memory-store.js";
 import { noSafety } from "./safety.js";
+
+const cleanups: (() => Promise<void>)[] = [];
+afterEach(async () => { for (const cleanup of cleanups.splice(0)) await cleanup(); });
 
 const MAYA = "Has a younger sister, Maya. They have been arguing since the summer about their parents' divorce.";
 const LAKE = "Finds walks by the lake calming.";
@@ -20,10 +27,15 @@ function parse(body: string) {
 
 async function setup(store = new InMemoryChatStore(), locked = false) {
   const provider = new FakeProvider({ reply: ["Okay. ", "Tell me more."] });
+  const dir = mkdtempSync(path.join(tmpdir(), "innercove-phase3-"));
+  const database = new DatabaseStore(path.join(dir, "test.db"));
+  cleanups.push(async () => { await database.shutdown(); rmSync(dir, { recursive: true, force: true }); });
+  if (!locked) await database.setup("fixture-only-passphrase");
   const app = await buildApp(
-    { provider, safety: noSafety, systemPrompt: "SYSTEM", stats: { lastReply: null }, store, isLocked: () => locked },
+    { provider, safety: noSafety, systemPrompt: "SYSTEM", stats: { lastReply: null }, store, database },
     false,
   );
+  cleanups.unshift(async () => { await app.close(); });
   const chat = async (message: string, opts: { conversationId?: string | null; useMemories?: boolean; pinned?: string[] } = {}) => {
     const res = await app.inject({
       method: "POST",
@@ -204,4 +216,3 @@ describe("Phase 3: persistence and routes", () => {
     expect((await chat("hi")).res.statusCode).toBe(423);
   });
 });
-

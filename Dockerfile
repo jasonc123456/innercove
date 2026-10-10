@@ -7,7 +7,7 @@ COPY web/ ./
 RUN npm run build
 
 FROM node:22-bookworm-slim AS server
-# No prebuilt better-sqlite3-multiple-ciphers binary for Node 22 on arm64: compile it here.
+# Toolchain for native dependencies when their prebuilt binaries are unavailable.
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -27,5 +27,6 @@ COPY --from=server /app/packages packages
 COPY --from=web /app/web/dist web/dist
 COPY config config
 COPY docs/prep/system-prompt.txt docs/prep/demo-persona.json docs/prep/
+RUN mkdir -p /app/data && chown node:node /app/data
 USER node
 CMD ["node", "packages/server/dist/main.js"]

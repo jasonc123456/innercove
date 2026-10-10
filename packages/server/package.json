@@ -6,10 +6,11 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/main.ts",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-migrations.mjs",
     "start": "node dist/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "spike:sqlcipher": "npm run build && node dist/store/sqlcipher-spike.js"
+    "spike:sqlcipher": "npm run build && node dist/store/sqlcipher-spike.js",
+    "smoke:db": "npm run build && node scripts/smoke-db.mjs"
   },
   "dependencies": {
     "@innercove/core": "*",

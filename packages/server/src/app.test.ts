@@ -1,8 +1,15 @@
 import { Writable } from "node:stream";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { DatabaseStore } from "./store/db.js";
 import { FakeProvider, ModelUnavailableError, type InferenceProvider } from "./inference/index.js";
 import { buildApp } from "./app.js";
 import { noSafety } from "./chat/safety.js";
+
+const cleanups: (() => Promise<void>)[] = [];
+afterEach(async () => { for (const cleanup of cleanups.splice(0)) await cleanup(); });
 
 const CANARY = "CANARY-7f3a9c";
 
@@ -26,7 +33,11 @@ async function setup(provider: InferenceProvider = new FakeProvider({ reply: ["H
     },
   });
   const stats = { lastReply: null };
-  const app = await buildApp({ provider, safety: noSafety, systemPrompt: "SYSTEM", stats }, { level: "info", stream });
+  const dir = mkdtempSync(path.join(tmpdir(), "innercove-app-"));
+  const database = new DatabaseStore(path.join(dir, "test.db"));
+  await database.setup("test-only-passphrase");
+  const app = await buildApp({ database, provider, safety: noSafety, systemPrompt: "SYSTEM", stats }, { level: "info", stream });
+  cleanups.push(async () => { await app.close(); rmSync(dir, { recursive: true, force: true }); });
   return { app, logs, stats };
 }
 

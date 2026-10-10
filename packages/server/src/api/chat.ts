@@ -18,7 +18,6 @@ import { openSse } from "./sse.js";
 export function chatRoutes(app: FastifyInstance, deps: AppDeps) {
   /** Saved chats: history from the store with D33 applied; both sides of the turn are persisted. */
   app.post("/api/chat", async (request, reply) => {
-    if (deps.isLocked?.()) return sendError(reply, "LOCKED", "Unlock InnerCove first");
     const parsed = ChatRequestSchema.safeParse(request.body);
     if (!parsed.success) return sendError(reply, "VALIDATION_ERROR", "Invalid chat request", validationDetails(parsed.error));
     const { conversationId, message, useMemories, pinnedMemoryIds } = parsed.data;
@@ -43,7 +42,6 @@ export function chatRoutes(app: FastifyInstance, deps: AppDeps) {
 
   /** Temporary chats (D35): history comes from the browser; never writes rows or content logs. */
   app.post("/api/infer", async (request, reply) => {
-    if (deps.isLocked?.()) return sendError(reply, "LOCKED", "Unlock InnerCove first");
     const parsed = InferRequestSchema.safeParse(request.body);
     if (!parsed.success) return sendError(reply, "VALIDATION_ERROR", "Invalid infer request", validationDetails(parsed.error));
     const { history, message, useMemories, pinnedMemoryIds } = parsed.data;
