@@ -1,5 +1,10 @@
+import { AppSessionProvider } from "./session/AppSession";
 import { AppRouter } from "./router";
 
 export function App() {
-  return <AppRouter />;
+  return (
+    <AppSessionProvider>
+      <AppRouter />
+    </AppSessionProvider>
+  );
 }

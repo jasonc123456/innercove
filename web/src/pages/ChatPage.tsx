@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { streamAssistantReply } from "../chat/streamReply";
 import { MessageInput } from "../components/MessageInput";
 import { MessageList, type ChatMessage } from "../components/MessageList";
+import { useAppSession } from "../session/AppSession";
 
 export function ChatPage() {
+  const { chatMode, useMemories, setChatMode, setUseMemories } = useAppSession();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streamingId, setStreamingId] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -67,6 +69,51 @@ export function ChatPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex shrink-0 flex-col gap-3 border-b border-line px-4 py-3">
+        <div className="flex gap-2" role="group" aria-label="Save or temporary">
+          <button
+            type="button"
+            aria-pressed={chatMode === "temporary"}
+            onClick={() => setChatMode("temporary")}
+            className={
+              chatMode === "temporary"
+                ? "inline-flex h-11 flex-1 items-center justify-center rounded-2xl bg-cove px-4 text-base font-medium text-white"
+                : "inline-flex h-11 flex-1 items-center justify-center rounded-2xl border border-line px-4 text-base text-ink"
+            }
+          >
+            Temporary
+          </button>
+          <button
+            type="button"
+            aria-pressed={chatMode === "saved"}
+            onClick={() => setChatMode("saved")}
+            className={
+              chatMode === "saved"
+                ? "inline-flex h-11 flex-1 items-center justify-center rounded-2xl bg-cove px-4 text-base font-medium text-white"
+                : "inline-flex h-11 flex-1 items-center justify-center rounded-2xl border border-line px-4 text-base text-ink"
+            }
+          >
+            Save
+          </button>
+        </div>
+        <label className="flex min-h-11 items-center gap-3 text-base text-ink">
+          <input
+            type="checkbox"
+            checked={useMemories}
+            onChange={(event) => setUseMemories(event.target.checked)}
+            className="size-5"
+          />
+          Use memories
+        </label>
+        {chatMode === "saved" ? (
+          <p className="text-sm text-ink/70">
+            Not saved. The conversation is not written to a database.
+          </p>
+        ) : null}
+        {useMemories ? (
+          <p className="text-sm text-ink/70">Memories are not connected.</p>
+        ) : null}
+      </div>
       <MessageList messages={messages} streamingId={streamingId} />
       {failed ? (
         <p className="px-4 pb-2 text-sm text-ink/70" role="status">
