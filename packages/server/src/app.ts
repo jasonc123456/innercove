@@ -8,6 +8,8 @@ import type { ReplyStats } from "./chat/turn.js";
 import { sendError } from "./api/errors.js";
 import { chatRoutes } from "./api/chat.js";
 import { healthRoutes } from "./api/health.js";
+import { databaseRoutes } from "./api/lock.js";
+import type { DatabaseStore } from "./store/db.js";
 
 export interface AppDeps {
   provider: InferenceProvider;
@@ -15,13 +17,19 @@ export interface AppDeps {
   systemPrompt: string;
   /** Speed of the last reply, for the privacy panel (plan §3c, A's fields). In memory only. */
   stats: { lastReply: ReplyStats | null };
-  isLocked?: () => boolean;
+  database: DatabaseStore;
   webDist?: string;
 }
 
 export async function buildApp(deps: AppDeps, logger: FastifyServerOptions["logger"] = true) {
   // Fastify logs method, URL and status only; request and response bodies are never logged.
-  const app = Fastify({ logger, bodyLimit: 256 * 1024 });
+  const app = Fastify({ bodyLimit: 256 * 1024, logger: logger === false ? false : {
+    ...(typeof logger === "object" ? logger : {}),
+    serializers: {
+      req: (request: { method: string; url: string }) => ({ method: request.method, url: request.url.split("?")[0]! }),
+    },
+  } });
+  databaseRoutes(app, deps.database);
 
   app.setErrorHandler((error: { statusCode?: number; code?: string }, request, reply) => {
     const status = error.statusCode ?? 500;

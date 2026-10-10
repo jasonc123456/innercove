@@ -1,4 +1,7 @@
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { DatabaseStore } from "../store/db.js";
 import {
   runOutputScreenGoldenCases,
   runSafetyGoldenCases,
@@ -28,13 +31,22 @@ function events(body: string) {
 }
 
 async function chat(provider: FakeProvider, message: string) {
-  const app = await buildApp({ provider, safety, systemPrompt: "SYSTEM", stats: { lastReply: null } }, false);
-  const res = await app.inject({
-    method: "POST",
-    url: "/api/chat",
-    payload: { conversationId: null, message, useMemories: false, pinnedMemoryIds: [] },
-  });
-  return { body: res.body, events: events(res.body) };
+  const dir = mkdtempSync(path.join(tmpdir(), "innercove-safety-"));
+  const database = new DatabaseStore(path.join(dir, "test.db"));
+  let app: Awaited<ReturnType<typeof buildApp>> | undefined;
+  try {
+    await database.setup("fixture-only-passphrase");
+    app = await buildApp({ database, provider, safety, systemPrompt: "SYSTEM", stats: { lastReply: null } }, false);
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/chat",
+      payload: { conversationId: null, message, useMemories: false, pinnedMemoryIds: [] },
+    });
+    return { body: res.body, events: events(res.body) };
+  } finally {
+    await app?.close(); await database.shutdown();
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 describe("D's safety engine (golden sets)", () => {

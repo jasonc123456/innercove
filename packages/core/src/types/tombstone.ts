@@ -11,9 +11,10 @@
  * `provenance_link` was REMOVED from the entity list in this revision:
  * provenance/messageContext rows never had content to begin with (see
  * provenance.ts/message-context.ts) and have no `id` of their own to
- * tombstone -- they are simply hard-deleted alongside whichever
- * conversation/diary entry/memory they pointed at, which is already
- * what that parent's own tombstone records.
+ * tombstone. Links are removed with their owning derived item/message.
+ * Deleting a SOURCE retains its content-free references: unresolved
+ * sources count as private (D16), and history exclusion still needs
+ * those source IDs (D33). The content itself is always hard-deleted.
  */
 import { z } from "zod";
 import {
