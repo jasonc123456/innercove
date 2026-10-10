@@ -95,8 +95,8 @@ Pre-event findings (2026-10-10, Qwen3.8-27B through Open WebUI → LM Studio beh
     - The static crisis card (D03) and the rules engine (D17) must cover all of these. D28 (prompt v3) and D32 (reviewed tier-2 replies) now target S12, S04 and S07 directly; check them in Phase 0.
 
 Other checks:
-- [ ] A request without a token gets 401.
-- [ ] Port 1234 is unreachable from the LAN.
+- [x] A request without a token gets 401. **PASS 2026-10-10:** `/v1/models` → 401 without the token, 200 with it (LM Studio 0.4.26, Require Authentication on).
+- [ ] Port 1234 is unreachable from the LAN. **Partial 2026-10-10:** `ss -ltnp` shows 1234 bound to 127.0.0.1 only, and a connect to the GX10's LAN IP is refused; still to confirm from another LAN machine.
 - [ ] A host-network container reaches LM Studio.
 - [ ] The canary string is absent from the LM Studio logs.
 - [ ] SQLCipher module (`better-sqlite3-multiple-ciphers`) loads on ARM64 with FTS5 enabled.
