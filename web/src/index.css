@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --color-paper: #f3efe6;
+  --color-ink: #1c2430;
+  --color-cove: #1e4f4c;
+  --color-foam: #e4efec;
+  --color-line: #d5cfc3;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+}
