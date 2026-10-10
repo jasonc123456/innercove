@@ -1,5 +1,9 @@
-import { assessUserText } from "./index.js";
-import type { SafetyRulesConfig, SafetyTier } from "./types.js";
+import { assessUserText, screenAssistantOutput } from "./index.js";
+import type {
+  OutputScreenReason,
+  SafetyRulesConfig,
+  SafetyTier,
+} from "./types.js";
 
 export interface SafetyGoldenCase {
   id: string;
@@ -23,5 +27,44 @@ export function runSafetyGoldenCases(
     return actualTier === testCase.expectedTier
       ? []
       : [{ id: testCase.id, expectedTier: testCase.expectedTier, actualTier }];
+  });
+}
+
+export interface OutputScreenGoldenCase {
+  id: string;
+  text: string;
+  allowed: boolean;
+  reasons: OutputScreenReason[];
+}
+
+export interface OutputScreenGoldenFailure {
+  id: string;
+  expectedAllowed: boolean;
+  actualAllowed: boolean;
+  expectedReasons: OutputScreenReason[];
+  actualReasons: OutputScreenReason[];
+}
+
+/** Framework-independent output-screen checks for the server test runner. */
+export function runOutputScreenGoldenCases(
+  cases: readonly OutputScreenGoldenCase[],
+): OutputScreenGoldenFailure[] {
+  return cases.flatMap((testCase) => {
+    const result = screenAssistantOutput(testCase.text);
+    const reasonsMatch =
+      result.reasons.length === testCase.reasons.length &&
+      result.reasons.every((reason) => testCase.reasons.includes(reason));
+
+    return result.allowed === testCase.allowed && reasonsMatch
+      ? []
+      : [
+          {
+            id: testCase.id,
+            expectedAllowed: testCase.allowed,
+            actualAllowed: result.allowed,
+            expectedReasons: testCase.reasons,
+            actualReasons: result.reasons,
+          },
+        ];
   });
 }

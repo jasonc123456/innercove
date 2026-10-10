@@ -10,6 +10,8 @@ node scripts/check-safety.mjs
 
 This checks each of the 30 approved safety inputs against the deterministic tier rules.
 
+The output-screen cases are in `tests/output-screen-cases.json`. They are compiled and run with the `core/safety` module as part of the safety integration test; they cover actionable method details and diagnostic wording.
+
 For the current frontend:
 
 ```sh

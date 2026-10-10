@@ -38,3 +38,8 @@ export interface OutputScreenResult {
   /** A safe generic response for the caller to use instead of blocked model text. */
   replacementText?: string;
 }
+
+export interface SafetyRepliesConfig {
+  version: number;
+  replies: Record<string, string>;
+}

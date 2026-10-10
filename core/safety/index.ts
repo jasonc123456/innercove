@@ -2,6 +2,7 @@ import type {
   OutputScreenReason,
   OutputScreenResult,
   SafetyAssessment,
+  SafetyRepliesConfig,
   SafetyRule,
   SafetyRulesConfig,
 } from "./types.js";
@@ -13,6 +14,7 @@ export type {
   SafetyCategory,
   SafetyRule,
   SafetyRulesConfig,
+  SafetyRepliesConfig,
   SafetyTier,
 } from "./types.js";
 
@@ -33,7 +35,7 @@ const OUTPUT_SCREEN_PATTERNS: ReadonlyArray<{
   {
     reason: "diagnostic_language",
     expression:
-      /\b(?:you (?:have|are)|this (?:is|means you have))\s+(?:clinical )?(?:depression|anxiety disorder|bipolar disorder|ptsd|post-traumatic stress disorder|borderline personality disorder|schizophrenia)\b/i,
+      /\b(?:you (?:have|are)|this (?:is|means you have))\s+(?:an? )?(?:clinical )?(?:depression|anxiety disorder|bipolar disorder|ptsd|post-traumatic stress disorder|borderline personality disorder|schizophrenia)\b/i,
   },
 ];
 
@@ -92,4 +94,27 @@ export function screenAssistantOutput(text: string): OutputScreenResult {
         reasons: [...new Set(reasons)],
         replacementText: SAFE_OUTPUT_REPLACEMENT,
       };
+}
+
+/**
+ * Gets the human-reviewed reply for a tier-2 assessment. The fallback is
+ * mandatory so a new rule category can never cause model text to be released.
+ */
+export function getReviewedTier2Reply(
+  assessment: SafetyAssessment,
+  config: SafetyRepliesConfig,
+): string {
+  if (assessment.tier !== 2) {
+    throw new Error("Reviewed replies are only used for tier-2 assessments.");
+  }
+
+  const reply =
+    (assessment.category && config.replies[assessment.category]) ||
+    config.replies.fallback;
+
+  if (!reply) {
+    throw new Error("Safety replies configuration must provide a fallback reply.");
+  }
+
+  return reply;
 }

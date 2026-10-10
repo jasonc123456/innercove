@@ -754,7 +754,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 
 **Role D handoff (2026-10-10):**
 - **Done:** deterministic tiers and output screening in `core/safety/`; static US resources and reviewed tier-2 replies in `config/`.
-- **Tests:** the 30 official phrases are in `tests/safety-cases.json`; run `node scripts/check-safety.mjs` (30/30 passing).
+- **Tests:** the 30 official phrases are in `tests/safety-cases.json`; run `node scripts/check-safety.mjs` (30/30 passing). Output-screen cases live in `tests/output-screen-cases.json`.
 - **Content:** prompt v3 is in `config/prompts/system-prompt.txt`; Jordan remains the fictional seed persona in `docs/prep/demo-persona.json`.
 - **Demo:** use `docs/DEMO_SCRIPT.md`; never use real personal content.
 - **A integration:** call `assessUserText(message, rules)` before generation and `screenAssistantOutput(reply)` before display. Tier 2 must use `config/safety-replies.us.json`, with no model text released.
