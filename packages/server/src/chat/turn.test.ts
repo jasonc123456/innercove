@@ -8,7 +8,12 @@ const PLANTED = "PLANTED-METHOD-DETAIL";
 
 /** Test double shaped like D's engine: "crisis" is tier 1, "emergency" tier 2, PLANTED is blocked. */
 const safety: SafetyLayer = {
-  assess: (text) => (/emergency/.test(text) ? { tier: 2, category: "overdose" } : /crisis/.test(text) ? { tier: 1 } : { tier: 0 }),
+  assess: (text) =>
+    /emergency/.test(text)
+      ? { tier: 2, category: "overdose", matchedRuleIds: ["t"] }
+      : /crisis/.test(text)
+        ? { tier: 1, matchedRuleIds: ["t"] }
+        : { tier: 0, matchedRuleIds: [] },
   screen: (text) =>
     text.includes(PLANTED)
       ? { allowed: false, reasons: ["method_detail"], replacementText: "SAFE REPLACEMENT" }
@@ -28,7 +33,7 @@ async function turn(reply: string[], message = "hello") {
     message,
     signal: new AbortController().signal,
     send: (name, data) => events.push({ name, data }),
-    onScreenBlock: (_tier, reasons) => blocks.push(reasons),
+    onScreenBlock: (_tier, reasons) => blocks.push([...reasons]),
   });
   const wire = JSON.stringify(events);
   return { provider, events, blocks, wire, names: events.map((e) => e.name) };

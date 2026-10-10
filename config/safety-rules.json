@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "id": "immediate-self-harm",
+      "tier": 2,
+      "category": "explicit_self_harm",
+      "patterns": ["\\b(?:kill myself|end(?:ing)? my life|commit suicide|suicide tonight|going to die by suicide|i have a plan[^.?!]{0,80}(?:tonight|today)|goodbye letters?|giving away my things|better off without me|don't see the point of waking|ya no quiero vivir)\\b"]
+    },
+    {
+      "id": "method-seeking",
+      "tier": 2,
+      "category": "method_seeking",
+      "patterns": ["\\b(?:how (?:do|can) i|what(?:'s| is) the (?:best|easiest|most painless) way to|ways? to|instructions? (?:for|on)|how many)[^.?!]{0,100}\\b(?:kill myself|die|suicide|overdose|self[- ]?harm|sleeping pills?)\\b"]
+    },
+    {
+      "id": "overdose-or-ingestion",
+      "tier": 2,
+      "category": "overdose",
+      "patterns": ["\\b(?:i (?:just )?(?:took|swallowed|ingested)|i(?:'ve| have) (?:taken|swallowed))[^.?!]{0,80}\\b(?:pills|tablets|medication|medicine|drugs)\\b", "\\b(?:overdosed|overdose)\\b"]
+    },
+    {
+      "id": "harm-to-others",
+      "tier": 2,
+      "category": "harm_to_others",
+      "patterns": ["\\b(?:kill|murder|stab|shoot|hurt)\\s+(?:him|her|them|my (?:partner|boss|friend|family|roommate)|someone|people)\\b", "\\b(?:really )?hurting my roommate\\b"]
+    },
+    {
+      "id": "active-abuse",
+      "tier": 2,
+      "category": "abuse",
+      "patterns": ["\\b(?:my (?:partner|parent|spouse|boyfriend|girlfriend|stepdad) (?:is )?(?:hitting|beating|assaulting|threatening|grabs?) me|i(?:'m| am) being abused)\\b"]
+    },
+    {
+      "id": "repeated-self-harm",
+      "tier": 2,
+      "category": "self_harm_ideation",
+      "patterns": ["\\bcut myself again\\b"]
+    },
+    {
+      "id": "passive-death-wish",
+      "tier": 1,
+      "category": "passive_self_harm",
+      "patterns": ["\\b(?:don't|do not) (?:want|see the point) to wake up\\b", "\\bnot wake up for a long time\\b", "\\b(?:wish i (?:was|were) dead|want to disappear|would be better off dead|nothing is ever going to get better|tired of everything)\\b"]
+    },
+    {
+      "id": "self-harm-ideation",
+      "tier": 1,
+      "category": "self_harm_ideation",
+      "patterns": ["\\b(?:hurt(?:ing)? myself|harm(?:ing)? myself|self[- ]?harm|cut(?:ting)? myself|cut myself again|don't want to be here|can(?:not|'t) go on|punching the wall[^.?!]{0,80}bleed)\\b"],
+      "excludePatterns": ["\\b(?:not|never) (?:going to |planning to |actually )?(?:hurt myself|harm myself|self[- ]?harm|cut myself)\\b", "\\bi(?:'m| am) not suicidal[^.?!]{0,80}just so tired\\b", "\\bused to self[- ]?harm[^.?!]{0,80}(?:clean|proud)\\b"]
+    },
+    {
+      "id": "possible-abuse",
+      "tier": 1,
+      "category": "abuse",
+      "patterns": ["\\b(?:someone|my (?:partner|parent|spouse|boyfriend|girlfriend)) (?:is |might )?(?:hurting|scaring|controlling)(?: (?:and|or) (?:hurting|scaring|controlling))* me\\b", "\\bmy partner checks my phone\\b", "\\bi(?:'m| am) worried (?:that )?someone might hurt me\\b"]
+    },
+    {
+      "id": "harm-to-others-distress",
+      "tier": 1,
+      "category": "harm_to_others",
+      "patterns": ["\\bwant to make (?:him|her|them) suffer\\b"]
+    },
+    {
+      "id": "eating-concern",
+      "tier": 1,
+      "category": "eating_concern",
+      "patterns": ["\\b(?:only eaten once in three days|like feeling empty)\\b"]
+    },
+    {
+      "id": "third-party-immediate-risk",
+      "tier": 2,
+      "category": "third_party_concern",
+      "patterns": ["\\b(?:goodbye message)[^.?!]{0,100}(?:isn't answering|not answering)\\b"]
+    }
+  ]
+}

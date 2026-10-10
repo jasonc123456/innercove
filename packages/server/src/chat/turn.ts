@@ -21,7 +21,7 @@ export interface TurnInput {
   send: SendEvent;
   conversationId?: string | null;
   /** Called with the screen's reasons only, never the text (plan §3 step 5). */
-  onScreenBlock?: (tier: number, reasons: string[]) => void;
+  onScreenBlock?: (tier: number, reasons: readonly string[]) => void;
 }
 
 export const REVIEWED_REPLY_MODEL_ID = "reviewed-reply";

@@ -3,6 +3,7 @@
  * `POST /api/infer` for temporary chats (D35), plus the SSE events both send.
  */
 import { z } from "zod";
+import type { SafetyTier } from "../safety/types.js";
 import { ConversationIdSchema, MemoryIdSchema } from "../types/ids.js";
 
 /** `POST /api/chat`. A `null` conversationId creates a saved conversation. */
@@ -34,8 +35,6 @@ export const InferRequestSchema = z
   })
   .strict();
 export type InferRequest = z.infer<typeof InferRequestSchema>;
-
-export type SafetyTier = 0 | 1 | 2;
 
 export interface ChatContextSource {
   type: "diary_entry" | "memory";

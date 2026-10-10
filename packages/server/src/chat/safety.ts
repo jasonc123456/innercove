@@ -1,33 +1,22 @@
-import type { SafetyTier } from "@innercove/core";
-
-export interface Assessment {
-  tier: SafetyTier;
-  category?: string;
-}
-
-export interface ScreenResult {
-  allowed: boolean;
-  reasons: string[];
-  replacementText?: string;
-}
+import type { OutputScreenResult, SafetyAssessment } from "@innercove/core";
 
 /**
- * The seam between the chat pipeline (A) and the safety engine (D, `core/safety`).
- * Shapes match D's `assessUserText`, `screenAssistantOutput` and `getReviewedTier2Reply`.
+ * The seam between the chat pipeline (A) and the safety engine (D, `@innercove/core` safety).
+ * `rules-safety.ts` implements it with D's engine; tests use doubles.
  */
 export interface SafetyLayer {
-  assess(userText: string): Assessment;
-  screen(assistantText: string): ScreenResult;
+  assess(userText: string): SafetyAssessment;
+  screen(assistantText: string): OutputScreenResult;
   /** Reviewed static reply for a tier-2 assessment (D32); never model output. */
-  tier2Reply(assessment: Assessment): string;
+  tier2Reply(assessment: SafetyAssessment): string;
 }
 
 export const SAFE_FALLBACK =
   "I want to respond safely. If you may be in immediate danger, please call 911 now. You can also call, text, or chat 988 in the US for immediate crisis support.";
 
-/** Placeholder until D's engine is merged: every message is tier 0 and nothing is screened. Dev only. */
+/** Test-only double: every message is tier 0 and nothing is screened. Never use in the server. */
 export const noSafety: SafetyLayer = {
-  assess: () => ({ tier: 0 }),
+  assess: () => ({ tier: 0, matchedRuleIds: [] }),
   screen: () => ({ allowed: true, reasons: [] }),
   tier2Reply: () => SAFE_FALLBACK,
 };

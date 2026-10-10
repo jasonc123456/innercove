@@ -14,11 +14,11 @@ Local-first wellness companion for the GX10 hackathon. Read `docs/TEAM_PLAN.md` 
 |---|---|---|
 | `packages/core/src/` | Pure shared code (`@innercove/core`): Zod contracts and data-layer ports | B |
 | `packages/core/src/api/chat.ts` | `/api/chat` + `/api/infer` request schemas and SSE event types | A |
-| `packages/core/src/safety/` | Safety tiers, output screen, reviewed tier-2 replies (pending D's rebase) | D |
+| `packages/core/src/safety/` | Safety tiers, output screen, reviewed tier-2 replies, golden helpers | D |
 | `packages/server/src/{app,main}.ts`, `api/chat.ts`, `api/health.ts` | Fastify app, chat and health routes | A |
-| `packages/server/src/chat/`, `inference/` | Turn pipeline (D32 screening; retrieval/prompt in Phase 3), LM Studio + Fake providers | A |
+| `packages/server/src/chat/`, `inference/` | Turn pipeline (D32 screening via `rules-safety.ts`; retrieval/prompt in Phase 3), LM Studio + Fake providers | A |
 | `packages/server/src/store/`, data routes in `api/` | SQLCipher DB, schema, migrations, repos | B |
-| `config/` | Safety rules, crisis resources, tier-2 replies, prompts (JSON/text) | D |
+| `config/`, `tests/*.json` | Safety rules, crisis resources, tier-2 replies, prompts; golden test cases | D |
 | `web/` | React SPA; `App.tsx` and the router are C's | C |
 | `scripts/`, `docs/` | Phase 0 eval scripts; plan, decisions, team split, GX10 setup log | A / everyone |
 
