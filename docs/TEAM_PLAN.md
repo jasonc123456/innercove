@@ -81,6 +81,7 @@ If people sleep, stagger A/B and C so someone is always on the critical path.
 
 ## Working rules
 - **Merge to `main` every 2–3 hours.** `main` must always pass `docker compose up`.
+- **Document each functional change in the same branch.** Update the relevant README, test guide, demo runbook, decision, or Phase log before opening its pull request; the commit message names the feature and owner.
 - **Single owners for files people often edit at the same time:**
   - `core/types`: B.
   - The schema and migrations: B.
