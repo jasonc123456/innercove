@@ -52,12 +52,13 @@ The details behind each decision are in `PROJECT_PLAN.md`. Add one line per new 
 | D42 | **API contracts per plan §3c.** B's first Zod draft is revised to match: permission filtering in B's read port, `messageContext` added, `isTemporary` removed, the memory flags simplified, no read exemptions while locked | CONFIRMED | Review of B's draft; plan §3c | 2026-10-10 |
 | D43 | **Quantization: Qwen3.8-27B Q6_K** (replaces D12's "Phase 0 picks"; Q4_K_M is not tested or downloaded). Phase 0 still records Q6_K speed, thinking-off and the 40 tests with prompt v3; switching to Q4_K_M later needs a team decision | CONFIRMED | Team choice; the pre-event quality scores were measured at Q6_K | 2026-10-10 |
 | D44 | **Repo layout: two npm workspaces.** `packages/core` holds pure shared code (B's Zod contracts, A's chat contract in `src/api/chat.ts`, D's safety engine in `src/safety`); `packages/server/src` holds the Fastify app (`api/`, `chat/` pipeline, `inference/`, B's `store/`). `config/` (D), `web/` (C), `scripts/` and `docs/` stay at the root. The plan's `core/<x>` and `store/<x>` paths map onto these | CONFIRMED | Three parallel layouts appeared (root `core/` + `server/`, `packages/*`); one server and one core avoids duplicate builds; mobile can reuse `packages/core` | 2026-10-10 |
+| D45 | **Model load on the GX10:** `qwen/qwen3.8-27b` (LM Studio's default identifier, so GUI and CLI loads match `LOCAL_AI_MODEL`), Q6_K, **context 262K** (overrides the 16–32K cap; the app's prompts stay small, D27 and 20-exchange history), all layers on GPU, LM Studio's default flash attention and F16 KV cache, no TTL. The vision projector loads with it (~0.9 GB, unused) | CONFIRMED | Team choice: 128 GB is plenty (LM Studio estimates ~63 GiB at 262K vs ~22 GiB at 32K); prefill time depends on prompt length, not the cap | 2026-10-10 |
 
 ## Phase 0 results (fill in on the GX10)
 | Model | Quant | TTFT 1K | TTFT 8K | tok/s | Thinking off honored | JSON schema OK | Companion % | Safety % (critical fails) |
 |---|---|---|---|---|---|---|---|---|
 | Qwen3.8-27B | Q4_K_M | not run (D43) | | | | | | |
-| Qwen3.8-27B | Q6_K | | | | | | — | — |
+| Qwen3.8-27B on the GX10 (LM Studio 0.4.26, llama.cpp CUDA 13 runtime 2.55.0, 262K context, D45) | Q6_K, KV cache F16 | 1.7 s | 10.4 s | 20–31 | Only via `reasoning_effort: "none"` (`chat_template_kwargs` still returns `reasoning_content`) | yes | | |
 | Qwen3.6-35B-A3B | Q4_K_M | only if Q6_K fails (D12) | | | | | | |
 | Qwen3.5-9B | Q4_K_M | dropped (plan §8) | | | | | | |
 | Pre-event, prompt v1: Qwen3.8-27B on the team's own server (Open WebUI, **AMD Radeon AI PRO R9700**; speed not representative of the GX10) | Q6_K, KV cache Q4_0 | ~0.4 s (short prompts) | — | 22–30 | Only via `reasoning_effort: "none"` | not tested | 82.4% | 93.3% (0) |
@@ -98,7 +99,7 @@ Pre-event findings (2026-10-10, Qwen3.8-27B through Open WebUI → LM Studio beh
 Other checks:
 - [x] A request without a token gets 401. **PASS 2026-10-10:** `/v1/models` → 401 without the token, 200 with it (LM Studio 0.4.26, Require Authentication on).
 - [ ] Port 1234 is unreachable from the LAN. **Partial 2026-10-10:** `ss -ltnp` shows 1234 bound to 127.0.0.1 only, and a connect to the GX10's LAN IP is refused; still to confirm from another LAN machine.
-- [ ] A host-network container reaches LM Studio.
-- [ ] The canary string is absent from the LM Studio logs.
+- [x] A host-network container reaches LM Studio. **PASS 2026-10-10:** `docker run --network host innercove-app` → `/v1/models` 200 with the token, 401 without.
+- [x] The canary string is absent from the LM Studio logs. **PASS 2026-10-10:** `scripts/smoke-inference.py` sent a random canary; not found under `~/.lmstudio` (models excluded) or `~/.cache/lm-studio`. Settings: Redact Content on, verbose and file logging off.
 - [x] SQLCipher module (`better-sqlite3-multiple-ciphers`) loads on ARM64 with FTS5 enabled. **PASS 2026-10-10:** B's spike 18/18 on the GX10 (aarch64, host Node 24.15); also 18/18 inside the Node 22 app container (compiled from source; no prebuilt arm64 binary for Node 22).
 - [ ] Run the 40 `prep/` tests with prompt v3 (D28) on the GX10, at Q6_K (D43), with an F16 or Q8_0 KV cache, and compare against the pre-event Q6_K scores.

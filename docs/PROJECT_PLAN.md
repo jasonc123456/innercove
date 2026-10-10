@@ -201,7 +201,7 @@ The team accepted every recommendation below **except #15: the diary is encrypte
 **Model guidance**
 - **Chat:** Qwen3.8-27B at **Q6_K** (D43; estimated ~9–10 tok/s on the GX10). Q4_K_M only if the team switches back.
 - **Sampling:** the model card's non-thinking settings: temperature 0.7, top_p 0.8, top_k 20, presence_penalty 1.5.
-- **Context:** cap at 16–32K, since prefill time matters more than the native length. Don't load the vision projector.
+- **Context:** ~~cap at 16–32K~~ loaded at 262K by team choice (D45); the app keeps prompts small, since prefill time depends on prompt length. The vision projector loads too (unused).
 - **KV cache:** F16 or Q8_0 on the GX10. The pre-event tests used Q4_0, which can hurt long-context recall.
 - **Memory headroom:** 128 GB fits the chat model, an embedding model, Whisper and Piper together.
 - **Mobile candidate:** Qwen3.5-0.8B. ✅ GGUF and `.litertlm` builds exist, at roughly 0.5 GB for 4-bit (a third-party figure). I found no Qwen3.8 small models.

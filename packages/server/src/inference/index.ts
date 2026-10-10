@@ -23,6 +23,6 @@ export function createProvider(env: InferenceEnv): InferenceProvider {
   return new LMStudioProvider({
     baseUrl: env.LOCAL_AI_BASE_URL ?? "http://127.0.0.1:1234/v1",
     apiKey: env.LOCAL_AI_API_KEY,
-    modelId: env.LOCAL_AI_MODEL ?? "qwen3.8-27b",
+    modelId: env.LOCAL_AI_MODEL ?? "qwen/qwen3.8-27b",
   });
 }
