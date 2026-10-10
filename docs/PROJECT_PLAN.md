@@ -6,8 +6,8 @@ Legend: ✅ verified (sources at end) · ⚠️ assumption/unverified · 🧪 me
 ## Context
 InnerCove is a privacy-first local AI wellness companion. It combines chat, a diary, permission-controlled memory and an app-level safety layer, and it runs on an ASUS GX10 for a 24-hour hackathon. The product is built around a **hub**: one computer (a home PC, a GX10, or later an organization's server) holds the diary and runs the main model. Browsers, and later an Android companion app, connect to it (§3a). This document sets the architecture, the MVP scope and the phased plan before any code is written.
 
-**Status:** the event has started and code is in progress in the repo ([github.com/jasonc123456/innercove](https://github.com/jasonc123456/innercove); these docs live in its `docs/` folder, D40). **Every decision is confirmed, including the chat model: Qwen3.8-27B (D12).** Phase 0 only picks its quantization and confirms it runs (see `DECISIONS.md`, D01–D42). An external review (2026-10-10) added D31–D34 and tightened the safety, revocation and deletion tests. Pre-event tests of Qwen3.8-27B on the team's own server are recorded in `DECISIONS.md` (prompt v2: companion 89.8%, safety 96.1%, no critical fails). Under D08, all code is written after the official start. Phase 0 starts only when the team explicitly says go.
-**Last updated 2026-10-10:** added the hub-and-companion model, desktop packaging, model strategy, remote access, connecting your own model server, SQLCipher encryption from day one, crisis comfort and support notes (D29, D30), the pre-event model tests, the eval runner spec (§5 Phase 0), the "Start here" section, the API contracts (§3c), the demo persona and the pitch plan (§10).
+**Status:** the event has started and code is in progress in the repo ([github.com/jasonc123456/innercove](https://github.com/jasonc123456/innercove); these docs live in its `docs/` folder, D40). **Every decision is confirmed, including the chat model: Qwen3.8-27B (D12).** The quantization is Q6_K (D43); Phase 0 confirms it runs (see `DECISIONS.md`, D01–D44). An external review (2026-10-10) added D31–D34 and tightened the safety, revocation and deletion tests. Pre-event tests of Qwen3.8-27B on the team's own server are recorded in `DECISIONS.md` (prompt v2: companion 89.8%, safety 96.1%, no critical fails). Under D08, all code is written after the official start. Phase 0 starts only when the team explicitly says go.
+**Last updated 2026-10-10 (evening):** Q6_K chosen (D43); repo layout settled as two workspaces (D44); GX10 set up (`SETUP_LOG.md`); Phase 1 server, D32 screening and D's safety engine merged (see the Phase log). Earlier the same day: added the hub-and-companion model, desktop packaging, model strategy, remote access, connecting your own model server, SQLCipher encryption from day one, crisis comfort and support notes (D29, D30), the pre-event model tests, the eval runner spec (§5 Phase 0), the "Start here" section, the API contracts (§3c), the demo persona and the pitch plan (§10).
 
 Environment note: the planning workstation is x86_64. Phase 0 must run on the GX10.
 
@@ -20,7 +20,7 @@ Environment note: the planning workstation is x86_64. Phase 0 must run on the GX
 
 ## Start here (event day)
 For anyone, human or a Claude Code/Codex session, picking this up on the GX10.
-1. **Read in this order:** this section, `TEAM_PLAN.md` (who does what), `DECISIONS.md` (D01–D34 and the pre-event results), §3b, §5 Phase 0, §8.
+1. **Read in this order:** this section, `TEAM_PLAN.md` (who does what), `DECISIONS.md` (D01–D44 and the pre-event results), §3b, §5 Phase 0, §8.
 2. **What's in `docs/`** (paths below are relative to it):
    - `PROJECT_PLAN.md`, `DECISIONS.md` and `TEAM_PLAN.md`.
    - `prep/system-prompt.txt`: system prompt v3 (D29 comfort and de-escalation plus the D28 fixes; not yet tested). `prep/system-prompt-v2.txt` is the version the pre-event results used.
@@ -107,7 +107,7 @@ The team accepted every recommendation below **except #15: the diary is encrypte
 | 13 | Mobile framework | Capacitor companion app (reuses the web UI), with a llama.cpp or LiteRT plugin for offline mode, after a spike | React Native + `llama.rn` (UI is rewritten) | UI reuse vs. on-device LLM maturity | No (after the hackathon) |
 | 14 | Remote access away from home | v1: home Wi-Fi only. v2: an end-to-end encrypted relay by default, with **port forwarding as an opt-in advanced option**. Both use the same pinned TLS and per-device keys (§3a) | Port forwarding as the default | Works for everyone (behind CGNAT, no router setup) vs. no relay for us to run | No (roadmap) |
 | 15 | Encryption at rest | **Chosen: SQLCipher from day one** (§3, "Encryption at rest") | Disk encryption only during the hackathon | Stronger privacy story vs. ~1–1.5 h on the critical path | Yes, Phase 2 |
-| 16 | Final chat model | **Decided: Qwen3.8-27B (D12)**; Phase 0 picks the quantization | Qwen3.6-35B-A3B | Quality vs. speed | Yes, at the end of Phase 0 |
+| 16 | Final chat model | **Decided: Qwen3.8-27B (D12) at Q6_K (D43)** | Qwen3.6-35B-A3B | Quality vs. speed | Yes, at the end of Phase 0 |
 | 17 | Desktop app shell | **Electron**: one window plus a tray icon, bundling the server and llama.cpp | Tauri (smaller, but the TS server needs a Node sidecar) | Simplicity vs. installer size (irrelevant next to multi-GB models) | No (roadmap) |
 
 ---
@@ -199,7 +199,7 @@ The team accepted every recommendation below **except #15: the diary is encrypte
 - **Development:** run the app natively against `FakeProvider`, or against the GX10 through `ssh -L 1234:127.0.0.1:1234 gx10`.
 
 **Model guidance**
-- **Chat:** Qwen3.8-27B. Start at Q4_K_M and move to Q6_K if it still reaches ~10 tok/s or more.
+- **Chat:** Qwen3.8-27B at **Q6_K** (D43; estimated ~9–10 tok/s on the GX10). Q4_K_M only if the team switches back.
 - **Sampling:** the model card's non-thinking settings: temperature 0.7, top_p 0.8, top_k 20, presence_penalty 1.5.
 - **Context:** cap at 16–32K, since prefill time matters more than the native length. Don't load the vision projector.
 - **KV cache:** F16 or Q8_0 on the GX10. The pre-event tests used Q4_0, which can hurt long-context recall.
@@ -360,13 +360,13 @@ No model size makes this a validated mental health tool. The app-level safety la
 | Offline and phone-only scripted mode | 0.8–4B (e.g. Qwen3.5-0.8B; GGUF and `.litertlm` builds exist) | Phone (roadmap) |
 | Laptop-tier hub | 4–9B | The user's laptop (roadmap) |
 
-**Phase 0 model check (time-boxed, ~30 min).** The model is decided: **Qwen3.8-27B (D12)**. This check confirms it runs and picks the quantization.
+**Phase 0 model check (time-boxed, ~30 min).** The model is decided: **Qwen3.8-27B (D12)**. This check confirms Q6_K (D43) runs and measures it.
 - **Run order** (⚠️ superseded by D43: the team chose **Q6_K**, so run the 40 tests on Q6_K only; Q4_K_M isn't downloaded):
   1. Run the full 40 tests on **Qwen3.8-27B Q4_K_M**, the default. At ~11 tok/s and the ~130-token average reply measured pre-event, that's about 8–10 minutes.
   2. **If Q4_K_M reaches ≳ 10 tok/s,** also try Q6_K and keep it if it stays ≳ 8 tok/s with time to first visible word ≲ 2 s. Otherwise keep Q4_K_M.
   3. **Only if the 27B fails to load or is unusably slow** (≲ 5 tok/s), the team decides whether to switch to the fallback Qwen3.6-35B-A3B; run its smoke test (5 companion and 10 safety cases) first.
   4. No other models are compared.
-- **Models:** Qwen3.8-27B at Q4_K_M and Q6_K; Qwen3.6-35B-A3B only as the fallback (⚠️ confirm the exact repo ID).
+- **Models:** Qwen3.8-27B Q6_K (D43). Qwen3.6-35B-A3B only as the fallback; not downloaded (⚠️ confirm the exact repo ID if it's ever needed).
 - **Method:** the same 10 scripted messages, the same system prompt and a short fake memory block for every model.
 - **Files:** `prep/system-prompt.txt`, `prep/companion-tests.json` (messages, context block, criteria), `prep/companion-scoring.csv`. Safety phrases are in `prep/safety-tests.json` with `prep/safety-scoring.csv`.
 - **Score each reply 0–2 on the criteria that apply to it.** Not every criterion applies to every message, so compare models by the percentage of available points:
@@ -494,9 +494,9 @@ Estimates are uncertain. P0 is about **18–25 engineer-hours, or 8–10 wall-cl
 
 > **Paths (D44):** in the file lists below, `core/<x>` means `packages/core/src/<x>` for pure shared logic (types, safety) or `packages/server/src/<x>` for server code (inference, retrieval, prompt); `store/<x>` means `packages/server/src/store/<x>`; `api/` routes live in `packages/server/src/api/`. `config/` stays at the repo root.
 
-**Phase 0 — Inference verification on the GX10.** Owner A (D reviews the scores) · **time-boxed to ~1.5 h** · Prerequisites: GX10 access, and the three candidate models on the USB SSD.
+**Phase 0 — Inference verification on the GX10.** Owner A (D reviews the scores) · **time-boxed to ~1.5 h** · Prerequisites: GX10 access and the model (downloaded through LM Studio on site; no SSD was used).
 - **Objective:** prove the runtime contract the app depends on.
-- **Files:** `scripts/smoke-inference.*`; results go in `DECISIONS.md`.
+- **Files:** `scripts/smoke-inference.py` (checks 1–5, 7), `scripts/run_eval.py` (the 40 tests); results go in `DECISIONS.md`.
 - **Acceptance:**
   1. Time to first visible word (after reasoning stripping) and tok/s recorded for 1K- and 8K-token prompts at Q6_K (D43).
   2. Thinking is off. Send `reasoning_effort: "none"` first, since it was the only switch that worked pre-event through Open WebUI → LM Studio. Also check whether `chat_template_kwargs.enable_thinking=false` works against LM Studio directly. There's no reasoning in `content`, and we know whether `reasoning_content` or `reasoning` comes back separately.
@@ -506,7 +506,7 @@ Estimates are uncertain. P0 is about **18–25 engineer-hours, or 8–10 wall-cl
   6. A container using host networking can reach it.
   7. A canary string sent in a prompt doesn't appear in the LM Studio log directories.
   8. The 40 tests are scored on Qwen3.8-27B Q6_K (D43 fixed the quantization).
-- **Eval runner spec.** Recreate it at the event; it's ~120 lines of stdlib Python, kept out of the repo before the event per D08.
+- **Eval runner spec.** Recreate it at the event; it's ~120 lines of stdlib Python. ✅ Recreated at the event as `scripts/run_eval.py`.
   - **Usage:** `run_eval.py PREP_DIR OUT_DIR [all|companion|safety] [LIMIT]`, configured by the env vars `LOCAL_AI_BASE_URL`, `LOCAL_AI_API_KEY` and `LOCAL_AI_MODEL`. Never write the key to a file.
   - **Request:** a streaming POST to `{BASE}/chat/completions` with `temperature` 0.7, `top_p` 0.8, `presence_penalty` 1.5, `max_tokens` 2048, `top_k` 20 and `reasoning_effort: "none"`. If the server returns HTTP 400, 422 or 500, retry without `top_k` and `reasoning_effort`, and record that it did.
   - **Headers:** `Authorization: Bearer`, plus an explicit `User-Agent` such as `InnerCove-eval/0.1`. Cloudflare blocks Python's default one with error 1010.
@@ -597,7 +597,7 @@ Estimates are uncertain. P0 is about **18–25 engineer-hours, or 8–10 wall-cl
 
 **Dependencies:** B and C agree the zod schemas in `packages/core` during the first hour, and C builds against mocks or `FakeProvider`. D's safety and retrieval code is pure functions, so it can be tested without the server.
 
-**Merge-conflict hotspots and their single owners:** `packages/core` contracts (B), schema and migrations (B only), the chat pipeline (D, while A owns the provider), and `App.tsx`/the router (C).
+**Merge-conflict hotspots and their single owners:** `packages/core` contracts (B), schema and migrations (B only), the chat pipeline (A; see `TEAM_PLAN.md`), and `App.tsx`/the router (C).
 
 **Git workflow:**
 - One monorepo, trunk-based, with short branches named `p<N>-<topic>`.
@@ -634,7 +634,7 @@ Every default below was accepted (Q5 was resolved earlier). The answers are reco
 ## 8. Recommended first phase: Phase 0
 - **Why first:** every downstream choice depends on unverified runtime facts: whether the runtime supports `qwen35`, tok/s on the GB10, whether the thinking toggle is honored, structured output, auth, and logging behavior. It's time-boxed to ~1.5 hours and it's the only phase that needs the GX10 exclusively.
 - **What it covers:** the 8 checks in Phase 0, including the ~30-minute model check (§3b run order). Phase 1 starts in parallel against `FakeProvider` as soon as Q1 is answered.
-- **Done when:** all 8 checks are recorded in `DECISIONS.md`, the quantization of Qwen3.8-27B is chosen, and the fallback model is confirmed to load.
+- **Done when:** all 8 checks are recorded in `DECISIONS.md` and Q6_K (D43) is measured and tested. The fallback model is only loaded if Q6_K fails.
 - **What waits:** everything that touches the DB, UI polish, and all P1 work.
 
 **Before the event (no code, per D08; confirm with the organizers that non-code prep is allowed):**
@@ -657,11 +657,11 @@ Every default below was accepted (Q5 was resolved earlier). The answers are reco
 ## 9. Risks and concerns
 - **Technical**
   - The `qwen35` architecture might not work on LM Studio ARM64. Mitigation: update the runtime first, with Nemotron as a preloaded fallback.
-  - The dense 27B model might be too slow. Mitigation: Q4, a context cap, or the MoE fallback.
+  - The dense 27B model might be too slow at Q6_K. Mitigation: a context cap, Q4_K_M (needs a team decision, D43), or the MoE fallback.
   - The thinking toggle might not be honored through the API. Mitigation: the adapter strips reasoning regardless.
-  - Downloading 17–29 GB over venue Wi-Fi. Mitigation: bring the model on an SSD.
+  - Downloading 17–29 GB over venue Wi-Fi. Mitigation was an SSD; in practice Q6_K (~22 GB) is downloading through LM Studio on site at a few MB/s.
   - Contention for the single GX10. Mitigation: `FakeProvider`.
-  - SQLCipher's native module might not build on ARM64. Mitigation: verify it in Phase 1; if it fails, use the `DB_ENCRYPTION=off` emergency switch (decide by about hour 6).
+  - ✅ Resolved: SQLCipher's native module builds and passes B's 18 checks on the GX10, on the host and in the Node 22 container (compiled from source). `DB_ENCRYPTION=off` stays as the emergency switch.
 - **Security**
   - Docker port publishing can bypass ufw.
   - LM Studio's "Serve on Local Network" toggle exposes the API.
@@ -766,6 +766,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - Full database initialization, migrations, lock/unlock, repositories, B's data APIs, and runtime permission enforcement are not implemented yet; schema validation is not authorization.
 - Phase 2 remains incomplete; the GX10 `DB_ENCRYPTION` decision remains pending under D26, with confirmed decisions unchanged.
 - **Next:** run the spike on the GX10 and proceed with B's database implementation.
+- **Update (A, later on 2026-10-10):** the spike passes 18/18 on the GX10, on the host (Node 24) and inside the Node 22 app container.
 
 **A (Jason), GX10 setup, Phase 0, Phase 1 server and D32 (2026-10-10, in progress):**
 - **Done:**
@@ -776,7 +777,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
   - Screen-before-display (D32) behind a `SafetyLayer` seam (`packages/server/src/chat/safety.ts`, `turn.ts`): tier 0 releases screened sentences, tier 1 is buffered then screened, tier 2 sends the reviewed reply with no model call. Tested with a planted method detail split across chunks.
 - **How to run:** `npm install`, `INFERENCE_PROVIDER=fake npm run dev`, or `sudo docker compose up -d --build` with a `.env` from `.env.example`. `npm test` runs 56 tests. The container is running on the GX10 with the fake provider and D's safety engine.
 - **Known issues / not done yet:**
-  - Model: Q6_K (D43) still downloading; Phase 0 checks 1–3, 6, 7 and the 40 tests wait for it. LM Studio "Log sensitive data" is still ON (fails check 7) and the JIT auto-unload TTL (60 min) is still on; both are GUI toggles.
+  - Model: Q6_K (D43) still downloading (17 of ~22 GB at the last check); Phase 0 checks 1–3, 6, 7, the 40 tests and Phase 1's "responses stream from Qwen in the UI" wait for it. LM Studio "Log sensitive data" is still ON (fails check 7) and the JIT auto-unload TTL (60 min) is still on; both are GUI toggles. Check 5 still needs the laptop test.
   - **D's engine is wired in** (merged `codex/reapply-safety`, moved to `packages/core/src/safety` per D44). `packages/server/src/chat/rules-safety.ts` loads `config/safety-rules.json` and `config/safety-replies.us.json` and refuses to start without them. `rules-safety.test.ts` runs D's 30 tier cases and the output-screen cases through `/api/chat`; all pass (56 tests total). The container now uses prompt v3 from `config/prompts/system-prompt.txt`.
   - `/api/chat` has no persistence until B's store lands (only `conversationId: null`).
   - **Layout settled (D44):** A's code moved into the workspaces: chat contracts → `packages/core/src/api/chat.ts`; Fastify app, inference and chat pipeline → `packages/server/src/`. Root `core/` and `server/` are gone. **D:** when rebasing `codex/safety-content`, move `core/safety` → `packages/core/src/safety` (export it from `packages/core/src/index.ts`); `config/` stays at the root.

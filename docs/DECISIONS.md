@@ -19,7 +19,7 @@ The details behind each decision are in `PROJECT_PLAN.md`. Add one line per new 
 | D09 | Temporary mode: Save off; "Use memories" off by default, toggleable per chat; history kept in browser memory only | CONFIRMED | Plan §2 #2–3 | 2026-10-10 |
 | D10 | Demo access: P0 on the GX10's screen or a laptop over an SSH tunnel; P1 adds QR pairing for a phone on our own travel router (HTTPS details in D31) | CONFIRMED | Plan §2 #12 | 2026-10-10 |
 | D11 | Demo audience: US university students 18+; 988, Crisis Text Line, campus counseling; fictional persona | CONFIRMED | Plan §7 | 2026-10-10 |
-| D12 | **Chat model: Qwen3.8-27B.** Phase 0 picks the quantization (Q4_K_M by default, Q6_K if it stays fast enough). Qwen3.6-35B-A3B is the fallback only if the 27B fails to load or is unusably slow, and switching needs a team decision | CONFIRMED | Team choice; pre-event tests: 0 critical fails, safety 96.1%; plan §3b | 2026-10-10 |
+| D12 | **Chat model: Qwen3.8-27B.** Phase 0 picks the quantization (Q4_K_M by default, Q6_K if it stays fast enough). Qwen3.6-35B-A3B is the fallback only if the 27B fails to load or is unusably slow, and switching needs a team decision | CONFIRMED (quantization superseded by D43) | Team choice; pre-event tests: 0 critical fails, safety 96.1%; plan §3b | 2026-10-10 |
 | D13 | Reasoning off for chat (send `reasoning_effort: "none"`; see findings below); the adapter always strips `<think>`, `reasoning_content` and `reasoning` | CONFIRMED | Plan §2 #9 | 2026-10-10 |
 | D14 | SQLite (WAL, FTS5, secure_delete), encrypted per D26; inject the approved memories relevant to the message (changed by D27), plus FTS top-k from diary entries the AI may use | CONFIRMED | Plan §2–3 | 2026-10-10 |
 | D15 | Schema: separate chat and diary tables; UUIDv7 IDs; `user_id` on every row; content-free tombstones; provenance links; `devices` table | CONFIRMED | Cheap now, expensive later; plan §3 | 2026-10-10 |
@@ -58,14 +58,14 @@ The details behind each decision are in `PROJECT_PLAN.md`. Add one line per new 
 |---|---|---|---|---|---|---|---|---|
 | Qwen3.8-27B | Q4_K_M | not run (D43) | | | | | | |
 | Qwen3.8-27B | Q6_K | | | | | | — | — |
-| Qwen3.6-35B-A3B | Q4_K_M | | | | | | | |
-| Qwen3.5-9B | Q4_K_M | | | | | | | |
+| Qwen3.6-35B-A3B | Q4_K_M | only if Q6_K fails (D12) | | | | | | |
+| Qwen3.5-9B | Q4_K_M | dropped (plan §8) | | | | | | |
 | Pre-event, prompt v1: Qwen3.8-27B on the team's own server (Open WebUI, **AMD Radeon AI PRO R9700**; speed not representative of the GX10) | Q6_K, KV cache Q4_0 | ~0.4 s (short prompts) | — | 22–30 | Only via `reasoning_effort: "none"` | not tested | 82.4% | 93.3% (0) |
 | Pre-event, prompt v2 (D29 comfort and de-escalation added), same setup | Q6_K, KV cache Q4_0 | ~0.4 s | — | 22–30 | Same | not tested | 89.8% | 96.1% (0) |
 
 **Notes on the pre-event rows:**
 - **GX10 speed estimate**, from the ~273 vs ~640 GB/s bandwidth ratio: Q6_K about 9–10 tok/s, Q4_K_M about 11–13 tok/s.
-- **Quality was measured at Q6_K.** Re-run the same 40 tests at Q4_K_M in Phase 0 before choosing it.
+- **Quality was measured at Q6_K,** which the team kept (D43); Q4_K_M isn't tested.
 - **On the GX10, use an F16 or Q8_0 KV cache.** Memory isn't scarce there, and quantizing the cache can hurt long-context recall, which matters for handoff summaries over many entries. Also cap context at 16–32K.
 - **Each test ran once at temperature 0.7**, so differences of 1–2 points per case can be noise.
 
@@ -101,4 +101,4 @@ Other checks:
 - [ ] A host-network container reaches LM Studio.
 - [ ] The canary string is absent from the LM Studio logs.
 - [x] SQLCipher module (`better-sqlite3-multiple-ciphers`) loads on ARM64 with FTS5 enabled. **PASS 2026-10-10:** B's spike 18/18 on the GX10 (aarch64, host Node 24.15); also 18/18 inside the Node 22 app container (compiled from source; no prebuilt arm64 binary for Node 22).
-- [ ] Run the 40 `prep/` tests with prompt v3 (D28) on the GX10, following plan §3b's run order. Re-run them at the chosen quantization (Q4_K_M and/or Q6_K), with an F16 or Q8_0 KV cache, and compare against the pre-event Q6_K scores.
+- [ ] Run the 40 `prep/` tests with prompt v3 (D28) on the GX10, at Q6_K (D43), with an F16 or Q8_0 KV cache, and compare against the pre-event Q6_K scores.
