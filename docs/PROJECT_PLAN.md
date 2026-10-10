@@ -6,7 +6,7 @@ Legend: ✅ verified (sources at end) · ⚠️ assumption/unverified · 🧪 me
 ## Context
 InnerCove is a privacy-first local AI wellness companion. It combines chat, a diary, permission-controlled memory and an app-level safety layer, and it runs on an ASUS GX10 for a 24-hour hackathon. The product is built around a **hub**: one computer (a home PC, a GX10, or later an organization's server) holds the diary and runs the main model. Browsers, and later an Android companion app, connect to it (§3a). This document sets the architecture, the MVP scope and the phased plan before any code is written.
 
-**Status:** the event has started and code is in progress in the repo ([github.com/jasonc123456/innercove](https://github.com/jasonc123456/innercove); these docs live in its `docs/` folder, D40). **Every decision is confirmed, including the chat model: Qwen3.8-27B (D12).** The quantization is Q6_K (D43), loaded at 262K context (D45). **Phase 0 is done on the GX10** (prompt v3: companion 89.8%, safety 95.8%, 0 critical fails; D to review the scores). See `DECISIONS.md`, D01–D45. An external review (2026-10-10) added D31–D34 and tightened the safety, revocation and deletion tests. Pre-event tests of Qwen3.8-27B on the team's own server are recorded in `DECISIONS.md` (prompt v2: companion 89.8%, safety 96.1%, no critical fails). Under D08, all code is written after the official start. Phase 0 starts only when the team explicitly says go.
+**Status:** the event has started and code is in progress in the repo ([github.com/jasonc123456/innercove](https://github.com/jasonc123456/innercove); these docs live in its `docs/` folder, D40). **Every decision is confirmed, including the chat model: Qwen3.8-27B (D12).** The quantization is Q6_K (D43), loaded at 262K context (D45). **Phase 0 is done on the GX10** (prompt v3: companion 89.8%, safety 95.8%, 0 critical fails; D to review the scores). The app is reachable on the team LAN (D46). See `DECISIONS.md`, D01–D46. An external review (2026-10-10) added D31–D34 and tightened the safety, revocation and deletion tests. Pre-event tests of Qwen3.8-27B on the team's own server are recorded in `DECISIONS.md` (prompt v2: companion 89.8%, safety 96.1%, no critical fails). Under D08, all code is written after the official start. Phase 0 starts only when the team explicitly says go.
 **Last updated 2026-10-10 (evening):** Phase 0 checks and the 40 tests done on the GX10; model loaded at 262K (D45); Q6_K chosen (D43); repo layout settled as two workspaces (D44); GX10 set up (`SETUP_LOG.md`); Phase 1 server, D32 screening and D's safety engine merged (see the Phase log). Earlier the same day: added the hub-and-companion model, desktop packaging, model strategy, remote access, connecting your own model server, SQLCipher encryption from day one, crisis comfort and support notes (D29, D30), the pre-event model tests, the eval runner spec (§5 Phase 0), the "Start here" section, the API contracts (§3c), the demo persona and the pitch plan (§10).
 
 Environment note: the planning workstation is x86_64. Phase 0 must run on the GX10.
@@ -20,7 +20,7 @@ Environment note: the planning workstation is x86_64. Phase 0 must run on the GX
 
 ## Start here (event day)
 For anyone, human or a Claude Code/Codex session, picking this up on the GX10.
-1. **Read in this order:** this section, `TEAM_PLAN.md` (who does what), `DECISIONS.md` (D01–D44 and the pre-event results), §3b, §5 Phase 0, §8.
+1. **Read in this order:** this section, `TEAM_PLAN.md` (who does what), `DECISIONS.md` (D01–D46 and the pre-event results), §3b, §5 Phase 0, §8.
 2. **What's in `docs/`** (paths below are relative to it):
    - `PROJECT_PLAN.md`, `DECISIONS.md` and `TEAM_PLAN.md`.
    - `prep/system-prompt.txt`: system prompt v3 (D29 comfort and de-escalation plus the D28 fixes; not yet tested). `prep/system-prompt-v2.txt` is the version the pre-event results used.
@@ -785,6 +785,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
   - **Needs B:** a `ConversationHistoryPort.listMessages({ userId, conversationId })` in `packages/core` data-layer (defined for now in `packages/server/src/chat/ports.ts`), and a `ChatStore` implementation over SQLCipher. Until then `DEV_STORE=demo` runs an unencrypted in-memory store seeded with the fictional persona (dev only).
   - **Real model in the app (later on 2026-10-10):** the container now runs `INFERENCE_PROVIDER=lmstudio`. Verified against a throwaway instance: `/api/infer` streams sentence-gated deltas (first word 0.7 s, ~18 tok/s), `/api/chat` with the demo store sends memory and diary chips and persists, tier 2 returns `reviewed-reply`, and the server log contains no message text. **The browser check of Phase 1 waits on the UI's setup/unlock screen (C, on B's endpoints):** until the passphrase is set, chat answers 423.
   - **B's target gate passed on the GX10** (host and container): 99 tests, `smoke:db`, spike 18/18. `DB_ENCRYPTION` stays `sqlcipher` (D26).
+  - **LAN access (D46):** the container binds 0.0.0.0:8000 on the GX10 (opt-in via `.env`), ufw allows 8000 from 192.168.2.0/24 only (`SETUP_LOG.md` #18); LM Studio stays on loopback. Open `http://192.168.2.151:8000` from the LAN.
 - **Next (A):** the A half of `/api/privacy-status`, Phase 6 prep (offline test, `ss -ltnp`, demo-script checks), then wire B's SQL-backed `ChatStore` into `AppDeps.store` when it lands.
 
 **D (Meowie), Phase 4 safety handoff (2026-10-10):**
@@ -826,7 +827,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 6. Send a crisis phrase. The reviewed reply and the 988 card appear, even with the model stopped.
 7. Save an excerpt to the diary.
 8. Run delete-all, then confirm through the unlocked database that the canary is gone from rows, search and the next prompt.
-9. `ss -ltnp` shows ports 1234 and 8000 bound to 127.0.0.1 only (when phone pairing is on, only the InnerCove HTTPS port listens on the LAN).
+9. `ss -ltnp` shows port 1234 bound to 127.0.0.1 only. Port 8000 is on loopback by default; with the LAN demo on (D46) it listens on 0.0.0.0 and ufw limits it to the subnet. When phone pairing is on, only the InnerCove HTTPS port listens on the LAN.
 
 ## Sources
 - [Qwen/Qwen3.8-27B model card](https://huggingface.co/Qwen/Qwen3.8-27B) · [lmstudio-community GGUF](https://huggingface.co/lmstudio-community/Qwen3.8-27B-GGUF) · [nvidia NVFP4](https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4)

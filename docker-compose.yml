@@ -1,5 +1,7 @@
 # D18: host networking with a loopback bind. Never publish ports with `ports:`;
 # Docker's port publishing binds 0.0.0.0 and bypasses ufw.
+# D46: a LAN demo sets INNERCOVE_HOST=0.0.0.0 and ALLOW_NON_LOOPBACK=1 in .env,
+# with ufw allowing port 8000 from the LAN subnet only. The default stays loopback.
 services:
   app:
     build: .
@@ -8,7 +10,8 @@ services:
       - path: .env
         required: false
     environment:
-      HOST: 127.0.0.1
+      HOST: ${INNERCOVE_HOST:-127.0.0.1}
+      ALLOW_NON_LOOPBACK: ${ALLOW_NON_LOOPBACK:-0}
       PORT: "8000"
     volumes:
       - ./data:/app/data

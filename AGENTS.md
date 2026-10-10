@@ -32,7 +32,7 @@ Single owners for hot files: `packages/core` contracts (B), schema and migration
 - Every query is scoped by `user_id`; AI reads go through B's permission-filtered read port only.
 - `/api/infer` (temporary chats) never writes anything (D35).
 - Crisis resources come from static config, never from the model (D03). Model output is screened before display (D32).
-- Bind 127.0.0.1 only. Never use Docker `ports:` (binds 0.0.0.0, bypasses ufw); LM Studio stays on loopback with auth on (D18).
+- Bind 127.0.0.1 by default. Never use Docker `ports:` (binds 0.0.0.0, bypasses ufw); LM Studio stays on loopback with auth on (D18). The GX10's LAN demo opts in via `.env` with ufw limiting port 8000 to the subnet (D46).
 - The repo is public (D40): no keys, `.env`, tokens, real personal data or private server details. Use the fictional persona only.
 
 ## Conventions
