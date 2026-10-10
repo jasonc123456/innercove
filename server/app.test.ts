@@ -2,6 +2,7 @@ import { Writable } from "node:stream";
 import { describe, expect, it } from "vitest";
 import { FakeProvider, ModelUnavailableError, type InferenceProvider } from "../core/inference/index.js";
 import { buildApp } from "./app.js";
+import { noSafety } from "./chat/safety.js";
 
 const CANARY = "CANARY-7f3a9c";
 
@@ -25,7 +26,7 @@ async function setup(provider: InferenceProvider = new FakeProvider({ reply: ["H
     },
   });
   const stats = { lastReply: null };
-  const app = await buildApp({ provider, systemPrompt: "SYSTEM", stats }, { level: "info", stream });
+  const app = await buildApp({ provider, safety: noSafety, systemPrompt: "SYSTEM", stats }, { level: "info", stream });
   return { app, logs, stats };
 }
 
@@ -38,8 +39,8 @@ describe("GET /api/health", () => {
 });
 
 describe("POST /api/infer", () => {
-  it("streams meta, context, deltas and done in order", async () => {
-    const provider = new FakeProvider({ reply: ["Hi ", "there."] });
+  it("streams meta, context, sentence deltas and done in order", async () => {
+    const provider = new FakeProvider({ reply: ["Hi ", "there. How ", "are you?"] });
     const { app, stats } = await setup(provider);
     const res = await app.inject({
       method: "POST",
@@ -49,8 +50,9 @@ describe("POST /api/infer", () => {
     expect(res.headers["content-type"]).toMatch(/^text\/event-stream/);
     const events = parseSse(res.body);
     expect(events.map((e) => e.name)).toEqual(["meta", "context", "delta", "delta", "done"]);
+    expect(events[2]!.data.text).toBe("Hi there. ");
     expect(events[0]!.data).toEqual({ conversationId: null, userMessageId: null, tier: 0 });
-    expect(events.filter((e) => e.name === "delta").map((e) => e.data.text).join("")).toBe("Hi there.");
+    expect(events.filter((e) => e.name === "delta").map((e) => e.data.text).join("")).toBe("Hi there. How are you?");
     expect(events.at(-1)!.data).toMatchObject({ assistantMessageId: null, modelId: "fake" });
     expect(provider.prompts[0]).toEqual([
       { role: "system", content: "SYSTEM" },

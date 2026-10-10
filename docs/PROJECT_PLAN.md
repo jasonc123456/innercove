@@ -774,8 +774,9 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Known issues / not done yet:**
   - LM Studio auth is still OFF and `logSensitiveData` is ON; both are GUI toggles. Phase 0 checks 4 and 7 fail until they're fixed.
   - Q6_K still downloading. The team chose Q6_K (D43), so Q4_K_M is skipped. Phase 0 runs pending.
-  - `/api/chat` has no persistence until B's store lands (only `conversationId: null`). No safety tiering yet (A, hours 5–8, needs D's `core/safety`).
-  - `AGENTS.md` not written yet.
+  - `/api/chat` has no persistence until B's store lands (only `conversationId: null`).
+  - **Screen-before-display (D32) is built** behind a `SafetyLayer` seam (`server/chat/safety.ts`, `turn.ts`): tier 0 releases screened sentences, tier 1 is buffered then screened, tier 2 sends the reviewed reply with no model call; tested with a planted method detail. **Not yet connected to D's engine:** `codex/safety-content` conflicts with `main` (package files, PROJECT_PLAN) and must be rebased on `main` before A wires it in; until then the server runs with `noSafety`.
+  - `AGENTS.md` and `CLAUDE.md` written.
 - **Layout note:** D's branch uses root `core/` (`core/safety`); B uses the `packages/core` workspace. A's code is in root `core/inference` and `server/` for now; agree one layout before merging D's branch.
 
 ## End-to-end verification (the Phase 6 demo script)
