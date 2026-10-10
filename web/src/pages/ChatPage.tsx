@@ -5,10 +5,15 @@ import { MessageList, type ChatMessage } from "../components/MessageList";
 import { useAppSession } from "../session/AppSession";
 
 export function ChatPage() {
-  const { chatMode, useMemories, setChatMode, setUseMemories } = useAppSession();
+  const { chatMode, useMemories, pinnedMemoryIds, setChatMode, setUseMemories } =
+    useAppSession();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streamingId, setStreamingId] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  const [openSource, setOpenSource] = useState<{
+    messageId: string;
+    sourceId: string;
+  } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -48,10 +53,24 @@ export function ChatPage() {
 
     try {
       await streamAssistantReply(
-        { message: text, history },
+        { message: text, history, useMemories, pinnedMemoryIds },
         {
           onDelta: (chunk) => setReply((content) => content + chunk),
           onReplace: (replacement) => setReply(() => replacement),
+          onContext: (context) =>
+            setMessages((current) =>
+              current.map((message) =>
+                message.id === assistantId ? { ...message, context } : message,
+              ),
+            ),
+          onHistoryExcluded: (count) =>
+            setMessages((current) =>
+              current.map((message) =>
+                message.id === assistantId
+                  ? { ...message, historyExcluded: count }
+                  : message,
+              ),
+            ),
         },
         controller.signal,
       );
@@ -111,10 +130,21 @@ export function ChatPage() {
           </p>
         ) : null}
         {useMemories ? (
-          <p className="text-sm text-ink/70">Memories are not connected.</p>
+          <p className="text-sm text-ink/70">
+            Use memories is on for the next reply. This tab&apos;s list is separate
+            from the hub. {pinnedMemoryIds.length} selected.
+          </p>
         ) : null}
       </div>
-      <MessageList messages={messages} streamingId={streamingId} />
+      <MessageList
+        messages={messages}
+        streamingId={streamingId}
+        openSource={openSource}
+        onOpenSource={(messageId, sourceId) =>
+          setOpenSource({ messageId, sourceId })
+        }
+        onCloseSource={() => setOpenSource(null)}
+      />
       {failed ? (
         <p className="px-4 pb-2 text-sm text-ink/70" role="status">
           The reply stopped. Try sending again.

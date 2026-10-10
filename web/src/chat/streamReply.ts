@@ -22,12 +22,21 @@ export interface ReplyDone {
   tokPerS: number | null;
 }
 
+/** SSE `context` event: chips and the exact text that was sent (§3c). */
+export interface ReplyContext {
+  sources: { type: "diary_entry" | "memory"; id: string; title: string }[];
+  sent: { id: string; text: string }[];
+}
+
 export interface StreamHandlers {
   onDelta: (text: string) => void;
   /** The output screen stopped the stream; replace the partial reply with this text. */
   onReplace?: (text: string) => void;
   onMeta?: (meta: ReplyMeta) => void;
   onDone?: (done: ReplyDone) => void;
+  onContext?: (context: ReplyContext) => void;
+  /** Present only when the server dropped earlier exchanges (D33). */
+  onHistoryExcluded?: (count: number) => void;
 }
 
 export class ReplyError extends Error {
@@ -42,7 +51,12 @@ export class ReplyError extends Error {
 const MAX_HISTORY = 40; // 20 turns
 
 export async function streamAssistantReply(
-  request: { message: string; history: ChatTurn[] },
+  request: {
+    message: string;
+    history: ChatTurn[];
+    useMemories?: boolean;
+    pinnedMemoryIds?: string[];
+  },
   handlers: StreamHandlers,
   signal?: AbortSignal,
 ): Promise<void> {
@@ -52,6 +66,8 @@ export async function streamAssistantReply(
     body: JSON.stringify({
       history: request.history.slice(-MAX_HISTORY),
       message: request.message,
+      useMemories: request.useMemories ?? false,
+      pinnedMemoryIds: (request.pinnedMemoryIds ?? []).slice(0, 5),
     }),
     signal,
   });
@@ -86,6 +102,12 @@ function dispatch(block: string, handlers: StreamHandlers) {
   switch (name) {
     case "meta":
       handlers.onMeta?.(payload);
+      break;
+    case "context":
+      handlers.onContext?.(payload);
+      break;
+    case "historyExcluded":
+      handlers.onHistoryExcluded?.(payload.count);
       break;
     case "delta":
       handlers.onDelta(payload.text);

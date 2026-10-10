@@ -16,6 +16,21 @@ import {
 export type AccessLevel = "private" | "ai_eligible";
 export type ChatMode = "temporary" | "saved";
 
+/**
+ * TEMPORARY memory rows. Field names follow packages/core MemoryRecord.
+ * There is no /api/memories client here.
+ */
+export type PracticeMemory = {
+  id: string;
+  userId: string;
+  origin: "user";
+  status: "approved";
+  content: string;
+  accessLevel: AccessLevel;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type DiaryEntry = {
   id: string;
   userId: string;
@@ -42,6 +57,8 @@ type AppSessionValue = {
   chatMode: ChatMode;
   useMemories: boolean;
   entries: DiaryEntry[];
+  memories: PracticeMemory[];
+  pinnedMemoryIds: string[];
   completeSetup: (passphrase: string, confirm: string) => string | null;
   completeUnlock: (passphrase: string) => string | null;
   lock: () => void;
@@ -50,6 +67,10 @@ type AppSessionValue = {
   addEntry: (input: NewDiaryEntry) => void;
   updateEntry: (id: string, input: NewDiaryEntry) => void;
   deleteEntry: (id: string) => void;
+  addMemory: (input: { content: string; accessLevel: AccessLevel }) => void;
+  updateMemory: (id: string, input: { content: string; accessLevel: AccessLevel }) => void;
+  deleteMemory: (id: string) => void;
+  pinMemory: (id: string) => string | null;
 };
 
 const DEMO_USER_ID = "01900000-0000-7000-8000-000000000001";
@@ -62,6 +83,8 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
   const [chatMode, setChatModeState] = useState<ChatMode>("temporary");
   const [useMemories, setUseMemoriesState] = useState(false);
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
+  const [memories, setMemories] = useState<PracticeMemory[]>([]);
+  const [pinnedMemoryIds, setPinnedMemoryIds] = useState<string[]>([]);
 
   const value = useMemo<AppSessionValue>(() => {
     return {
@@ -70,6 +93,8 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
       chatMode,
       useMemories,
       entries,
+      memories,
+      pinnedMemoryIds,
       completeSetup(passphrase, confirm) {
         if (passphrase.length < 8) {
           return "Use at least 8 characters.";
@@ -135,8 +160,61 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
       deleteEntry(id) {
         setEntries((current) => current.filter((entry) => entry.id !== id));
       },
+      addMemory(input) {
+        const timestamp = new Date().toISOString();
+        setMemories((current) => [
+          {
+            id: uuidv7(),
+            userId: DEMO_USER_ID,
+            origin: "user",
+            status: "approved",
+            content: input.content.trim(),
+            accessLevel: input.accessLevel,
+            createdAt: timestamp,
+            updatedAt: timestamp,
+          },
+          ...current,
+        ]);
+      },
+      updateMemory(id, input) {
+        setMemories((current) =>
+          current.map((memory) =>
+            memory.id === id
+              ? {
+                  ...memory,
+                  content: input.content.trim(),
+                  accessLevel: input.accessLevel,
+                  updatedAt: new Date().toISOString(),
+                }
+              : memory,
+          ),
+        );
+        if (input.accessLevel === "private") {
+          setPinnedMemoryIds((current) => current.filter((pinned) => pinned !== id));
+        }
+      },
+      deleteMemory(id) {
+        setMemories((current) => current.filter((memory) => memory.id !== id));
+        setPinnedMemoryIds((current) => current.filter((pinned) => pinned !== id));
+      },
+      pinMemory(id) {
+        const memory = memories.find((item) => item.id === id);
+        if (!memory || memory.accessLevel !== "ai_eligible") {
+          return "Turn on AI access before using this in a chat.";
+        }
+        if (pinnedMemoryIds.includes(id)) {
+          setPinnedMemoryIds((current) => current.filter((pinned) => pinned !== id));
+          return null;
+        }
+        if (pinnedMemoryIds.length >= 5) {
+          return "This chat already has 5 memories.";
+        }
+        setPinnedMemoryIds((current) => [...current, id]);
+        setUseMemoriesState(true);
+        return null;
+      },
     };
-  }, [chatMode, entries, hasPassphrase, locked, useMemories]);
+  }, [chatMode, entries, hasPassphrase, locked, memories, pinnedMemoryIds, useMemories]);
 
   return (
     <AppSessionContext.Provider value={value}>

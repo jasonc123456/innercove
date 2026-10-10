@@ -815,6 +815,16 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **B → D/A:** preserve D's reviewed replies, static resources and support-note consent/privacy defaults. B must enforce user-scoping and source eligibility in SQL-backed ports so A's D27 retrieval and D33 history exclusion remain effective after revocation/deletion.
 - **Target gate:** A's reported GX10 spike passes do not validate the new database foundation. Run its migrations, lifecycle and runtime smoke on GX10 ARM64 (including the container); Phase 2 remains incomplete and the GX10 `DB_ENCRYPTION` decision remains pending under D26.
 
+**C Phase 1–3 UI (2026-10-10). Phases 2 and 3 are not complete:**
+- **Phase 1:** Mobile chat shell. `web/src/chat/streamReply.ts` posts `/api/infer` with history and reads delta/replace. Temporary chat stays in React state.
+- **Phase 2:** Setup, unlock, diary create/edit/delete/search, and Save/Temporary plus Use memories. In-memory only. The passphrase is checked for length, then discarded. Save does not call `/api/chat`.
+- **Phase 3:** Memory page for approved user memories (create, edit, delete, AI access, pin up to 5). Chips and “what was sent” render the SSE `context` event. A `historyExcluded` count shows the D33 notice. Pins and Use memories are sent on `/api/infer`.
+- **Files:** `web/src/pages/{ChatPage,DiaryPage,MemoryPage,SetupPage,UnlockPage}.tsx`, `web/src/components/{AppShell,MessageList,MessageInput}.tsx`, `web/src/chat/streamReply.ts`, `web/src/session/AppSession.tsx`, `web/src/router.tsx`.
+- **Checks:** `npm run build` in `web/` passed. Browser: memory CRUD, the 5-pin limit, chips opening sent text from a scripted `context` event, and the notice from `historyExcluded`. No web storage.
+- **Mock-only:** memories are not `/api/memories`. Setup, unlock, and diary do not call B’s lock or diary routes.
+- **Not verified:** live retrieval, permission filtering, or D33 against the server. Chat still answers 423 until the real unlock runs.
+- **Next:** point setup and unlock at B’s endpoints, then retest chips on `DEV_STORE=demo`.
+
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
 1. Write diary entries A and B. Allow AI access to A only.

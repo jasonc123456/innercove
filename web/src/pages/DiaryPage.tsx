@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { useSearchParams } from "react-router-dom";
 import { SetupPage } from "./SetupPage";
 import { UnlockPage } from "./UnlockPage";
 import {
@@ -21,6 +22,8 @@ export function DiaryPage() {
 
 function DiaryWorkspace() {
   const { entries, lock, addEntry, updateEntry, deleteEntry } = useAppSession();
+  const [params] = useSearchParams();
+  const focusId = params.get("id");
   const [query, setQuery] = useState("");
   const [editingId, setEditingId] = useState<string | "new" | null>(null);
 
@@ -107,7 +110,12 @@ function DiaryWorkspace() {
               <button
                 type="button"
                 onClick={() => setEditingId(entry.id)}
-                className="flex w-full flex-col items-start gap-1 rounded-2xl bg-foam px-4 py-3 text-left"
+                data-entry-id={entry.id}
+                className={
+                  entry.id === focusId
+                    ? "flex w-full flex-col items-start gap-1 rounded-2xl bg-foam px-4 py-3 text-left ring-2 ring-cove"
+                    : "flex w-full flex-col items-start gap-1 rounded-2xl bg-foam px-4 py-3 text-left"
+                }
               >
                 <span className="text-base font-medium text-ink">
                   {entry.title ?? "Untitled"}
