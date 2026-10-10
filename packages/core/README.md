@@ -34,12 +34,21 @@ D42); they fill in a shape §3c never specified at all.
   whichever memory/diary entry/message it pointed at — that parent's
   own tombstone already records the deletion.
 - **`diaryDefaultAccessLevel` is read by the HANDLER, not hardcoded by
-  this package.** `DiaryEntryCreateInputSchema` leaves `accessLevel`
-  `undefined` when the client omits it; §3c's "defaults to
-  `accessLevel: "private"` (D36)" is satisfied because the *setting's
-  own* default value is `"private"` until the user changes it — this
-  package has no settings lookup available at parse time to do that
-  substitution itself.
+  this package — for every origin EXCEPT `support_note`.**
+  `DiaryEntryCreateInputSchema` leaves `accessLevel` `undefined` on a
+  `manual`/`excerpt`/`ai_draft` entry when the client omits it; §3c's
+  "defaults to `accessLevel: "private"` (D36)" is satisfied because the
+  *setting's own* default value is `"private"` until the user changes
+  it — this package has no settings lookup available at parse time to
+  do that substitution itself. **A `support_note` is different**: D30
+  is a stronger, note-specific guarantee ("the AI doesn't use it in
+  later chats unless the user switches that on per note") than D36's
+  general, user-configurable default, so an omitted `accessLevel` on a
+  support note is forced to the literal `"private"` directly in this
+  schema's own `.transform` — independent of whatever
+  `diaryDefaultAccessLevel` currently is, even if the user has changed
+  it to `"ai_eligible"`. An explicit `accessLevel` on a support note is
+  still always respected as given.
 - **`includeInHandoff`'s per-origin default** (`true` for
   `support_note`, `false` for every other origin) is applied by this
   package's own `.transform`, since §3's data-model sketch states the
@@ -63,6 +72,30 @@ D42); they fill in a shape §3c never specified at all.
   `.strict()` too**, even though §3c's "API inputs use `.strict()`"
   line reads most naturally as being about request bodies — applied
   uniformly for one consistent rule rather than a body/query split.
+
+## Fixed: `z.intersection` silently dropped strictness (zod 4.6.5)
+
+Verified by direct repro, not assumed: in the installed zod version
+(4.6.5), `z.intersection(A, B)` stops enforcing `.strict()` for the
+WHOLE composite the moment either `A` or `B` is a plain, non-`.strict()`
+`z.object` — even when the other operand is itself strict (or is a
+discriminated union whose every branch is strict). Concretely:
+`z.intersection(z.object({userId}), strictDiscriminatedUnion)` silently
+accepted an unrelated unknown field that `strictDiscriminatedUnion`
+rejects on its own when parsed directly. Intersecting two schemas that
+are EACH already strict (e.g. two discriminated unions whose branches
+are all `.strict()`) is unaffected and behaves correctly.
+
+**The fix, applied everywhere this package composes a record via
+`z.intersection`** (`ProvenanceLinkRecordSchema`,
+`MessageContextRecordSchema`, `MessageContextCreateInputSchema`,
+`TombstoneRecordSchema`): every plain `z.object(...)` operand is now
+itself `.strict()`, not just the discriminated-union branches it's
+intersected with. **If a future schema adds a new `z.intersection`
+composition, every plain-object operand in it must be `.strict()`
+too, or this same silent-acceptance bug reopens.** `validate/run.ts`
+has a dedicated "REJECTS an unknown field (regression...)" check per
+composite schema specifically to catch this again.
 
 ## Flagged ambiguities (not resolved by this revision — need an answer, not a guess)
 

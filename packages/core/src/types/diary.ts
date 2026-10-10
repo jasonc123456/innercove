@@ -6,10 +6,16 @@
  * package's first draft -- `manual` replaces `user_written`, and
  * `excerpt`/`ai_draft` are added for P0 #5 "saving selected chat
  * messages to the diary as an excerpt" and the P1 AI-draft flow).
- * `accessLevel` defaults to `"private"` for EVERY new entry regardless
- * of origin (D36), not just support notes -- the first draft's
- * support-note-only default is gone; see the create-input comment
- * below for exactly how the default is now applied.
+ * `accessLevel` defaults to private when omitted, for every origin --
+ * but via two DIFFERENT mechanisms, not one: an ordinary entry
+ * (manual/excerpt/ai_draft) inherits the user's configurable
+ * `settings.diaryDefaultAccessLevel` (D36, itself `"private"` until
+ * changed -- resolved by the HANDLER, not this schema); a
+ * `support_note` is forced to the literal `"private"` directly in this
+ * schema's own `.transform`, independent of that setting (D30's
+ * stronger, note-specific guarantee -- see the create-input comment
+ * below). An explicit `accessLevel` on either kind is always respected
+ * as given.
  */
 import { z } from "zod";
 import { UserIdSchema, DiaryEntryIdSchema } from "./ids.js";
@@ -57,12 +63,23 @@ const DiaryEntryCreateRawInputSchema = z
     origin: DiaryEntryOriginSchema,
     title: z.string().max(200).nullable().optional(),
     content: z.string().min(1),
-    /** Omitted => the HANDLER fills in the user's current
-     * `settings.diaryDefaultAccessLevel` (itself `"private"` until the
-     * user changes it, D36) -- this package has no settings lookup to
-     * do that itself at parse time, so it deliberately leaves this
-     * `undefined` rather than hardcoding the literal "private" here.
-     * An explicit value is always respected as-is. */
+    /** Omitted on a NON-support-note entry => the HANDLER fills in the
+     * user's current `settings.diaryDefaultAccessLevel` (itself
+     * `"private"` until the user changes it, D36) -- this package has
+     * no settings lookup to do that itself at parse time, so it
+     * deliberately leaves this `undefined` rather than hardcoding the
+     * literal "private" here.
+     *
+     * A `support_note` is DIFFERENT (D30: "the AI doesn't use it in
+     * later chats unless the user switches that on per note" -- a
+     * stronger, note-specific guarantee than D36's general, user-
+     * configurable default): when omitted, it is forced to `"private"`
+     * directly in the `.transform` below, REGARDLESS of whatever
+     * `diaryDefaultAccessLevel` currently is -- even if the user has
+     * changed that general setting to `"ai_eligible"`. An EXPLICIT
+     * value on a support note (the user deliberately switching access
+     * on for that one note) is still always respected as-is; only the
+     * no-value-given case is forced. */
     accessLevel: AccessLevelSchema.optional(),
     includeInHandoff: z.boolean().optional(),
     tags: DiaryTagsSchema.optional(),
@@ -91,6 +108,12 @@ export type DiaryEntryCreateRawInput = z.infer<typeof DiaryEntryCreateRawInputSc
 
 export const DiaryEntryCreateInputSchema = DiaryEntryCreateRawInputSchema.transform((input) => ({
   ...input,
+  // D30: an omitted accessLevel on a support note is forced private,
+  // independent of settings.diaryDefaultAccessLevel (D36) -- see the
+  // field comment above. Every other origin is left untouched
+  // (`undefined` stays `undefined`) for the handler to resolve against
+  // that setting, exactly as before this fix.
+  accessLevel: input.accessLevel ?? (input.origin === "support_note" ? "private" : undefined),
   includeInHandoff: input.includeInHandoff ?? input.origin === "support_note",
 }));
 /** The shape a CLIENT sends (pre-default; `z.input`, not `z.infer`/

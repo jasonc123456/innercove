@@ -23,8 +23,13 @@ export const MessageContextSourceRefSchema = z.discriminatedUnion("sourceType", 
 ]);
 export type MessageContextSourceRef = z.infer<typeof MessageContextSourceRefSchema>;
 
+// `.strict()` on the plain object operand is REQUIRED, not cosmetic:
+// in zod 4.6.5, `z.intersection` of a non-strict object with an
+// otherwise-strict schema silently stops enforcing strictness for the
+// whole composite (verified by direct repro -- see provenance.ts's
+// matching comment for the exact failing/passing cases).
 export const MessageContextRecordSchema = z.intersection(
-  z.object({ userId: UserIdSchema, messageId: MessageIdSchema }),
+  z.object({ userId: UserIdSchema, messageId: MessageIdSchema }).strict(),
   MessageContextSourceRefSchema,
 );
 export type MessageContextRecord = z.infer<typeof MessageContextRecordSchema>;
@@ -35,7 +40,7 @@ export type MessageContextRecord = z.infer<typeof MessageContextRecordSchema>;
  * creates these directly, see data-layer/index.ts's
  * MessageContextWritePort). */
 export const MessageContextCreateInputSchema = z.intersection(
-  z.object({ messageId: MessageIdSchema }),
+  z.object({ messageId: MessageIdSchema }).strict(),
   MessageContextSourceRefSchema,
 );
 export type MessageContextCreateInput = z.infer<typeof MessageContextCreateInputSchema>;

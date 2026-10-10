@@ -47,9 +47,22 @@ export type DerivedRef = z.infer<typeof DerivedRefSchema>;
 /** Persisted record: `userId` is server-assigned (never client-supplied
  * -- see ProvenanceLinkCreateInputSchema). No `id`/`createdAt` here on
  * purpose: §3c's own column list for `provenance` has neither; a link
- * row's only timestamp of record is its derived item's `createdAt`. */
+ * row's only timestamp of record is its derived item's `createdAt`.
+ *
+ * BUG FIX (verified, not assumed): `z.object({ userId: UserIdSchema })`
+ * below MUST be `.strict()`, not plain. In zod 4.6.5, `z.intersection`
+ * of a non-strict object with an otherwise-strict schema silently stops
+ * enforcing strictness for the WHOLE composite, even though each
+ * operand rejects an unknown key when parsed alone -- confirmed by a
+ * direct repro: `z.intersection(z.object({userId}), inner)` accepted an
+ * extra `hacked` key that `inner` alone (the same two-discriminated-
+ * union intersection, minus the outer plain object) correctly rejects.
+ * Adding `.strict()` to this one object is the fix; it is NOT a
+ * reason to flatten the discriminated-union composition into plain
+ * optional fields (that would lose the "message source must carry a
+ * MessageId, never a DiaryEntryId" guarantee). */
 export const ProvenanceLinkRecordSchema = z.intersection(
-  z.object({ userId: UserIdSchema }),
+  z.object({ userId: UserIdSchema }).strict(),
   z.intersection(DerivedRefSchema, ProvenanceSourceRefSchema),
 );
 export type ProvenanceLinkRecord = z.infer<typeof ProvenanceLinkRecordSchema>;
