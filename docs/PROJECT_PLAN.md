@@ -778,6 +778,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
   - D's engine isn't wired in yet: `codex/safety-content` conflicts with `main` and must be rebased first. Until then the server runs with `noSafety` (dev only).
   - `/api/chat` has no persistence until B's store lands (only `conversationId: null`).
   - ⚠️ **Layout clash to settle:** B's `packages/server` is described as the app server (api/core/store/inference), A's Fastify app is in root `server/` + `core/inference`, and D's branch uses root `core/safety`. Proposal: move A's and D's code into `packages/server/src/{api,inference,safety}` (or `packages/core` for pure logic) so there's one server and one core.
+  - **D safety source:** this branch restores `core/safety`, `config/`, safety tests and the demo runbook. A must wire it into the existing `SafetyLayer` seam, replacing `noSafety`.
 - **Next (A):** finish Phase 0 once the model is loaded; wire D's engine; Phase 3 retrieval and prompt assembly with D33 against B's read port.
 
 ## End-to-end verification (the Phase 6 demo script)
