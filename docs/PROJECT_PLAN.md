@@ -782,6 +782,13 @@ Fill in the ASUS feedback survey before judging ends (D, early).
   - **Layout settled (D44):** A's code moved into the workspaces: chat contracts → `packages/core/src/api/chat.ts`; Fastify app, inference and chat pipeline → `packages/server/src/`. Root `core/` and `server/` are gone. **D:** when rebasing `codex/safety-content`, move `core/safety` → `packages/core/src/safety` (export it from `packages/core/src/index.ts`); `config/` stays at the root.
 - **Next (A):** finish Phase 0 once the model is loaded and switch the container to LM Studio; Phase 3 retrieval and prompt assembly with D33 against B's read port.
 
+**D (Meowie), Phase 4 safety handoff (2026-10-10):**
+- **Done:** deterministic tiers, output screening, reviewed tier-2 replies, US crisis resources, prompt v3, fictional demo content and the demo runbook.
+- **Files:** `packages/core/src/safety/**`, root `config/**`, `tests/safety-cases.json`, `tests/output-screen-cases.json`, and `docs/DEMO_SCRIPT.md`.
+- **Integration:** `packages/server/src/chat/rules-safety.ts` loads static config at startup; tier 2 never calls the model, and tiers 0–1 are screened before display.
+- **Tests:** `npm test` runs the 30 tier cases and output-screen cases through `/api/chat`; `node scripts/check-safety.mjs` remains a quick config check. Live fake-provider `/api/infer` verification returned tier 2 and `modelId: reviewed-reply` for an explicit-risk test message.
+- **Next:** C verifies the crisis card and support-note UX against the static config; the team runs the offline demo script after the real model is ready.
+
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
 1. Write diary entries A and B. Allow AI access to A only.
