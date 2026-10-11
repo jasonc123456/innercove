@@ -71,12 +71,13 @@ export function MessageInput({ disabled, onSend, tone, onToneChange }: MessageIn
     >
       <div className="voice-composer relative rounded-2xl border border-line bg-white focus-within:border-cove focus-within:ring-2 focus-within:ring-cove/30">
         <div aria-hidden={busy || undefined} inert={busy || undefined} style={busy ? { display: "none" } : undefined}
-          className="voice-composer-enter grid min-h-16 min-w-0 grid-cols-[minmax(0,1fr)_auto] items-end gap-2 p-2">
+          className="voice-composer-enter flex min-w-0 flex-col gap-1 p-2 sm:grid sm:min-h-16 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:gap-2">
+          {/* Phones: the draft gets the full width, with tone, voice and send on a row below. */}
           <label htmlFor="message" className="sr-only">Message</label>
           <textarea ref={textarea} id="message" name="message" rows={1} value={draft}
             disabled={disabled || busy} onChange={event => setDraft(event.target.value)} onKeyDown={handleKeyDown}
             placeholder="Write a message"
-            className="min-h-11 max-h-48 w-full min-w-0 resize-none overflow-y-auto border-0 bg-transparent px-2 py-2.5 text-base leading-6 text-ink outline-none placeholder:text-ink/55 disabled:opacity-60" />
+            className="min-h-14 max-h-48 w-full min-w-0 resize-none sm:min-h-11 overflow-y-auto border-0 bg-transparent px-2 py-2.5 text-base leading-6 text-ink outline-none placeholder:text-ink/55 disabled:opacity-60" />
           <div className="flex h-11 shrink-0 items-center justify-end gap-1">
             {tone && onToneChange ? <TonePicker tone={tone} onChange={onToneChange} disabled={busy} /> : null}
             <button type="button" aria-label="Record voice message"

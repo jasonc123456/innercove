@@ -41,7 +41,7 @@ export function TonePicker({ tone, onChange, disabled }: { tone: ChatTone; onCha
         aria-label={`Tone: ${current.label}. Change how InnerCove talks`}
         disabled={disabled}
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line bg-foam/70 pl-2.5 pr-2 text-xs font-medium text-cove transition-colors hover:bg-foam focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cove disabled:opacity-40"
+        className="inline-flex h-11 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium text-ink transition-colors hover:bg-foam/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cove disabled:opacity-40 sm:h-9 sm:border sm:border-line sm:bg-foam/70 sm:pl-2.5 sm:pr-2 sm:text-xs"
       >
         <ToneIcon tone={current.id} />
         <span>{current.label}</span>
