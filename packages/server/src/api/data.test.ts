@@ -169,7 +169,9 @@ describe("Phase 2 data routes and persistent chat", () => {
     await database.lock();
     const plain = new VanillaDatabase(file, { readonly: true });
     try { expect(() => plain.prepare("SELECT * FROM diary_entries").all()).toThrow(); } finally { plain.close(); }
-    const cli = spawnSync("python3", ["-m", "sqlite3", file, "SELECT * FROM diary_entries"], { encoding: "utf8" });
+    // Use the system SQLite CLI rather than Python's optional sqlite3 module so
+    // this encryption check works on macOS and Linux alike.
+    const cli = spawnSync("sqlite3", [file, "SELECT * FROM diary_entries"], { encoding: "utf8" });
     expect(cli.status).not.toBe(0);
     expect(cli.stderr).toMatch(/not a database/);
     expect(readFileSync(file).includes(Buffer.from(canary))).toBe(false);
