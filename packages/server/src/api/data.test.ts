@@ -169,9 +169,14 @@ describe("Phase 2 data routes and persistent chat", () => {
     await database.lock();
     const plain = new VanillaDatabase(file, { readonly: true });
     try { expect(() => plain.prepare("SELECT * FROM diary_entries").all()).toThrow(); } finally { plain.close(); }
-    // Use the system SQLite CLI rather than Python's optional sqlite3 module so
-    // this encryption check works on macOS and Linux alike.
-    const cli = spawnSync("sqlite3", [file, "SELECT * FROM diary_entries"], { encoding: "utf8" });
+    // Prefer the system CLI (macOS/Linux). Minimal Linux/WSL environments
+    // may only have Python's standard SQLite binding; still perform a real
+    // plaintext read there rather than treating a missing executable as proof.
+    let cli = spawnSync("sqlite3", [file, "SELECT * FROM diary_entries"], { encoding: "utf8" });
+    if (cli.error && (cli.error as NodeJS.ErrnoException).code === "ENOENT") {
+      cli = spawnSync("python3", ["-c", "import sqlite3, sys; sqlite3.connect(sys.argv[1]).execute('SELECT * FROM diary_entries').fetchall()", file], { encoding: "utf8" });
+    }
+    expect(cli.error).toBeUndefined();
     expect(cli.status).not.toBe(0);
     expect(cli.stderr).toMatch(/not a database/);
     expect(readFileSync(file).includes(Buffer.from(canary))).toBe(false);

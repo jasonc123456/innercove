@@ -263,3 +263,10 @@ Python scripts compile and `git diff --check` passed. Docker Desktop WSL
 integration is unavailable, so no local Compose runtime pass is claimed.
 All runtime checks used scratch databases; ARM64/GX10 and real UI checks above
 remain open.
+
+Integration with origin/main `6ca2ef8` preserved teammate prompt, safety,
+dashboard and saved-chat wiring. The first integrated suite exposed its new
+SQLite CLI check missing on WSL; the follow-up keeps the CLI and performs a
+real Python SQLite read only when it is absent, asserting process startup.
+The final merged suite passed 149/149; merged typechecks/contracts/safety,
+backend/web builds and compiled smoke passed again.
