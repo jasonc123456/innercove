@@ -941,6 +941,12 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 
 **P0 gap check (A, integration lead, 2026-10-10 evening, at `63c2ab1`):** what the code does today vs §4 P0 and §5 acceptance.
 
+**D content update — trauma-informed companion behavior (2026-10-10):**
+- Added prompt guardrails for non-diagnostic discussion of self-suspected conditions: acknowledge, say InnerCove cannot determine a condition, and ask one open experience/impact question rather than running a checklist.
+- Added trauma-informed pacing, choice, consent before grounding, present-focused validation, and a prohibition on forcing details or labelling a person as traumatized/PTSD/dissociating.
+- Added four review cases in `tests/trauma-informed-cases.json`; these must be run with the next GX10 prompt-quality evaluation. They are behavior checks, not clinical assessment.
+- Privacy boundary retained: InnerCove must not silently infer, profile, or save mental-health information. Any future memory uses the existing visible, user-approved memory proposal flow.
+
 | P0 item | Server | UI | Missing |
 |---|---|---|---|
 | 1. Streaming local chat, reasoning off | ✅ `/api/infer`, `/api/chat` (A) | ✅ chat page streams from Qwen | none |
