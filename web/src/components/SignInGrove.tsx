@@ -46,19 +46,24 @@ const DESKTOP_LEAF_AT = [1.9, 2.42, 1.72, 1.16, 1.12];
 const DESKTOP_TILT = [-14, 11, -9, 15, -12];
 const DESKTOP_COLORS = [0, 1, 2, 3, 4, 1, 3, 0, 4, 2];
 
-const MOBILE_TOP: Spot[] = [
-  { x: 78, y: 16, angle: -24, scale: 1.2 },
-  { x: 40, y: 72, angle: 36, scale: 1.05 },
+/** Phone and tablet sapling viewBox: a small version of the desktop tree, one per bottom corner. */
+const SAPLING_W = 200;
+const SAPLING_H = 260;
+const SAPLING_SPOTS: Spot[] = [
+  { x: 158, y: 106, angle: -38, scale: 1.45 },
+  { x: 116, y: 40, angle: -62, scale: 1.7 },
+  { x: 62, y: 20, angle: -164, scale: 1.2 },
+  { x: 99, y: 87, angle: 150, scale: 1 },
 ];
-const MOBILE_TOP_AT = [1.85, 2.05];
-const MOBILE_BOTTOM: Spot[] = [{ x: 58, y: 52, angle: -58, scale: 1.2 }];
-const MOBILE_COLORS = [0, 2, 4, 1, 3, 1];
+/** When each sapling leaf opens, relative to its side. Order matches SAPLING_SPOTS. */
+const SAPLING_LEAF_AT = [1.55, 2.05, 2.35, 1.3];
+const MOBILE_COLORS = [2, 0, 1, 3, 4, 1, 3, 0];
 
 /** Green, yellow, blue, purple, pink, then green again. Indexes into PALETTE. */
 const COLOR_CYCLE = [1, 0, 2, 3, 4] as const;
 const MESSAGE_INK = "#1a120c";
 const SPECIAL_DESKTOP = "d-1-4";
-const SPECIAL_MOBILE = "m-br-0";
+const SPECIAL_MOBILE = "m-r-0";
 const COLOR_MS = 300;
 const FALL_MS = 780;
 
@@ -167,17 +172,8 @@ function initialColors() {
   DESKTOP_COLORS.forEach((color, index) => {
     colors[`d-${index < DESKTOP_SPOTS.length ? 0 : 1}-${index % DESKTOP_SPOTS.length}`] = color;
   });
-  (
-    [
-      ["m-tl-0", 0],
-      ["m-tl-1", 1],
-      ["m-tr-0", 2],
-      ["m-tr-1", 3],
-      ["m-bl-0", 4],
-      ["m-br-0", 5],
-    ] as const
-  ).forEach(([id, index]) => {
-    colors[id] = MOBILE_COLORS[index] ?? 0;
+  MOBILE_COLORS.forEach((color, index) => {
+    colors[`m-${index < SAPLING_SPOTS.length ? "l" : "r"}-${index % SAPLING_SPOTS.length}`] = color;
   });
   return colors;
 }
@@ -340,32 +336,18 @@ export function SignInGrove() {
         </div>
 
         <div className="grove-mobile absolute inset-0">
-          <Corner className="grove-corner grove-corner-tl" viewBox="0 0 160 140">
+          <Corner className="grove-sapling grove-sapling-left" viewBox={`0 0 ${SAPLING_W} ${SAPLING_H}`}>
             <g aria-hidden="true">
-              <TopSprig lag={0.2} />
+              <Sapling lag={0} />
             </g>
-            <LeafSet spots={MOBILE_TOP} idPrefix="m-tl" opensAt={MOBILE_TOP_AT} lag={0.2} colors={colors} phase={phase} activeId={activeId} onLeaf={activateLeaf} remember={remember} labelFrom={1} />
+            <LeafSet spots={SAPLING_SPOTS} idPrefix="m-l" opensAt={SAPLING_LEAF_AT} lag={0} colors={colors} phase={phase} activeId={activeId} onLeaf={activateLeaf} remember={remember} labelFrom={1} />
           </Corner>
-          <Corner className="grove-corner grove-corner-tr" viewBox="0 0 160 140">
-            <g transform="translate(160 0) scale(-1 1)">
+          <Corner className="grove-sapling grove-sapling-right" viewBox={`0 0 ${SAPLING_W} ${SAPLING_H}`}>
+            <g transform={`translate(${SAPLING_W} 0) scale(-1 1)`}>
               <g aria-hidden="true">
-                <TopSprig lag={0.2 + GROW.side} />
+                <Sapling lag={GROW.side} />
               </g>
-              <LeafSet spots={MOBILE_TOP} idPrefix="m-tr" opensAt={MOBILE_TOP_AT} lag={0.2 + GROW.side} colors={colors} phase={phase} activeId={activeId} onLeaf={activateLeaf} remember={remember} labelFrom={3} />
-            </g>
-          </Corner>
-          <Corner className="grove-corner grove-corner-bl" viewBox="0 0 160 140">
-            <g aria-hidden="true">
-              <BottomSprig lag={0} />
-            </g>
-            <LeafSet spots={MOBILE_BOTTOM} idPrefix="m-bl" opensAt={[1.7]} lag={0} colors={colors} phase={phase} activeId={activeId} onLeaf={activateLeaf} remember={remember} labelFrom={5} />
-          </Corner>
-          <Corner className="grove-corner grove-corner-br" viewBox="0 0 160 140">
-            <g transform="translate(160 0) scale(-1 1)">
-              <g aria-hidden="true">
-                <BottomSprig lag={GROW.side} />
-              </g>
-              <LeafSet spots={MOBILE_BOTTOM} idPrefix="m-br" opensAt={[1.7]} lag={GROW.side} colors={colors} phase={phase} activeId={activeId} onLeaf={activateLeaf} remember={remember} labelFrom={6} />
+              <LeafSet spots={SAPLING_SPOTS} idPrefix="m-r" opensAt={SAPLING_LEAF_AT} lag={GROW.side} colors={colors} phase={phase} activeId={activeId} onLeaf={activateLeaf} remember={remember} labelFrom={SAPLING_SPOTS.length + 1} />
             </g>
           </Corner>
         </div>
@@ -441,7 +423,7 @@ function Corner({
 }) {
   return (
     <div className={className}>
-      <svg viewBox={viewBox} className="h-full w-full" preserveAspectRatio="xMidYMid meet">
+      <svg viewBox={viewBox} className="h-full w-full" preserveAspectRatio="xMinYMax meet">
         {children}
       </svg>
     </div>
@@ -506,20 +488,15 @@ function SideBranches({ lag }: { lag: number }) {
   );
 }
 
-function TopSprig({ lag }: { lag: number }) {
+/** The desktop tree's shape at sapling size: ground, a trunk leaning inward, two twigs. */
+function Sapling({ lag }: { lag: number }) {
   return (
     <>
-      <Branch d="M0 30C26 22 48 10 78 16" width={14} delay={lag + 0.7} duration={GROW.mobileTwig} />
-      <Branch d="M10 2C20 28 18 52 40 72" width={12} delay={lag + 0.9} duration={GROW.mobileTwig} />
-    </>
-  );
-}
-
-function BottomSprig({ lag }: { lag: number }) {
-  return (
-    <>
-      <path d="M0 128c22-12 40-8 58 8 8 8 10 12 10 12H0z" fill="var(--grove-ground)" />
-      <Branch d="M8 132C28 108 32 78 58 52" width={14} delay={lag} duration={GROW.mobileTrunk} />
+      <path d="M0 232c30-20 70-17 105-3 18 8 22 18 22 31H0z" fill="var(--grove-ground)" />
+      <ellipse cx="54" cy="251" rx="36" ry="8" fill="var(--grove-shade)" opacity="0.75" />
+      <Branch d="M34 250C52 206 66 170 84 136C102 102 96 72 116 40" width={13} delay={lag} duration={GROW.mobileTrunk} />
+      <Branch d="M116 40C98 30 80 28 62 20" width={8} delay={lag + 1.6} duration={GROW.mobileTwig} />
+      <Branch d="M84 136C112 120 136 128 158 106" width={9} delay={lag + 0.85} duration={GROW.mobileTwig} />
     </>
   );
 }
