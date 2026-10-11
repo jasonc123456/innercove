@@ -7,6 +7,7 @@ Local-first wellness companion for the GX10 hackathon. Read `docs/TEAM_PLAN.md` 
 - Real model: copy `.env.example` to `.env` (untracked), set `LOCAL_AI_API_KEY` from `~/.config/innercove/lmstudio.token`, set `INFERENCE_PROVIDER=lmstudio`.
 - `npm test` (vitest), `npm run typecheck`, `npm run validate` (B's contract checks). `@innercove/core` resolves to its `dist/`, so these scripts build it first.
 - `sudo docker compose up -d --build`: the demo build (web + API in one container, host network, 127.0.0.1:8000).
+- Dev mode on the GX10 (`docker-compose.dev.yml`): `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build`. Vite serves `web/` from source with hot reload on :8000 and proxies `/api` to the API under `tsx watch` on 127.0.0.1:8001, so a `git pull` shows up without a rebuild. A server-code change restarts the API, which locks the DB (unlock again). Back to the demo build: `docker compose up -d --build --remove-orphans`.
 - Phase 0 scripts: `scripts/run_eval.py`, `scripts/smoke-inference.py` (stdlib Python; env as above).
 
 ## Layout and owners (D44)

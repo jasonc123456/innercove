@@ -18,6 +18,15 @@ COPY tsconfig.base.json ./
 COPY packages packages
 RUN npm run build && npm prune --omit=dev
 
+# Dev mode only (docker-compose.dev.yml): the repo is bind-mounted and
+# node_modules live in named volumes, so nothing here is baked into the demo image.
+FROM node:22-bookworm-slim AS dev
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /app/node_modules /app/packages/core/node_modules /app/packages/server/node_modules /app/web/node_modules \
+  && chown -R node:node /app
+USER node
+WORKDIR /app
+
 FROM node:22-bookworm-slim
 ENV NODE_ENV=production HOST=127.0.0.1 PORT=8000 INNERCOVE_ROOT=/app WEB_DIST=web/dist
 WORKDIR /app
