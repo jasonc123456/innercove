@@ -47,6 +47,13 @@ export function AppShell() {
           <nav className="flex flex-wrap gap-2" aria-label="Sections">
             <NavLink to="/" end className={({ isActive }) => sectionClass(isActive)}>
               <NavIcon>
+                <path d="m4 11 8-6.5 8 6.5v8.5H4z" strokeLinejoin="round" />
+                <path d="M10 19.5v-5h4v5" strokeLinejoin="round" />
+              </NavIcon>
+              Home
+            </NavLink>
+            <NavLink to="/chat" className={({ isActive }) => sectionClass(isActive)}>
+              <NavIcon>
                 <path d="M5 6.5h14v8.5H9l-4 3v-3H5z" strokeLinejoin="round" />
               </NavIcon>
               Chat
