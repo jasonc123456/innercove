@@ -243,16 +243,27 @@ html[data-theme="dark"] .sign-in-page {
 
 .sign-in-grove,
 .sign-in-grove svg,
-.grove-corner {
+.grove-corner,
+.grove-side {
   pointer-events: none;
+}
+
+.sign-in-grove .grove-leaf,
+.sign-in-grove svg.grove-leaf {
+  pointer-events: auto;
 }
 
 .grove-leaf {
   cursor: pointer;
-  pointer-events: auto;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+}
+
+.grove-leaf-pin {
+  position: absolute;
+  overflow: visible;
+  transform-origin: left center;
 }
 
 .grove-leaf:focus {
@@ -274,6 +285,32 @@ html[data-theme="dark"] .sign-in-page {
 
 .grove-desktop {
   display: none;
+  position: absolute;
+  inset: 0;
+}
+
+.grove-side {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  /* The gutter beside the centered max-w-md column, including page padding, minus a small gap. */
+  width: min(36rem, calc((100% - min(100% - 2rem, 28rem)) / 2 - 0.5rem));
+  overflow: hidden;
+  container-type: size;
+}
+
+.grove-side-left {
+  left: 0;
+}
+
+.grove-side-right {
+  right: 0;
+}
+
+.grove-mirror {
+  width: 100%;
+  height: 100%;
+  transform: scaleX(-1);
 }
 
 .grove-corner {

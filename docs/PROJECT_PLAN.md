@@ -1044,6 +1044,12 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Checks:** core/server typechecks PASS; shared contract validate 52/52 PASS. Recovered core/backend build and safety config 33/33 PASS. Resume fixed whisper failure classification (503), then focused tests 10/10 PASS; integrated teammate commits with full suite 176/176 (17 files), typecheck and validate PASS; no new deployment, browser, Qwen, offline or GX10 result claimed.
 - **Handoff/Hour 2:** exact small GX10 experiment/config/metrics in `docs/VOICE_INPUT.md`, linked from backend README. Run ARM64 experiment; A wires verified sessions/microphone security, C implements tap-start/tap-stop/60 s auto-stop and editable draft with explicit Send; B supports authenticated format/cleanup acceptance. Replies remain text; no automatic send, continuous listening or speech output.
 
+**C sign-in grove (2026-10-10):**
+- **Done:** Decorative branches frame the sign-in box, using the sapling’s leaf shape, vein, rounded brown strokes, and gold, green, blue, purple, and rose. Ten leaves sit on desktop branches; narrow screens use smaller corner sprigs. Each leaf cycles only its own color. Nothing is saved, and a reload restores the first colors. The Daily check-in sapling is unchanged and no mood is sent.
+- **Files:** `web/src/components/SignInGrove.tsx`, `web/src/pages/LoginPage.tsx`, `web/src/index.css`.
+- **Checks:** `cd web && npm run build` passed. A DOM harness checked independent colors, touch, Enter and Space, branch clicks doing nothing, sign-in fields and Get help, remount reset, and check-in still adding leaves. Gutter math keeps the desktop trees beside the form from 1024px to 1440px.
+- **Limitations:** No browser screenshot; browser tools were unavailable. The app has no theme switch, so the sign-in page follows `prefers-color-scheme` and `html[data-theme]`. Side trees stop at 36rem, so very wide screens keep a gap. Mobile uses corner sprigs so the form stays readable.
+
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
 1. Write diary entries A and B. Allow AI access to A only.

@@ -18,13 +18,15 @@ const PALETTE = [
 
 type Spot = { x: number; y: number; angle: number; scale: number };
 
-/** Leaf bases are the endpoints of the branch curves below, so each one sits on a stroke. */
+/** Side-panel viewBox. Leaf bases are the endpoints of the curves in SideBranches. */
+const SIDE_W = 400;
+const SIDE_H = 780;
 const DESKTOP_SPOTS: Spot[] = [
-  { x: 300, y: 112, angle: -63, scale: 2.1 },
-  { x: 176, y: 74, angle: -153, scale: 1.55 },
-  { x: 340, y: 246, angle: -60, scale: 1.45 },
-  { x: 246, y: 330, angle: 158, scale: 1.15 },
-  { x: 308, y: 560, angle: -36, scale: 1.75 },
+  { x: 248, y: 52, angle: -65, scale: 2 },
+  { x: 128, y: 22, angle: -164, scale: 1.4 },
+  { x: 336, y: 132, angle: -38, scale: 1.55 },
+  { x: 214, y: 176, angle: 145, scale: 1.15 },
+  { x: 304, y: 404, angle: -39, scale: 1.7 },
 ];
 
 const MOBILE_TOP: Spot[] = [
@@ -47,34 +49,24 @@ export function SignInGrove() {
 
   return (
     <div className="sign-in-grove pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      <svg
-        className="grove-desktop absolute inset-0 h-full w-full"
-        viewBox="0 0 1440 900"
-        preserveAspectRatio="xMidYMid slice"
-      >
-        <g aria-hidden="true">
-          <GroveBranches />
-          <g transform="translate(1440 0) scale(-1 1)">
-            <GroveBranches />
-          </g>
-        </g>
-        <LeafSet
-          spots={DESKTOP_SPOTS}
-          colors={desktop}
-          start={0}
-          hit={26}
-          onCycle={(index) => setDesktop((current) => cycle(current, index))}
-        />
-        <g transform="translate(1440 0) scale(-1 1)">
-          <LeafSet
-            spots={DESKTOP_SPOTS}
+      <div className="grove-desktop">
+        <div className="grove-side grove-side-left">
+          <SideFrame
             colors={desktop}
-            start={DESKTOP_SPOTS.length}
-            hit={26}
+            start={0}
             onCycle={(index) => setDesktop((current) => cycle(current, index))}
           />
-        </g>
-      </svg>
+        </div>
+        <div className="grove-side grove-side-right">
+          <div className="grove-mirror">
+            <SideFrame
+              colors={desktop}
+              start={DESKTOP_SPOTS.length}
+              onCycle={(index) => setDesktop((current) => cycle(current, index))}
+            />
+          </div>
+        </div>
+      </div>
 
       <div className="grove-mobile absolute inset-0">
         <Corner className="grove-corner grove-corner-tl" viewBox="0 0 160 140">
@@ -152,38 +144,73 @@ function Corner({
   );
 }
 
-function GroveBranches() {
+function SideFrame({
+  colors,
+  start,
+  onCycle,
+}: {
+  colors: number[];
+  start: number;
+  onCycle: (index: number) => void;
+}) {
+  return (
+    <div className="relative h-full w-full">
+      <svg
+        aria-hidden="true"
+        viewBox={`0 0 ${SIDE_W} ${SIDE_H}`}
+        preserveAspectRatio="none"
+        className="absolute inset-0 h-full w-full"
+      >
+        <SideBranches />
+      </svg>
+      {DESKTOP_SPOTS.map((spot, offset) => {
+        const index = start + offset;
+        return (
+          <PinnedLeaf
+            key={index}
+            spot={spot}
+            colorIndex={colors[index] ?? 0}
+            label={`Change decorative leaf ${index + 1} color.`}
+            onCycle={() => onCycle(index)}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function SideBranches() {
   return (
     <>
-      <path d="M0 848c46-28 98-24 150-6 28 10 36 28 36 42H0z" fill="var(--grove-ground)" />
-      <ellipse cx="78" cy="874" rx="52" ry="11" fill="var(--grove-shade)" opacity="0.75" />
+      <path d="M0 742c40-26 92-22 140-4 24 10 30 24 30 36H0z" fill="var(--grove-ground)" />
+      <ellipse cx="72" cy="762" rx="48" ry="10" fill="var(--grove-shade)" opacity="0.75" />
       <path
-        d="M68 870C110 760 150 680 186 600C230 500 200 410 246 330C292 240 270 170 300 112"
+        d="M44 748C86 640 120 540 156 450C196 350 170 260 214 176C250 108 236 78 248 52"
         fill="none"
         stroke="var(--grove-branch)"
-        strokeWidth="28"
+        strokeWidth="30"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
-        d="M300 112C260 92 220 96 176 74"
-        fill="none"
-        stroke="var(--grove-branch)"
-        strokeWidth="14"
-        strokeLinecap="round"
-      />
-      <path
-        d="M246 330C290 300 320 280 340 246"
+        d="M248 52C210 36 170 34 128 22"
         fill="none"
         stroke="var(--grove-branch)"
         strokeWidth="16"
         strokeLinecap="round"
       />
       <path
-        d="M186 600C230 578 270 588 308 560"
+        d="M214 176C260 150 300 160 336 132"
         fill="none"
         stroke="var(--grove-branch)"
-        strokeWidth="16"
+        strokeWidth="18"
+        strokeLinecap="round"
+      />
+      <path
+        d="M156 450C210 420 260 440 304 404"
+        fill="none"
+        stroke="var(--grove-branch)"
+        strokeWidth="18"
         strokeLinecap="round"
       />
     </>
@@ -259,6 +286,70 @@ function LeafSet({
   );
 }
 
+function PinnedLeaf({
+  spot,
+  colorIndex,
+  label,
+  onCycle,
+}: {
+  spot: Spot;
+  colorIndex: number;
+  label: string;
+  onCycle: () => void;
+}) {
+  const swatch = PALETTE[colorIndex] ?? PALETTE[0];
+  return (
+    <svg
+      role="button"
+      tabIndex={0}
+      aria-label={label}
+      viewBox="0 -8.5 23 17"
+      className="grove-leaf grove-leaf-pin"
+      style={{
+        left: `${(spot.x / SIDE_W) * 100}%`,
+        top: `${(spot.y / SIDE_H) * 100}%`,
+        width: `calc(${spot.scale} * 8cqmin)`,
+        height: `calc(${spot.scale} * 8cqmin * 17 / 23)`,
+        transform: `translateY(-50%) rotate(${spot.angle}deg)`,
+      }}
+      {...leafHandlers(onCycle)}
+    >
+      <path className="grove-leaf-fill" d={LEAF_SHAPE} fill={swatch.fill} />
+      <path
+        className="grove-leaf-vein"
+        d="M2 0H18"
+        stroke={swatch.vein}
+        strokeOpacity={swatch.veinOpacity}
+        strokeWidth="1.15"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function leafHandlers(onCycle: () => void) {
+  return {
+    onPointerDown(event: PointerEvent<SVGElement>) {
+      if (event.button !== 0) return;
+      event.currentTarget.dataset.armed = "pointer";
+      onCycle();
+    },
+    onClick(event: MouseEvent<SVGElement>) {
+      if (event.currentTarget.dataset.armed === "pointer") {
+        delete event.currentTarget.dataset.armed;
+        return;
+      }
+      onCycle();
+    },
+    onKeyDown(event: KeyboardEvent<SVGElement>) {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      if (event.repeat) return;
+      onCycle();
+    },
+  };
+}
+
 function DecorativeLeaf({
   spot,
   colorIndex,
@@ -274,27 +365,6 @@ function DecorativeLeaf({
 }) {
   const swatch = PALETTE[colorIndex] ?? PALETTE[0];
 
-  function onPointerDown(event: PointerEvent<SVGGElement>) {
-    if (event.button !== 0) return;
-    event.currentTarget.dataset.armed = "pointer";
-    onCycle();
-  }
-
-  function onClick(event: MouseEvent<SVGGElement>) {
-    if (event.currentTarget.dataset.armed === "pointer") {
-      delete event.currentTarget.dataset.armed;
-      return;
-    }
-    onCycle();
-  }
-
-  function onKeyDown(event: KeyboardEvent<SVGGElement>) {
-    if (event.key !== "Enter" && event.key !== " ") return;
-    event.preventDefault();
-    if (event.repeat) return;
-    onCycle();
-  }
-
   return (
     <g
       role="button"
@@ -302,9 +372,7 @@ function DecorativeLeaf({
       aria-label={label}
       transform={`translate(${spot.x} ${spot.y}) rotate(${spot.angle})`}
       className="grove-leaf"
-      onPointerDown={onPointerDown}
-      onClick={onClick}
-      onKeyDown={onKeyDown}
+      {...leafHandlers(onCycle)}
     >
       <circle cx="12" cy="0" r={hit} fill="transparent" />
       <g transform={`scale(${spot.scale})`} pointerEvents="none">
