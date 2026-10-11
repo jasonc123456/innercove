@@ -982,6 +982,10 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - The chat card routes only to the server-approved breathing page. The model never supplies a route; prompt guidance keeps offers optional and non-diagnostic.
 - Automated coverage: breathing phase/completion calculations and suggestion positive/negative/ambiguous/dismissal/repeat/crisis cases. This feature is an optional wellness tool, not treatment or clinically validated care.
 
+**Wellness toolkit navigation (2026-10-10):**
+- Renamed the app navigation item to **WELLNESS TOOLKIT**. The library now presents Guided breathing as the only active tool; its no-hold comfortable-breathing option stays inside the guide.
+- Grounding, guided journaling, and thought reflection remain clearly marked as planned rather than appearing partially implemented.
+
 | P0 item | Server | UI | Missing |
 |---|---|---|---|
 | 1. Streaming local chat, reasoning off | ✅ `/api/infer`, `/api/chat` (A) | ✅ chat page streams from Qwen | none |
