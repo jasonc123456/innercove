@@ -45,6 +45,20 @@ export interface TurnInput {
   hooks?: TurnHooks;
   /** Called with the screen's reasons only, never the text (plan §3 step 5). */
   onScreenBlock?: (tier: number, reasons: readonly string[]) => void;
+  /** Recent user messages in this conversation, newest last; a risky one keeps this turn at tier 1 or above. */
+  recentUserMessages?: readonly string[];
+}
+
+/** How many recent user messages a tier-1+ assessment carries over from. */
+export const CARRY_TURNS = 3;
+
+/**
+ * A risk signal doesn't vanish because the next message is short ("do I have to spell it out?"):
+ * if any of the last few user messages was tier 1 or 2, this turn is at least tier 1 (crisis card,
+ * full reply screened before display). Carried risk never forces tier 2's static reply.
+ */
+export function carriedTier(safety: SafetyLayer, recent: readonly string[] = []): 0 | 1 {
+  return recent.slice(-CARRY_TURNS).some((text) => safety.assess(text).tier >= 1) ? 1 : 0;
 }
 
 export const REVIEWED_REPLY_MODEL_ID = "reviewed-reply";
@@ -57,7 +71,7 @@ export const REVIEWED_REPLY_MODEL_ID = "reviewed-reply";
 export async function runTurn(input: TurnInput): Promise<ReplyStats | null> {
   const { provider, safety, send, signal, hooks = {} } = input;
   const assessment = safety.assess(input.message);
-  const tier = assessment.tier;
+  const tier: SafetyTier = assessment.tier === 2 ? 2 : (Math.max(assessment.tier, carriedTier(safety, input.recentUserMessages)) as SafetyTier);
   const ids = (await hooks.start?.(tier)) ?? { conversationId: null, userMessageId: null };
   send("meta", { ...ids, tier });
 

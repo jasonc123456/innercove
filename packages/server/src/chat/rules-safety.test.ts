@@ -14,6 +14,7 @@ import { FakeProvider } from "../inference/index.js";
 import { fromRoot } from "../paths.js";
 import { loadSafetyConfigs, rulesSafety } from "./rules-safety.js";
 import type { SafetyLayer } from "./safety.js";
+import { carriedTier } from "./turn.js";
 import { signedIn } from "../testing/signed-in.js";
 
 const configs = loadSafetyConfigs();
@@ -109,5 +110,47 @@ describe("/api/chat with D's engine", () => {
       name: "error",
       data: { code: "INTERNAL_ERROR", message: expect.any(String) },
     });
+  });
+});
+
+describe("carried risk across turns", () => {
+  // A team test conversation (2026-10-11): each message alone looked harmless to the old rules.
+  const conversation = [
+    "I have some depressing thoughts and i feel like i no longer need any of the things i have rn...",
+    "i mean... i just want a fresh start maybe in another life?",
+  ];
+
+  it("indirect death wishes are tier 1, travel plans and idioms are not", () => {
+    for (const text of [...conversation, "I want to go to sleep and not wake up", "sometimes I think about ending it"]) {
+      expect(safety.assess(text).tier, text).toBe(1);
+    }
+    for (const text of ["I won't need my stuff for the trip", "thinking about ending it with my boyfriend", "I need a fresh start this semester"]) {
+      expect(safety.assess(text).tier, text).toBe(0);
+    }
+  });
+
+  it("a short follow-up after a risky message keeps the crisis tier, without forcing the static reply", () => {
+    expect(safety.assess("do i have to spell it out for you?").tier).toBe(0);
+    expect(carriedTier(safety, conversation)).toBe(1);
+    expect(carriedTier(safety, [conversation[0]!, "ok", "thanks", "what about exams"])).toBe(0);
+    expect(carriedTier(safety, ["I had a good day"])).toBe(0);
+  });
+
+  it("/api/infer sends tier 1 for the follow-up when the history holds the risk", async () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "innercove-carry-"));
+    const database = new DatabaseStore(path.join(dir, "test.db"));
+    await database.setup("fixture-only-passphrase");
+    const app = await buildApp({ sessionGuard: signedIn, database, provider: new FakeProvider(), safety, systemPrompt: "SYSTEM", stats: { lastReply: null } }, false);
+    try {
+      const history = conversation.flatMap((content) => [{ role: "user", content }, { role: "assistant", content: "I'm here." }]);
+      const res = await app.inject({ method: "POST", url: "/api/infer", payload: { history, message: "do i have to spell it out for you?" } });
+      expect(events(res.body).find((e) => e.name === "meta")!.data.tier).toBe(1);
+      const fresh = await app.inject({ method: "POST", url: "/api/infer", payload: { history: [], message: "do i have to spell it out for you?" } });
+      expect(events(fresh.body).find((e) => e.name === "meta")!.data.tier).toBe(0);
+    } finally {
+      await app.close();
+      await database.shutdown();
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

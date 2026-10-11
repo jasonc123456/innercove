@@ -44,6 +44,26 @@
       "patterns": ["\\b(?:don't|do not) (?:want|see the point) to wake up\\b", "\\bnot wake up for a long time\\b", "\\b(?:wish i (?:was|were) dead|want to disappear|would be better off dead|nothing is ever going to get better|tired of everything)\\b"]
     },
     {
+      "id": "indirect-death-wish",
+      "tier": 1,
+      "category": "passive_self_harm",
+      "patterns": ["\\b(?:go to sleep|fall asleep|sleep) and (?:never|not) wake up\\b", "\\b(?:fresh start|start over|start again|begin again)\\b[^.?!]{0,40}\\b(?:another|next|other) life\\b", "\\b(?:don't|do not) want to (?:be alive|exist|live anymore|be around anymore|wake up anymore)\\b", "\\b(?:no reason to live|tired of (?:living|being alive)|what'?s the point of (?:living|being alive|going on))\\b", "\\b(?:better off (?:dead|gone)|end it all|disappear forever|wish i (?:could )?(?:just )?(?:stop existing|not exist))\\b"]
+    },
+    {
+      "id": "not-needing-belongings",
+      "tier": 1,
+      "category": "passive_self_harm",
+      "patterns": ["\\b(?:no longer|won't|will not) need (?:any of )?(?:my|the|these|all my) (?:things|stuff|belongings)\\b"],
+      "excludePatterns": ["\\b(?:trip|travel|vacation|holiday|pack|packing|move|moving|dorm|semester|sell|selling|declutter)\\b"]
+    },
+    {
+      "id": "ending-it",
+      "tier": 1,
+      "category": "passive_self_harm",
+      "patterns": ["\\b(?:thinking|think|thought) (?:about|of) ending it\\b", "\\bjust want (?:it|everything) to end\\b"],
+      "excludePatterns": ["\\bending it with\\b", "\\b(?:relationship|breakup|break up|dating|boyfriend|girlfriend|partner)\\b"]
+    },
+    {
       "id": "self-harm-ideation",
       "tier": 1,
       "category": "self_harm_ideation",

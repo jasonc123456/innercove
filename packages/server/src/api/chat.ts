@@ -36,7 +36,7 @@ export function chatRoutes(app: FastifyInstance, deps: AppDeps) {
       }
     }
     const hooks = savedChatHooks(store, conversationId, prior, message, useMemories, pinnedMemoryIds, dismissedExerciseIds, deps);
-    return stream(request, reply, deps, message, hooks);
+    return stream(request, reply, deps, message, hooks, userTexts(prior));
   });
 
   /** Temporary chats (D35): history comes from the browser; never writes rows or content logs. */
@@ -62,8 +62,13 @@ export function chatRoutes(app: FastifyInstance, deps: AppDeps) {
         // narrower contract for the suggestion policy.
         recentHistory: history.map(({ role, content }) => ({ role: role as "user" | "assistant", content })),
       }),
-    });
+    }, userTexts(history));
   });
+}
+
+/** The user's side of a conversation, oldest first, for carried risk (turn.ts `carriedTier`). */
+function userTexts(messages: readonly { role: string; content: string | null }[]): string[] {
+  return messages.filter((m) => m.role === "user" && m.content).map((m) => m.content!);
 }
 
 function savedChatHooks(
@@ -157,7 +162,14 @@ function savedChatHooks(
   };
 }
 
-async function stream(request: FastifyRequest, reply: FastifyReply, deps: AppDeps, message: string, hooks: TurnHooks) {
+async function stream(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  deps: AppDeps,
+  message: string,
+  hooks: TurnHooks,
+  recentUserMessages: readonly string[],
+) {
   const controller = new AbortController();
   reply.raw.on("close", () => {
     if (!reply.raw.writableFinished) controller.abort();
@@ -173,6 +185,7 @@ async function stream(request: FastifyRequest, reply: FastifyReply, deps: AppDep
       signal: controller.signal,
       send,
       hooks,
+      recentUserMessages,
       onScreenBlock: (tier, reasons) =>
         request.log.info({ event: "output_screened", tier, reasons }, "output screen blocked a reply"),
     });
