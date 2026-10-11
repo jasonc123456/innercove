@@ -10,6 +10,12 @@ export function ChatPage() {
     useAppSession();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streamingId, setStreamingId] = useState<string | null>(null);
+  // Saved chats: the hub's conversation id, set from the first reply's `meta` event.
+  const conversationIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    // Switching mode starts a fresh saved conversation; temporary turns are never saved.
+    conversationIdRef.current = null;
+  }, [chatMode]);
   const [failed, setFailed] = useState(false);
   const [openSource, setOpenSource] = useState<{
     messageId: string;
@@ -54,7 +60,13 @@ export function ChatPage() {
 
     try {
       await streamAssistantReply(
-        { message: text, history, useMemories, pinnedMemoryIds },
+        {
+          message: text,
+          history,
+          useMemories,
+          pinnedMemoryIds,
+          ...(chatMode === "saved" ? { saved: { conversationId: conversationIdRef.current } } : {}),
+        },
         {
           onDelta: (chunk) => setReply((content) => content + chunk),
           onReplace: (replacement) => setReply(() => replacement),
@@ -72,12 +84,14 @@ export function ChatPage() {
                   : message,
               ),
             ),
-          onMeta: (meta) =>
+          onMeta: (meta) => {
+            if (chatMode === "saved" && meta.conversationId) conversationIdRef.current = meta.conversationId;
             setMessages((current) =>
               current.map((message) =>
                 message.id === assistantId ? { ...message, tier: meta.tier } : message,
               ),
-            ),
+            );
+          },
         },
         controller.signal,
       );
@@ -133,7 +147,7 @@ export function ChatPage() {
         </label>
         {chatMode === "saved" ? (
           <p className="text-sm text-ink/70">
-            Not saved. The conversation is not written to a database.
+            Saved. This conversation is stored in the hub&apos;s encrypted database.
           </p>
         ) : null}
         {useMemories ? (

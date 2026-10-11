@@ -942,7 +942,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 | P0 item | Server | UI | Missing |
 |---|---|---|---|
 | 1. Streaming local chat, reasoning off | ✅ `/api/infer`, `/api/chat` (A) | ✅ chat page streams from Qwen | none |
-| 2. Saved vs temporary + Use memories | ✅ both routes; saved chats persist in SQLCipher (B) | ⚠️ "Save" still calls `/api/infer` and says "Not saved" | **C:** saved mode → `/api/chat` + conversation list/reload |
+| 2. Saved vs temporary + Use memories | ✅ both routes; saved chats persist in SQLCipher (B) | ✅ "Save" now calls `/api/chat` and keeps the conversation id (A, `streamReply.ts`; verified in a browser: one conversation stored) | **C:** conversation list + reopening a saved chat |
 | 3. Diary CRUD, search, AI access | ✅ `/api/diary` incl. `?q=` (B) | ⚠️ diary page is tab-local; only the support note calls `/api/diary` | **C:** wire the diary page |
 | 4. Memories, D27 retrieval, chips + "what was sent" | ✅ `/api/memories` (B), retrieval/prompt/D33 (A) | ⚠️ chips/panel render from SSE; memories page is a placeholder | **C:** wire memories; pinned IDs from the hub |
 | 5. Save chat messages to the diary (excerpt) | ✅ `/api/diary` `origin: "excerpt"` | ❌ | **C** |

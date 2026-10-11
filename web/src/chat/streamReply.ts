@@ -1,7 +1,9 @@
 /**
- * SSE client for POST /api/infer (temporary chats, plan §3c). `EventSource`
- * can't POST, so this reads the stream with fetch. History stays in browser
- * memory only (D09/D35).
+ * SSE client for the chat routes (plan §3c). `EventSource` can't POST, so this
+ * reads the stream with fetch.
+ * - Temporary chats: POST /api/infer. History stays in browser memory only (D09/D35).
+ * - Saved chats: POST /api/chat. The hub stores both messages in the encrypted DB and
+ *   loads the history itself (with D33 applied), so no history is sent.
  */
 
 export interface ChatTurn {
@@ -56,19 +58,31 @@ export async function streamAssistantReply(
     history: ChatTurn[];
     useMemories?: boolean;
     pinnedMemoryIds?: string[];
+    /** Present for saved chats: `null` starts a new conversation (its id arrives in `onMeta`). */
+    saved?: { conversationId: string | null };
   },
   handlers: StreamHandlers,
   signal?: AbortSignal,
 ): Promise<void> {
-  const res = await fetch("/api/infer", {
+  const pinnedMemoryIds = (request.pinnedMemoryIds ?? []).slice(0, 5);
+  const res = await fetch(request.saved ? "/api/chat" : "/api/infer", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      history: request.history.slice(-MAX_HISTORY),
-      message: request.message,
-      useMemories: request.useMemories ?? false,
-      pinnedMemoryIds: (request.pinnedMemoryIds ?? []).slice(0, 5),
-    }),
+    body: JSON.stringify(
+      request.saved
+        ? {
+            conversationId: request.saved.conversationId,
+            message: request.message,
+            useMemories: request.useMemories ?? true,
+            pinnedMemoryIds,
+          }
+        : {
+            history: request.history.slice(-MAX_HISTORY),
+            message: request.message,
+            useMemories: request.useMemories ?? false,
+            pinnedMemoryIds,
+          },
+    ),
     signal,
   });
   if (!res.ok || !res.body) {

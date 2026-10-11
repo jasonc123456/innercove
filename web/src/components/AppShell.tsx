@@ -41,7 +41,7 @@ export function AppShell() {
               </p>
             </div>
             <p className="max-w-40 text-right text-xs leading-snug text-ink/80">
-              Save and the diary stay in this tab. They are not stored.
+              Saved chats are stored on the hub. The diary still stays in this tab.
             </p>
           </div>
           <nav className="flex flex-wrap gap-2" aria-label="Sections">
