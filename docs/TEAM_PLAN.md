@@ -29,7 +29,8 @@ Compared with the original plan, retrieval and prompt assembly move from D to A,
 | 5–8 | Wire D's safety pre-screen and output screen into `/api/chat` with **screen-before-display by tier (D32)**: tier 0 streams with a sentence-level lag, tier 1 is buffered and screened, tier 2 sends D's reviewed static reply. Add the test where a planted method detail mid-stream never reaches the client. |
 | 8–12 | **Phase 3 core:** the retrieval policy (relevant memories only, top 3–5, plus "Use this memory in this chat", D27), prompt assembly, and **history exclusion on revocation (D33)**, all with `FakeProvider` tests on the assembled prompt. |
 | 12–14 | **Phase 6:** integration, the offline test, the `ss -ltnp` check. |
-| P1 | **Stretch #2, phone pairing (D31):** the local CA and hub certificate, the HTTPS listener on the LAN for the InnerCove port only, QR token → per-device cookie. Install the CA on the demo phone and test it on the travel router. Later items only if time allows. |
+| 12–14 | **Phase 5a, sign-in (D47):** the session guard (`401` on every protected route, no loopback exemption), `POST/GET/DELETE /api/session`, cookie and `Origin` checks, failure backoff; `demo-check.mjs` signs in first. |
+| P1 | **Two-factor (D47):** TOTP verify (±1 step, no replay), enrollment and recovery-code routes, the hub-shell reset. Then **stretch #3, phone pairing (D31):** the local CA and hub certificate, the HTTPS listener on the LAN for the InnerCove port only, QR token → per-device cookie. Install the CA on the demo phone and test it on the travel router. Later items only if time allows. |
 | Backup for | D's safety work. |
 
 ### B: data and APIs
@@ -41,6 +42,7 @@ Compared with the original plan, retrieval and prompt assembly move from D to A,
 | 3–8 | **Phase 2:** opening the SQLCipher database, key derivation, lock and unlock (`423` while locked), the schema and migrations (including `devices`, and `user_id` on every table), the conversation and diary repos, FTS with `secure-delete` (or `optimize` after deletes), `/api/unlock`, `/api/conversations` and `/api/diary`. |
 | 8–12 | **Phase 3, API side:** the memory repo, provenance, `/api/memories` and revoke propagation. Also the **permission and user-scoping tests**. |
 | 12–14 | **Phase 5, backend:** `/api/settings`, delete-all with `VACUUM`, and the deletion test **through the unlocked database** (canary gone from rows, search, derived items and the next prompt). The encryption state and speed stats for the privacy panel. A seed script that loads D's persona. |
+| 12–14 | **Phase 5a, sign-in (D47):** verify the passphrase against the unlocked key (constant time) and unlock on the first sign-in; later, store the TOTP secret and hashed recovery codes in the encrypted DB. |
 | P1 | **Stretch #1, Summary to share (D34):** the generation endpoint with the one-time consent, a factual JSON-schema summary with a source link for every point, and Markdown export. Later items only if time allows. |
 | Backup for | D's persona and seed data. |
 
@@ -51,6 +53,7 @@ Compared with the original plan, retrieval and prompt assembly move from D to A,
 | 3–8 | The setup and unlock screen, the diary pages, the Save/Temporary switch and the "Use memories" switch. |
 | 8–12 | The memory page, the "had access to" chips and **the panel that shows exactly what was sent**, the "Use this memory in this chat" button, and the revocation notice in the chat (D33). The crisis card, the Help button and the support note form, using D's config; from Temporary mode it says "This note will be saved to your diary." |
 | 12–14 | The settings page, the privacy panel (acceleration, model, memory, last reply's speed, and an honest "Diary encryption: OFF" if the fallback is on) and the CSP headers. |
+| 12–14 | **Phase 5a, sign-in (D47):** turn `LoginPage` into the passphrase sign-in (setup on first run, then sign in; no email), handle `401` anywhere by returning to sign-in, sign-out button; later the code step and two-factor setup in Settings (QR rendered locally, recovery codes shown once). |
 | P1 | The UI for stretch #1 (item selection with the consent wording, the editable summary, export) and then stretch #2 (the pairing QR screen). |
 | Backup for | D's demo script. |
 

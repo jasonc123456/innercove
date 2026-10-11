@@ -6,7 +6,7 @@ Legend: ✅ verified (sources at end) · ⚠️ assumption/unverified · 🧪 me
 ## Context
 InnerCove is a privacy-first local AI wellness companion. It combines chat, a diary, permission-controlled memory and an app-level safety layer, and it runs on an ASUS GX10 for a 24-hour hackathon. The product is built around a **hub**: one computer (a home PC, a GX10, or later an organization's server) holds the diary and runs the main model. Browsers, and later an Android companion app, connect to it (§3a). This document sets the architecture, the MVP scope and the phased plan before any code is written.
 
-**Status:** the event has started and code is in progress in the repo ([github.com/jasonc123456/innercove](https://github.com/jasonc123456/innercove); these docs live in its `docs/` folder, D40). **Every decision is confirmed, including the chat model: Qwen3.8-27B (D12).** The quantization is Q6_K (D43), loaded at 262K context (D45). **Phase 0 is done on the GX10** (prompt v3: companion 89.8%, safety 95.8%, 0 critical fails; D to review the scores). The app is reachable on the team LAN (D46). See `DECISIONS.md`, D01–D46. An external review (2026-10-10) added D31–D34 and tightened the safety, revocation and deletion tests. Pre-event tests of Qwen3.8-27B on the team's own server are recorded in `DECISIONS.md` (prompt v2: companion 89.8%, safety 96.1%, no critical fails). Under D08, all code is written after the official start. Phase 0 starts only when the team explicitly says go.
+**Status:** the event has started and code is in progress in the repo ([github.com/jasonc123456/innercove](https://github.com/jasonc123456/innercove); these docs live in its `docs/` folder, D40). **Every decision is confirmed, including the chat model: Qwen3.8-27B (D12).** The quantization is Q6_K (D43), loaded at 262K context (D45). **Phase 0 is done on the GX10** (prompt v3: companion 89.8%, safety 95.8%, 0 critical fails; D to review the scores). The app is reachable on the team LAN (D46); **sign-in with the hub passphrase is mandatory and two-factor is optional (D47)**. See `DECISIONS.md`, D01–D47. An external review (2026-10-10) added D31–D34 and tightened the safety, revocation and deletion tests. Pre-event tests of Qwen3.8-27B on the team's own server are recorded in `DECISIONS.md` (prompt v2: companion 89.8%, safety 96.1%, no critical fails). Under D08, all code is written after the official start. Phase 0 starts only when the team explicitly says go.
 **Last updated 2026-10-10 (late evening):** B's Phase 2, 3 and 5 backends are in (encrypted DB, conversations, diary, memories, settings, delete-all, persona seed); saved chats now persist from the UI; desktop UI and mood-tree fix; dev mode with hot reload on the GX10; CI on every push; `scripts/demo-check.mjs` passes on the GX10. Before that: Phase 0 checks and the 40 tests done on the GX10; model loaded at 262K (D45); Q6_K chosen (D43); repo layout settled as two workspaces (D44); GX10 set up (`SETUP_LOG.md`). Earlier the same day: added the hub-and-companion model, desktop packaging, model strategy, remote access, connecting your own model server, SQLCipher encryption from day one, crisis comfort and support notes (D29, D30), the pre-event model tests, the eval runner spec (§5 Phase 0), the "Start here" section, the API contracts (§3c), the demo persona and the pitch plan (§10).
 
 Environment note: the planning workstation is x86_64. Phase 0 must run on the GX10.
@@ -20,7 +20,7 @@ Environment note: the planning workstation is x86_64. Phase 0 must run on the GX
 
 ## Start here (event day)
 For anyone, human or a Claude Code/Codex session, picking this up on the GX10.
-1. **Read in this order:** this section, `TEAM_PLAN.md` (who does what), `DECISIONS.md` (D01–D46 and the pre-event results), §3b, §5 Phase 0, §8.
+1. **Read in this order:** this section, `TEAM_PLAN.md` (who does what), `DECISIONS.md` (D01–D47 and the pre-event results), §3b, §5 Phase 0, §8.
 2. **What's in `docs/`** (paths below are relative to it):
    - `PROJECT_PLAN.md`, `DECISIONS.md` and `TEAM_PLAN.md`.
    - `prep/system-prompt.txt`: system prompt v3 (D29 comfort and de-escalation plus the D28 fixes; not yet tested). `prep/system-prompt-v2.txt` is the version the pre-event results used.
@@ -98,7 +98,7 @@ The team accepted every recommendation below **except #15: the diary is encrypte
 | 4 | Memory creation | Explicit: the user writes or approves memories, and the AI can only *propose* (`status=proposed`) | Automatic extraction | Trust vs. effort | No (proposals are P1) |
 | 5 | Chat vs. diary schema | Separate tables. An excerpt or summary becomes a **new diary entry with copied text** plus a provenance link | One unified documents table | Distinct lifecycles vs. reuse | Yes, Phase 2 |
 | 6 | Permission propagation | A derived item's AI access is the **most restrictive of its sources**. If a source is revoked or deleted, the derived item is flagged and excluded until the user re-confirms | Snapshot permissions at creation | Correctness vs. a little complexity | Yes, Phase 3 |
-| 7 | Users | One seeded user, with **`user_id` on every row and in every query**. No login UI | Full auth now | Hours saved vs. a later retrofit | Yes, Phase 2 (schema only) |
+| 7 | Users | One seeded user, with **`user_id` on every row and in every query**. ~~No login UI~~ **Sign-in with the hub passphrase, optional TOTP two-factor (D47)** | Full auth now | Hours saved vs. a later retrofit | Yes, Phase 2 (schema only) |
 | 8 | Citations | Show the items injected into the prompt ("had access to") | Ask the model to cite IDs | Always accurate vs. precise but unreliable | Phase 3 |
 | 9 | Reasoning | Off for chat (`reasoning_effort: "none"`; see D13 findings). The adapter **always** strips `<think>` and drops `reasoning_content`. Optionally on for handoff summaries | On everywhere | Latency vs. quality | Phase 0/1 |
 | 10 | Safety detection | Deterministic tiered rules are the primary signal. An optional LLM classifier can only *escalate* | LLM-only | Predictable and testable vs. nuance | Phase 4 |
@@ -250,7 +250,7 @@ The team accepted every recommendation below **except #15: the diary is encrypte
 |---|---|---|
 | Home Wi-Fi only | **v1** | The simplest, but there's no access away from home. |
 | An E2E-encrypted relay we run | **v2 default** | The relay forwards the pinned TLS connection without decrypting it. It sees only metadata: IPs, timing and sizes. Works behind CGNAT. We run and pay for it. |
-| Port forwarding | **v2 opt-in advanced option** | A direct path with no third party. **Requirements:** pinned TLS; per-device keys on every request; no password login and no pairing on the internet-facing port; expose only the InnerCove port, never the model server; rate limiting; auto-updates; a security review before shipping. Try automatic mapping (UPnP/NAT-PMP) first, with manual steps as a fallback. **Caveats:** it fails behind CGNAT (common with 5G and satellite home internet and some ISPs). Home IPs change, so it needs dynamic DNS or the relay as a meeting point. Router setup is hard for non-technical users. Internet scanners will find the hub, so any server bug exposes diaries. |
+| Port forwarding | **v2 opt-in advanced option** | A direct path with no third party. **Requirements:** TLS (pinned in the native apps); **browsers sign in with the passphrase plus two-factor (D47)**, native apps use per-device keys; no pairing on the internet-facing port; expose only the InnerCove port, never the model server; rate limiting; auto-updates; a security review before shipping. Try automatic mapping (UPnP/NAT-PMP) first, with manual steps as a fallback. **Caveats:** it fails behind CGNAT (common with 5G and satellite home internet and some ISPs). Home IPs change, so it needs dynamic DNS or the relay as a meeting point. Router setup is hard for non-technical users. Internet scanners will find the hub, so any server bug exposes diaries. |
 | Cloudflare Tunnel | **Only with app-layer encryption** | By default Cloudflare **decrypts at its edge**. There are two TLS legs (phone → Cloudflare, then Cloudflare → `cloudflared` → hub), so Cloudflare can read the content. It's usable only if InnerCove encrypts request and response bodies with the paired device keys, so Cloudflare relays ciphertext. It still sees paths, timing and sizes. It also needs a Cloudflare account and a domain, which is hard for non-technical users. |
 | Tailscale | For technical users | WireGuard end-to-end, but it needs a third-party account and a second app. |
 | ngrok-style tunnels | **Avoid** | They terminate TLS, like Cloudflare, and offer no upside. |
@@ -394,6 +394,17 @@ No model size makes this a validated mental health tool. The app-level safety la
 
 **Lock rule (D26):** while locked, **every** `/api` route returns `423` except `GET /api/health`, `GET /api/lock-status`, `POST /api/setup` and `POST /api/unlock`. There are no read exemptions. The crisis card and Help button are static frontend content and always work.
 
+**Sign-in rule (D47):** every `/api` route also needs a session, except `GET /api/health`, `GET /api/lock-status`, `POST /api/setup` (only while no passphrase exists) and `POST /api/session`; otherwise `401 UNAUTHENTICATED`. No loopback exemption. `POST /api/unlock` is folded into sign-in.
+
+| Route | Shape | Owner |
+|---|---|---|
+| `POST /api/session` | `{ passphrase, code? }` → `200 { signedIn: true }` + session cookie; `401 { error: { code: "TOTP_REQUIRED" } }` when two-factor is on and `code` is missing; `401` on a wrong passphrase or code (backoff, D47). Unlocks the DB if it is locked | A (B: passphrase verification) |
+| `GET /api/session` | → `{ signedIn, twoFactor: boolean, expiresAt }` | A |
+| `DELETE /api/session` | Sign out this browser; `DELETE /api/sessions` signs out everywhere | A |
+| `POST /api/two-factor/enroll` | → `{ otpauthUri, secret }` (not active until confirmed) | A (B: storage) |
+| `POST /api/two-factor/confirm` | `{ code }` → `{ recoveryCodes: string[10] }`, shown once | A (B: storage) |
+| `DELETE /api/two-factor` | `{ code }` (a current code or a recovery code) → off | A |
+
 **Routes**
 | Route | Request → response | Owner |
 |---|---|---|
@@ -463,19 +474,21 @@ If the client aborts, the server stops generating. In a saved chat the user's me
 6. The deterministic safety layer with tiered screening before display (D32), reviewed static tier-2 replies, the static crisis card and an always-visible "Get help" button. This is non-negotiable in this domain, and judges will probe it. Crisis replies comfort and de-escalate while pointing to help (D29). The crisis card's "Save a support note" button opens a simple template the user can edit (D30); an AI-drafted note is P1.
 7. Data controls (delete entry, conversation, or everything) and a privacy panel. The panel shows the acceleration in use (CUDA), the loaded model, memory use if available, the last reply's time to first word and tok/s, and the encryption state, reporting "OFF" honestly if the fallback is on.
 8. A verified offline demo run.
+9. **Sign-in (D47):** the hub passphrase, sessions in an `HttpOnly` cookie, `401` on every protected route, backoff on failures. This replaces both the unlock step and the front-end-only login.
 
-**P1: one stretch feature at a time, in this order.** Finish and integrate each before starting the next. Start item 2 only if item 1 is done by about hour 17.
+**P1: one stretch feature at a time, in this order.** Finish and integrate each before starting the next. Start item 2 only if item 1 is done by about hour 17. Two-factor (item 2) comes before phone pairing because pairing builds on sign-in.
 1. **Summary to share** (formerly the professional handoff summary): select items, which counts as the one-time consent "Use these N items to write this summary" (D34); generate a factual JSON-schema summary in which every point links to its source; edit it; export as Markdown or print to PDF. Saved support notes are pre-selected (D30), and the user still approves the export.
-2. **Phone pairing (D31):** a phone browser on our travel router opens the hub over HTTPS from a local CA installed on our demo phone. The QR code carries the URL and a one-time token, which becomes a per-device cookie (`devices` table). Bring our own travel router, because venue Wi-Fi often blocks traffic between devices.
-3. AI diary draft from a conversation: structured output, then edit, then save.
-4. One curated exercise (box breathing or 5-4-3-2-1 grounding) as a UI flow with a "not now" option.
-5. Memory proposals after a conversation (approve or reject).
-6. Export/import, first plain JSON, then encrypted.
-7. Check-ins with a Recharts trend.
-8. Embedding retrieval.
-9. An escalate-only LLM risk classifier. Together with the embeddings in item 8, it turns the privacy panel into a **"models resident on this GX10"** view, which serves the hardware-acceleration criterion.
-10. **Model switcher** in settings: list LM Studio's models and switch between them live (⚠️ loading the 27B takes time). It shows off the adapter and the GX10's capacity.
-11. **A printable recovery key** for the encrypted diary.
+2. **Two-factor sign-in (D47):** TOTP enrollment in Settings (locally rendered QR code, confirm with a code, 10 recovery codes), the code step at sign-in, replay protection, and a hub-shell reset. **Required before anyone port-forwards the hub.**
+3. **Phone pairing (D31):** a phone browser on our travel router opens the hub over HTTPS from a local CA installed on our demo phone. The QR code carries the URL and a one-time token, which becomes a per-device cookie (`devices` table). Bring our own travel router, because venue Wi-Fi often blocks traffic between devices.
+4. AI diary draft from a conversation: structured output, then edit, then save.
+5. One curated exercise (box breathing or 5-4-3-2-1 grounding) as a UI flow with a "not now" option.
+6. Memory proposals after a conversation (approve or reject).
+7. Export/import, first plain JSON, then encrypted.
+8. Check-ins with a Recharts trend.
+9. Embedding retrieval.
+10. An escalate-only LLM risk classifier. Together with the embeddings in item 9, it turns the privacy panel into a **"models resident on this GX10"** view, which serves the hardware-acceleration criterion.
+11. **Model switcher** in settings: list LM Studio's models and switch between them live (⚠️ loading the 27B takes time). It shows off the adapter and the GX10's capacity.
+12. **A printable recovery key** for the encrypted diary.
 
 **P2 — needs new infrastructure, or doesn't serve the GX10 demo**
 - Voice (whisper.cpp + Piper, push-to-talk).
@@ -578,6 +591,15 @@ Estimates are uncertain. P0 is about **18–25 engineer-hours, or 8–10 wall-cl
   - The privacy panel shows the acceleration, model, speed of the last reply and the encryption state.
   - The CSP blocks an external fetch.
 
+**Phase 5a — Sign-in and two-factor (D47).** Owners A (session guard, sign-in routes, TOTP), B (passphrase verification against the unlocked key, encrypted storage for the TOTP secret and hashed recovery codes), C (sign-in page: passphrase, then the code step; two-factor setup in Settings) · ~2 h for sign-in (P0), ~2 h for two-factor (P1 #2)
+- **Acceptance:**
+  - Every protected route answers `401` without a session, from loopback too; the static UI, the crisis card and Help still load.
+  - The session cookie is `HttpOnly` and `SameSite=Strict` (and `Secure` over HTTPS); sign-out and "sign out everywhere" end it; a restart signs everyone out.
+  - A wrong passphrase backs off (5 failures → 30 s, doubling to 15 min); a cross-origin `Origin` on a state-changing request is refused.
+  - With two-factor on: no session without a valid code; ±1 step accepted; the same code can't be used twice; each recovery code works once; turning it off needs a code.
+  - The front-end-only login (any email/password) is gone; there is no email field.
+  - `scripts/demo-check.mjs` signs in first and still passes.
+
 **Phase 6 — Integration, offline test and demo hardening.** Everyone · 2–3 h · This is the **P0 gate, around hour 14**.
 - **Acceptance:**
   - The demo script passes on the GX10 with the network unplugged.
@@ -585,7 +607,7 @@ Estimates are uncertain. P0 is about **18–25 engineer-hours, or 8–10 wall-cl
   - A backup screen recording exists.
   - The README has the run steps.
 
-**P1 phases (1.5–3 h each, one at a time, in priority order):** 7 Summary to share · 8 phone pairing (D31) · 9 diary draft · 10 exercise · 11 memory proposals · 12 export/import · 13 check-ins · 14 embeddings · 15 model switcher. Realistically only 7 and 8 fit. Feature freeze is around hour 20.
+**P1 phases (1.5–3 h each, one at a time, in priority order):** 7 Summary to share · 8 two-factor sign-in (D47; see Phase 5a) · 9 phone pairing (D31) · 10 diary draft · 11 exercise · 12 memory proposals · 13 export/import · 14 check-ins · 15 embeddings · 16 model switcher. Realistically only 7 and 8 fit; Phase 5a's sign-in itself is P0. Feature freeze is around hour 20.
 
 ---
 
@@ -796,7 +818,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
   - **Fixed after C's settings page:** the help page bundles `config/crisis-resources.us.json` from outside `web/`, which broke the Docker web build and dev-mode Vite. The Dockerfile's web stage now copies `config/`, and dev mode mounts it read-only. Chat "not responding" was the DB locked after a dev-mode restart (unlock again; C's unlock screen will remove the curl step).
   - **Fixed: the UI couldn't send over the LAN.** `crypto.randomUUID()` exists only on secure origins (HTTPS or localhost), so over `http://192.168.2.151:8000` (D46) Send threw before any request. The chat page now uses the existing `uuidv7()` helper (`getRandomValues`). Verified in headless Firefox on the GX10: message sent, `/api/infer` 200, Qwen's reply rendered. **Everyone:** avoid `crypto.randomUUID`, `navigator.clipboard` and other secure-context-only APIs in `web/` until phone pairing brings HTTPS (D31).
   - **Phase 6 gate script:** `scripts/demo-check.mjs` runs demo steps 1–3, 5, 6 and 9 through the API and cleans up. **First run on the GX10 (real model, B's SQLCipher store): all 17 checks pass**: chips show A only, "what was sent" is A's exact text, B never sent; hiding A drops it and the earlier exchange (`historyExcluded: 1`); temporary chat saves nothing; the crisis phrase gets tier 2 and `reviewed-reply`; 1234 and 8001 loopback only. Step 8 (delete-all canary) waits for B's delete-all route; step 7 (save an excerpt) and the UI side are C's.
-- **Next (A):** the offline run over SSH with the router's uplink unplugged; then P1 phone pairing, pending the team's call on passphrase sign-in vs QR-only (proposed D47).
+- **Next (A):** the offline run over SSH with the router's uplink unplugged; Phase 5a sign-in (D47) with B and C, then two-factor (P1 #2), then phone pairing.
 
 **D (Meowie), Phase 4 safety handoff (2026-10-10):**
 - **Done:** deterministic tiers, output screening, reviewed tier-2 replies, US crisis resources, prompt v3, fictional demo content and the demo runbook.
@@ -963,7 +985,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 | 6. Safety layer, crisis card, Get help | ✅ tiers, D32 screen, tier-2 replies (D/A) | ✅ crisis card, help page, support note | D: review Phase 0 scores |
 | 7. Data controls + privacy panel | ✅ `/api/privacy-status` (A), `/api/settings` and `/api/delete-all` (B), **CSP + security headers (A): verified in Firefox on the production build: UI renders fully, `fetch("https://example.com")` blocked by `connect-src 'self'`, same-origin API OK** | ❌ settings/privacy panel and delete controls not wired | **C:** panel + delete UI |
 | 8. Verified offline demo | ✅ `scripts/demo-check.mjs` passes online; **`--delete-all` (demo step 8) passes on a throwaway hub**: a canary stored in a diary entry, a memory, search and a sent prompt is gone from rows, search, memories, conversations and the next prompt, and the hub stays unlocked | | **A:** `--offline` run with the router's uplink unplugged (over SSH; the GX10 has no monitor). **B (bug):** `GET /api/diary?q=` returns 400 for any hyphen (`self-care`, `check-in`): user text goes to FTS5 as raw syntax; quote each term |
-| Lock screen (Phase 2) | ✅ setup/unlock/lock | ❌ `SetupPage`/`UnlockPage` exist but aren't routed or calling the API | **C** (top priority: every restart locks the hub) |
+| Sign-in (D47, P0 #9) / lock screen | ✅ setup/unlock/lock (B); ❌ sessions + `401` guard (A), passphrase verify (B) | ⚠️ `LoginPage` accepts any email/password and calls nothing | **A + B + C** per Phase 5a; two-factor is P1 #2 |
 | Phase 6 extras | ✅ persona seed: `npm run seed:persona --workspace=@innercove/server -- --db <path> --confirm-fictional` (B; API stopped first) | | ✅ root README run steps (B); backup recording (C) remains unverified |
 
 

@@ -36,6 +36,7 @@ Single owners for hot files: `packages/core` contracts (B), schema and migration
 - `/api/infer` (temporary chats) never writes anything (D35).
 - Crisis resources come from static config, never from the model (D03). Model output is screened before display (D32).
 - Bind 127.0.0.1 by default. Never use Docker `ports:` (binds 0.0.0.0, bypasses ufw); LM Studio stays on loopback with auth on (D18). The GX10's LAN demo opts in via `.env` with ufw limiting port 8000 to the subnet (D46).
+- Every `/api` route needs a session except health, lock-status, first-run setup and sign-in (D47). No loopback exemption; never add a "dev bypass". Sign-in uses the hub passphrase; two-factor secrets live only in the encrypted DB.
 - The repo is public (D40): no keys, `.env`, tokens, real personal data or private server details. Use the fictional persona only.
 
 ## Conventions
