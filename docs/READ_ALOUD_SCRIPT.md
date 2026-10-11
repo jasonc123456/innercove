@@ -52,13 +52,12 @@ And when you just need to say something without keeping it, temporary chats disa
 
 Now, the hardest moment. InnerCove doesn't improvise here. A safety layer, not the AI, catches this and shows a reply we wrote and reviewed in advance, with the 988 Lifeline, even if the AI is offline. And because it's private, it doesn't report anyone. It gives them the number… and the choice.
 
-**[Diary → Export, then Settings → Delete all my data]**
+**[Diary+ memory → Export, then Settings → Delete all my data]**
 
 Your words are yours: export exactly what you choose, or delete everything in one step.
 
-**[Back to the GX10]**
 
-Next: an installer for Windows and Mac, so anyone can run InnerCove at home with a smaller model and a setup wizard.
+In the future an installer for Windows and Mac, so anyone can run InnerCove at home with a smaller model and a setup wizard.
 
 Because when the AI, the data, and the decisions stay with you… it's finally safe to open up.
 
