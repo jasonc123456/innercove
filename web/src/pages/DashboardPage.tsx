@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 type Mood = {
@@ -48,13 +48,12 @@ export function DashboardPage() {
 
   return (
     <div className="dashboard-scroll min-h-0 flex-1 overflow-y-auto px-4 py-5 lg:px-10 lg:py-12">
-      <SignInBox />
       {/* Desktop only: a quiet, time-aware greeting above the grid. */}
-      <header className="dashboard-welcome mt-8 hidden lg:mb-8 lg:block">
+      <header className="dashboard-welcome hidden lg:mb-8 lg:block">
         <p className="text-sm font-medium text-ink/55">{today}</p>
         <h1 className="mt-1 text-5xl font-semibold leading-[1.05] tracking-[-0.025em] text-ink">{greeting}</h1>
       </header>
-      <div className="mt-5 lg:mt-0 lg:grid lg:grid-cols-12 lg:gap-6">
+      <div className="lg:grid lg:grid-cols-12 lg:gap-6">
       <section className="dashboard-welcome rounded-[2rem] bg-cove px-6 py-7 text-white shadow-sm lg:col-span-7 lg:flex lg:flex-col lg:justify-center lg:bg-gradient-to-br lg:from-cove lg:to-[#2b6662] lg:px-10 lg:py-10">
         <p className="text-sm font-medium tracking-wide text-white/75 lg:hidden">Your space, at your pace</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Welcome back.</h1>
@@ -132,65 +131,6 @@ const SPOTS = [
   [86, 90, -134], [168, 72, -50], [100, 53, -126], [155, 54, -57], [104, 114, 165],
   [114, 39, -115], [144, 38, -66], [153, 97, 12], [146, 75, -18], [129, 70, -90],
 ] as const;
-
-function SignInBox() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setPassword("");
-    setError("Account sign-in is not available. This does not unlock the diary.");
-  }
-
-  return (
-    <section
-      className="glass-card rounded-[1.7rem] border border-line bg-white/70 p-5 shadow-sm lg:border-white/70 lg:p-8"
-      aria-labelledby="sign-in-title"
-    >
-      <h2 id="sign-in-title" className="text-xl font-semibold tracking-tight">
-        Sign in
-      </h2>
-      <p className="mt-2 text-sm leading-relaxed text-ink/75">This does not sign you in.</p>
-      <form onSubmit={handleSubmit} autoComplete="off" className="mt-4 flex flex-col gap-3 lg:max-w-md">
-        <label className="flex flex-col gap-2 text-sm text-ink/80">
-          Email
-          <input
-            type="email"
-            name="email"
-            value={email}
-            autoComplete="off"
-            onChange={(event) => setEmail(event.target.value)}
-            className="h-11 rounded-2xl border border-line bg-white px-4 text-base text-ink outline-none focus:border-cove"
-          />
-        </label>
-        <label className="flex flex-col gap-2 text-sm text-ink/80">
-          Password
-          <input
-            type="password"
-            name="password"
-            value={password}
-            autoComplete="off"
-            onChange={(event) => setPassword(event.target.value)}
-            className="h-11 rounded-2xl border border-line bg-white px-4 text-base text-ink outline-none focus:border-cove"
-          />
-        </label>
-        {error ? (
-          <p className="text-sm leading-relaxed text-ink" role="alert">
-            {error}
-          </p>
-        ) : null}
-        <button
-          type="submit"
-          className="inline-flex h-11 items-center justify-center rounded-2xl bg-cove px-4 text-base font-medium text-white"
-        >
-          Sign in
-        </button>
-      </form>
-    </section>
-  );
-}
 
 function MoodTree({ leaves }: { leaves: Mood[] }) {
   const shown = leaves.slice(-SPOTS.length);
