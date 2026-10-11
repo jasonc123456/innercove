@@ -65,6 +65,12 @@ export function AppShell() {
               Memories
             </NavLink>
           </nav>
+          <NavLink
+            to="/help"
+            className="inline-flex h-11 items-center justify-center rounded-2xl border border-cove px-4 text-base font-medium text-cove"
+          >
+            Get help
+          </NavLink>
         </div>
       </header>
       <main className="mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col">

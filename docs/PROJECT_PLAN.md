@@ -868,6 +868,15 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Whole-team Phase 2 incomplete:** C's latest handoff still has mock diary/setup/unlock and Save does not call `/api/chat`; C must connect real endpoints, saved reload and lock-screen crisis/help UX. Run the new backend/API/runtime acceptance on the deployed GX10 before claiming deployment completion.
 - **Next/separate:** hand C the existing contracts and coordinate target verification with A. Phase 3 memory CRUD/revoke/re-confirmation and Phase 5 settings/delete-all/seed remain separate; external SQLCipher/Android interoperability remains unverified. No plaintext fallback or runtime encryption configuration change.
 
+**C Phase 4 safety UI (2026-10-10). Phase 4 is not complete:**
+- **Done:** Header Get help, including on the passphrase screen. `/help` shows D's `config/crisis-resources.us.json` with no model call. A reply shows the crisis card only when SSE `meta.tier` is 1 or 2. Support notes are edited, then saved only after an explicit approval.
+- **Defaults:** The post uses `origin: support_note`, `accessLevel: private`, and `includeInHandoff: true` unless the user changes them. Temporary mode shows "This note will be saved to your diary." Cancel does not post.
+- **Files:** `web/src/pages/HelpPage.tsx`, `web/src/pages/ChatPage.tsx`, `web/src/router.tsx`, `web/src/components/{AppShell,CrisisCard,CrisisResources,MessageList,SupportNoteForm}.tsx`, `web/src/safety/{crisisResources,saveSupportNote}.ts`, `web/vite.config.ts`, `web/tsconfig.app.json`.
+- **Checks:** `npm run build` in `web/` passed. Browser: help from the passphrase screen, resources with zero infer calls, tier 2 card from a scripted `meta` event, tier 0 adds no card, cancel and keep-editing post nothing, approval posts the defaults, 423 shows the note was not saved. No web storage.
+- **Blocked:** `/api/diary` is not implemented, so a real save cannot be confirmed. The 423 check was a scripted locked response. Setup and unlock still do not call B's lock routes.
+- **Not run:** D's safety golden tests and the server safety suite.
+- **Next:** post the approved note through B's diary route once it exists, and do not bypass a 423.
+
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
 1. Write diary entries A and B. Allow AI access to A only.

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import type { ReplyContext } from "../chat/streamReply";
+import { CrisisCard } from "./CrisisCard";
 
 export type ChatMessage = {
   id: string;
@@ -8,6 +9,7 @@ export type ChatMessage = {
   content: string;
   context?: ReplyContext;
   historyExcluded?: number;
+  tier?: 0 | 1 | 2;
 };
 
 type MessageListProps = {
@@ -63,7 +65,12 @@ export function MessageList({
             </span>
             {message.content}
             {isStreaming && message.content.length === 0 ? (
-              <span className="text-ink/50">…</span>
+              <span className="text-ink/50">
+                {message.tier !== undefined && message.tier >= 1 ? "thinking…" : "…"}
+              </span>
+            ) : null}
+            {!isUser && message.tier !== undefined && message.tier >= 1 ? (
+              <CrisisCard />
             ) : null}
             {!isUser && message.historyExcluded && message.historyExcluded > 0 ? (
               <p className="mt-3 text-sm leading-snug text-ink/80" role="status">

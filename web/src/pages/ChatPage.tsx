@@ -72,6 +72,12 @@ export function ChatPage() {
                   : message,
               ),
             ),
+          onMeta: (meta) =>
+            setMessages((current) =>
+              current.map((message) =>
+                message.id === assistantId ? { ...message, tier: meta.tier } : message,
+              ),
+            ),
         },
         controller.signal,
       );
