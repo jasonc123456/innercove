@@ -162,3 +162,14 @@ regression 238/238, web typecheck/build and git diff --check passed. Render test
 use controlled states; browser focus, visual transitions and real microphone
 behavior still need isolated browser verification. No browser tooling was
 available here. Backend, microphone policy and live GX10 remain unchanged.
+
+### Composer action layout refinement — 2026-10-11
+
+One rounded boundary now contains the growing textarea and an internal
+bottom-right action group: unboxed microphone plus circular up-arrow Send.
+Both targets are 44×44 px, with accessible labels Record voice message and
+Send message. Multiline text grows to 192 px before scrolling; controls stay
+in a separate flex row. Listening/Transcribing, draft restoration and explicit
+submission are unchanged. Local focused tests 29/29, web typecheck/build and
+diff check passed. Browser tooling is unavailable: desktop and 375/390/430 px
+visual checks, real iPhone behavior and microphone verification remain pending.

@@ -13,12 +13,12 @@ vi.mock('react', async importOriginal => {
   ] };
 });
 beforeEach(() => { state.voice = { phase: 'idle', seconds: 0 }; state.level = .5; });
-const render = () => renderToStaticMarkup(createElement(MessageInput, { disabled: false, onSend: vi.fn() }));
+const render = (disabled = false) => renderToStaticMarkup(createElement(MessageInput, { disabled, onSend: vi.fn() }));
 it('renders the idle microphone next to the editable draft with a focus outline', () => {
   const html = render();
-  expect(html).toContain('aria-label="Start microphone recording"');
+  expect(html).toContain('aria-label="Record voice message"');
   expect(html).toContain('<svg'); expect(html).toContain('focus-visible:outline');
-  expect(html).toContain('min-w-0 flex-1'); expect(html).toContain('typed draft'); expect(html).toContain('Review it before Send.');
+  expect(html).toContain('w-full min-w-0'); expect(html).toContain('typed draft'); expect(html).toContain('Review it before sending.');
   expect(html).not.toContain('aria-label="Microphone level"');
 });
 it('renders five bounded bars outside the live status, with Stop and elapsed recording state', () => {
@@ -26,8 +26,8 @@ it('renders five bounded bars outside the live status, with Stop and elapsed rec
   const html = render();
   expect(html).toContain('>Stop</button>');
   expect(html).toContain('>Cancel</button>');
-  expect(html).toContain('hidden=""');
-  expect(html).toContain('display:none');
+  expect(html).toContain('inert=""');
+  expect(html).toContain('visibility:hidden');
   expect(html).toContain('Listening…');
   expect(html).toContain('aria-label="Microphone level"');
   expect(html.match(/style="height:/g)).toHaveLength(5);
@@ -45,12 +45,12 @@ it('hides levels during processing, shows a reduced-motion-aware spinner and ret
   expect(html).toContain('Transcribing…');
   expect(html).toContain('>Cancel</button>');
   expect(html).not.toContain('>Stop</button>');
-  expect(html).toContain('display:none');
+  expect(html).toContain('visibility:hidden');
   state.voice = { phase: 'idle', seconds: 0, error: 'Audio could not be transcribed.' };
   const restored = render();
   expect(restored).toContain('Audio could not be transcribed.');
   expect(restored).toContain('typed draft');
-  expect(restored).not.toContain('display:none');
+  expect(restored).not.toContain('visibility:hidden');
 });
 
 it('keeps announcement independent of waveform and elapsed-time changes', () => {
@@ -58,4 +58,25 @@ it('keeps announcement independent of waveform and elapsed-time changes', () => 
   const first = render().split('role="status"')[1];
   state.voice = { phase: 'recording', seconds: 59 }; state.level = .9;
   expect(render().split('role="status"')[1]).toBe(first);
+});
+
+it('groups 44px microphone and circular arrow inside the rounded composer, after the textarea', () => {
+  const html = render();
+  expect(html).toContain('min-h-44 rounded-2xl border border-line');
+  expect(html).toContain('shrink-0 items-center justify-end gap-1');
+  expect(html.match(/h-11 w-11 shrink-0/g)).toHaveLength(2);
+  expect(html).toContain('aria-label="Send message"');
+  expect(html).toContain('M12 19V5M5 12l7-7 7 7');
+  expect(html).not.toContain('>Send</button>');
+  expect(html.indexOf('</textarea>')).toBeLessThan(html.indexOf('aria-label="Record voice message"'));
+  const microphone = html.split('aria-label="Record voice message"')[1].split('</button>')[0];
+  expect(microphone).not.toContain('border-line');
+  expect(html).toContain('max-h-48');
+  expect(html).toContain('overflow-y-auto');
+});
+it('keeps both action buttons disabled while submitting', () => {
+  const html = render(true);
+  for (const label of ['Record voice message', 'Send message']) {
+    expect(html.split(`aria-label="${label}"`)[1].split('</button>')[0]).toContain('disabled=""');
+  }
 });

@@ -13,6 +13,7 @@ export function MessageInput({ disabled, onSend }: MessageInputProps) {
   const { locked, signedIn, chatMode } = useAppSession();
   const [voice, setVoice] = useState<VoiceState>({ phase: "idle", seconds: 0 });
   const [level, setLevel] = useState(0);
+  const textarea = useRef<HTMLTextAreaElement | null>(null);
   const stopButton = useRef<HTMLButtonElement | null>(null);
   const cancelButton = useRef<HTMLButtonElement | null>(null);
   const previousPhase = useRef<VoiceState["phase"]>("idle");
@@ -35,6 +36,13 @@ export function MessageInput({ disabled, onSend }: MessageInputProps) {
     previousPhase.current = voice.phase;
   }, [voice.phase, disabled, signedIn, locked]);
 
+  useEffect(() => {
+    const input = textarea.current;
+    if (!input) return;
+    input.style.height = "auto";
+    input.style.height = `${Math.min(192, Math.max(72, input.scrollHeight))}px`;
+  }, [draft]);
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (disabled || busy || trimmed.length === 0) {
@@ -56,26 +64,30 @@ export function MessageInput({ disabled, onSend }: MessageInputProps) {
       onSubmit={handleSubmit}
       className="shrink-0 border-t border-line bg-paper page-x px-4 py-3 lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
-      <div className="relative h-44">
-        <div hidden={busy} style={busy ? { display: "none" } : undefined}
-          className="voice-composer-enter flex h-full flex-col gap-2">
+      <div className="relative min-h-44 rounded-2xl border border-line bg-white focus-within:border-cove">
+        <div aria-hidden={busy || undefined} inert={busy || undefined} style={busy ? { visibility: "hidden" } : undefined}
+          className="voice-composer-enter flex min-h-44 min-w-0 flex-col gap-2 p-2">
           <label htmlFor="message" className="sr-only">Message</label>
-          <textarea id="message" name="message" rows={3} value={draft}
+          <textarea ref={textarea} id="message" name="message" rows={3} value={draft}
             disabled={disabled || busy} onChange={event => setDraft(event.target.value)} onKeyDown={handleKeyDown}
             placeholder="Write a message"
-            className="min-h-0 min-w-0 flex-1 resize-none rounded-2xl border border-line bg-white px-4 py-3 text-base leading-6 text-ink outline-none placeholder:text-ink/55 focus:border-cove disabled:opacity-60" />
-          <div className="flex h-11 items-center justify-between gap-2">
-            <button type="button" aria-label="Start microphone recording"
+            className="min-h-[72px] max-h-48 w-full min-w-0 resize-none overflow-y-auto border-0 bg-transparent px-2 py-2 text-base leading-6 text-ink outline-none placeholder:text-ink/55 focus:border-cove disabled:opacity-60" />
+          <div className="mt-auto flex h-11 shrink-0 items-center justify-end gap-1">
+            <button type="button" aria-label="Record voice message"
               disabled={disabled || locked || !signedIn || busy}
               onClick={() => void recording.current?.start()}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-line text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cove disabled:opacity-40">
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cove disabled:opacity-40">
               <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="9" y="2" width="6" height="12" rx="3" />
                 <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8" />
               </svg>
             </button>
-            <button type="submit" disabled={disabled || busy || trimmed.length === 0}
-              className="inline-flex h-11 min-w-11 items-center justify-center rounded-2xl bg-cove px-4 text-base font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cove disabled:opacity-40">Send</button>
+            <button type="submit" aria-label="Send message" disabled={disabled || busy || trimmed.length === 0}
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cove text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cove disabled:opacity-40">
+              <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 19V5M5 12l7-7 7 7" />
+              </svg>
+            </button>
           </div>
         </div>
         {busy && <div key={voice.phase} className="voice-composer-enter absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-2xl border border-cove/40 bg-cove/5 px-3 py-2">
@@ -100,7 +112,7 @@ export function MessageInput({ disabled, onSend }: MessageInputProps) {
           </div>
         </div>}
       </div>
-      <p className="mt-2 min-h-5 text-sm text-ink/75">{voice.error ?? (busy ? "Voice stays in your draft. Nothing is sent automatically." : "Voice adds to your draft. Review it before Send.")}</p>
+      <p className="mt-2 min-h-5 text-sm text-ink/75">{voice.error ?? (busy ? "Voice stays in your draft. Nothing is sent automatically." : "Voice adds to your draft. Review it before sending.")}</p>
       <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">{announcement}</span>
     </form>
   );
