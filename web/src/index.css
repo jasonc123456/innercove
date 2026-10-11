@@ -204,6 +204,7 @@ textarea:focus-visible {
   --color-line: light-dark(#d5cfc3, #4a615b);
   background-color: var(--color-paper);
   color: var(--color-ink);
+  transition: background-color 200ms ease, color 200ms ease;
 }
 
 html[data-theme="light"] .sign-in-page {
@@ -215,11 +216,13 @@ html[data-theme="dark"] .sign-in-page {
 }
 
 .sign-in-page h1,
-.sign-in-page a.border-cove {
+.sign-in-page a.border-cove,
+.sign-in-page .theme-toggle {
   color: var(--sign-in-heading);
 }
 
-.sign-in-page a.border-cove {
+.sign-in-page a.border-cove,
+.sign-in-page .theme-toggle {
   border-color: var(--sign-in-heading);
 }
 
@@ -359,7 +362,8 @@ html[data-theme="dark"] .sign-in-page {
 
 @media (prefers-reduced-motion: reduce) {
   .grove-leaf-fill,
-  .grove-leaf-vein {
+  .grove-leaf-vein,
+  .sign-in-page {
     transition: none;
   }
 }

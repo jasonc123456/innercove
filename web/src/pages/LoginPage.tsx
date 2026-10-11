@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useLayoutEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { SignInGrove } from "../components/SignInGrove";
 import { useAppSession } from "../session/AppSession";
@@ -11,6 +11,7 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const { theme, toggleTheme } = useSignInTheme();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -25,9 +26,19 @@ export function LoginPage() {
     <div className="sign-in-page relative flex min-h-dvh flex-col overflow-x-clip bg-paper px-4 py-8 font-sans text-ink">
       <div className="pointer-events-none relative z-10 mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
         <div className="pointer-events-auto">
-          <div className="flex items-center gap-3">
-            <CoveMark />
-            <h1 className="text-3xl font-semibold tracking-tight text-cove">Inner Cove</h1>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <CoveMark />
+              <h1 className="text-3xl font-semibold tracking-tight text-cove">Inner Cove</h1>
+            </div>
+            <button
+              type="button"
+              className="theme-toggle inline-flex h-11 shrink-0 items-center justify-center rounded-2xl border px-3 text-sm font-medium"
+              aria-pressed={theme === "dark"}
+              onClick={toggleTheme}
+            >
+              {theme === "dark" ? "Light mode" : "Dark mode"}
+            </button>
           </div>
           <p className="mt-4 text-base leading-relaxed text-ink/80">
             Sign in to your hub.
@@ -88,6 +99,25 @@ export function LoginPage() {
   );
 }
 
+
+function useSignInTheme() {
+  const [theme, setTheme] = useState<"light" | "dark">(() =>
+    window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
+  );
+
+  useLayoutEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    return () => {
+      delete document.documentElement.dataset.theme;
+    };
+  }, [theme]);
+
+  function toggleTheme() {
+    setTheme((current) => (current === "dark" ? "light" : "dark"));
+  }
+
+  return { theme, toggleTheme };
+}
 
 function CoveMark() {
   return (
