@@ -53,4 +53,5 @@ Single owners for hot files: `packages/core` contracts (B), schema and migration
 
 ## GX10
 - It's borrowed: log every system change with its undo in `docs/SETUP_LOG.md`.
+- LM Studio runs inside the xrdp desktop session (it needs a display). **Disconnect** xrdp by closing the window; logging out stops the model server. If LM Studio dies, its `llama-server` engine can survive orphaned and keep ~50 GB: check `nvidia-smi` for two engines before loading again.
 - Only A uses the GX10 during Phase 0; others use `FakeProvider` or `ssh -L 1234:127.0.0.1:1234 gx10`.
