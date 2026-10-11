@@ -25,6 +25,19 @@ const FEELINGS = [
 
 export type DiaryFeelingId = (typeof FEELINGS)[number]["id"];
 
+/** The feeling is stored as one `feeling:<id>` tag, so it needs no new column and reaches the AI with the entry. */
+const FEELING_TAG = "feeling:";
+
+export function feelingFromTags(tags: readonly string[]): (typeof FEELINGS)[number] | null {
+  const tag = tags.find((t) => t.startsWith(FEELING_TAG));
+  return FEELINGS.find((feeling) => FEELING_TAG + feeling.id === tag) ?? null;
+}
+
+export function tagsWithFeeling(tags: readonly string[], feeling: DiaryFeelingId | null): string[] {
+  const rest = tags.filter((t) => !t.startsWith(FEELING_TAG));
+  return feeling ? [...rest, FEELING_TAG + feeling] : rest;
+}
+
 function columnCount(buttons: HTMLButtonElement[]): number {
   const top = buttons[0]?.offsetTop ?? 0;
   let count = 0;
@@ -35,7 +48,7 @@ function columnCount(buttons: HTMLButtonElement[]): number {
   return Math.max(1, count);
 }
 
-/** Optional, one-at-a-time feeling for the open editor. Nothing here is stored or sent. */
+/** Optional, one-at-a-time feeling, saved with the entry (as a tag) and shown to the AI when it may use the entry. */
 export function DiaryFeelingPicker({
   value,
   onChange,
@@ -122,8 +135,8 @@ export function DiaryFeelingPicker({
       <div className="flex items-center justify-between gap-3">
         <p id={noteId} className="feeling-note text-xs leading-snug" role="status">
           {selected
-            ? `${selected.label} selected. Not saved with the entry.`
-            : "No feeling selected. Not saved with the entry."}
+            ? `${selected.label} selected. Saved with the entry.`
+            : "No feeling selected."}
         </p>
         <button
           type="button"

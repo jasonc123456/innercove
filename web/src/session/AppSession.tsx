@@ -52,6 +52,7 @@ type NewDiaryEntry = {
   title: string;
   content: string;
   accessLevel: AccessLevel;
+  tags: string[];
 };
 
 type AppSessionValue = {
@@ -298,6 +299,7 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
               title: blankToNull(input.title),
               content: input.content,
               accessLevel: input.accessLevel,
+              tags: input.tags,
             }),
           }),
         );
@@ -311,6 +313,7 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
               title: blankToNull(input.title),
               content: input.content,
               accessLevel: input.accessLevel,
+              tags: input.tags,
             }),
           }),
         );

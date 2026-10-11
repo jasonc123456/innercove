@@ -2,6 +2,8 @@ import { useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   DiaryFeelingPicker,
+  feelingFromTags,
+  tagsWithFeeling,
   type DiaryFeelingId,
 } from "../components/DiaryFeelingPicker";
 import {
@@ -98,36 +100,46 @@ function DiaryWorkspace() {
         <p className="page-x px-4 py-6 text-base text-ink/75">No diary entries yet.</p>
       ) : (
         <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto page-x px-4 py-4">
-          {visible.map((entry) => (
-            <li key={entry.id}>
-              <button
-                type="button"
-                onClick={() => setEditingId(entry.id)}
-                data-entry-id={entry.id}
-                className={
-                  entry.id === focusId
-                    ? "flex w-full flex-col items-start gap-1 rounded-2xl bg-foam px-4 py-3 text-left ring-2 ring-cove"
-                    : "flex w-full flex-col items-start gap-1 rounded-2xl bg-foam px-4 py-3 text-left"
-                }
-              >
-                <span className="text-base font-medium text-ink">
-                  {entry.title ?? "Untitled"}
-                </span>
-                <time dateTime={entry.createdAt} className="text-xs text-ink/60">
-                  {formatDateTime(entry.createdAt)}
-                  {/* Edited later than a minute after writing: show that too. */}
-                  {Date.parse(entry.updatedAt) - Date.parse(entry.createdAt) > 60_000
-                    ? ` · edited ${formatDateTime(entry.updatedAt)}`
-                    : ""}
-                </time>
-                <span className="text-sm text-ink/70">
-                  {entry.accessLevel === "private"
-                    ? "Private"
-                    : "AI may use this"}
-                </span>
-              </button>
-            </li>
-          ))}
+          {visible.map((entry) => {
+            const feeling = feelingFromTags(entry.tags);
+            const labels = [
+              entry.origin === "support_note" ? "Support note" : null,
+              feeling ? `${feeling.emoji} ${feeling.label}` : null,
+            ].filter(Boolean);
+            return (
+              <li key={entry.id}>
+                <button
+                  type="button"
+                  onClick={() => setEditingId(entry.id)}
+                  data-entry-id={entry.id}
+                  className={
+                    entry.id === focusId
+                      ? "flex w-full flex-col items-start gap-1 rounded-2xl bg-foam px-4 py-3 text-left ring-2 ring-cove"
+                      : "flex w-full flex-col items-start gap-1 rounded-2xl bg-foam px-4 py-3 text-left"
+                  }
+                >
+                  <span className="text-base font-medium text-ink">
+                    {entry.title ?? "Untitled"}
+                  </span>
+                  {labels.length > 0 ? (
+                    <span className="text-sm text-ink/80">{labels.join(" · ")}</span>
+                  ) : null}
+                  <time dateTime={entry.createdAt} className="text-xs text-ink/60">
+                    {formatDateTime(entry.createdAt)}
+                    {/* Edited later than a minute after writing: show that too. */}
+                    {Date.parse(entry.updatedAt) - Date.parse(entry.createdAt) > 60_000
+                      ? ` · edited ${formatDateTime(entry.updatedAt)}`
+                      : ""}
+                  </time>
+                  <span className="text-sm text-ink/70">
+                    {entry.accessLevel === "private"
+                      ? "Private"
+                      : "AI may use this"}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
@@ -146,12 +158,15 @@ function EntryForm({
     title: string;
     content: string;
     accessLevel: AccessLevel;
+    tags: string[];
   }) => void;
   onDelete?: () => void;
 }) {
   const [title, setTitle] = useState(entry?.title ?? "");
   const [content, setContent] = useState(entry?.content ?? "");
-  const [feeling, setFeeling] = useState<DiaryFeelingId | null>(null);
+  const [feeling, setFeeling] = useState<DiaryFeelingId | null>(
+    feelingFromTags(entry?.tags ?? [])?.id ?? null,
+  );
   const [accessLevel, setAccessLevel] = useState<AccessLevel>(
     entry?.accessLevel ?? "private",
   );
@@ -164,7 +179,12 @@ function EntryForm({
       setError("Write something in the entry.");
       return;
     }
-    onSubmit({ title, content: content.trim(), accessLevel });
+    onSubmit({
+      title,
+      content: content.trim(),
+      accessLevel,
+      tags: tagsWithFeeling(entry?.tags ?? [], feeling),
+    });
   }
 
   return (
