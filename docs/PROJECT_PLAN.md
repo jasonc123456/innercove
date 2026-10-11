@@ -1133,6 +1133,8 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 
 **A (Jason), dark mode fixes (2026-10-11, ~03:00):** the sign-in page had its own theme state (started from the system theme, never saved, and deleted `data-theme` on sign-in), so a saved dark mode reverted to light after sign-out. It now uses the shared, saved `theme.ts` store. Added a "Dark mode" switch to the desktop sidebar (above the storage note) and to the phone "More" menu. Mood check-in labels keep dark ink on their pastel tiles in dark mode. Verified in headless Firefox (system light): dark chosen on sign-in → kept after sign-in, sign-out and reload; both switches flip and persist.
 
+**A (Jason), diary timestamps and time zone (2026-10-11, ~02:30):** each diary entry shows its date and time (plus "edited …" when changed later); memories show their date. Settings → Time zone: "Automatic (device zone)" or any IANA zone; diary, memories and the dashboard greeting/date follow it. Saved per browser like the theme (`web/src/timeZone.ts`), not on the hub: a hub setting would need a settings migration (B) the night before the demo; move it there later if it should follow the user across devices. Verified in headless Firefox: an entry at 2:29 AM PDT shows 6:29 PM GMT+9 after choosing Asia/Tokyo.
+
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
 1. Write diary entries A and B. Allow AI access to A only.
