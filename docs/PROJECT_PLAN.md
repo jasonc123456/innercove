@@ -1115,7 +1115,8 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **D:** review the Phase 0 scores; rerun the 40 tests plus `tests/trauma-informed-cases.json` on the current prompt (the S03/S15/S17 fixes are unscored).
 - **Before judging:** switch the GX10 from dev mode to the demo build (`docker compose up -d --build --remove-orphans`); presenter chosen and two rehearsals (D41); backup recording (C); ASUS survey (D). `DEMO_SCRIPT.md` step 5 reworded: the offline moment is descoped.
 - **Not started:** P1 #1 Summary to share, P1 #3 phone pairing.
-- **Before returning the GX10 (A):** remove the verify images (`innercove-{db,phase2,phase3,phase5}-verify`) and checkouts (`~/innercove-phase{2,3,5}-verify`, `~/innercove-voice-browser-verify`, `~/innercove-stt-hour1`), leftover `/tmp/innercove-*`, then the `SETUP_LOG.md` undo list (incl. #1 sudoers, #28–29 Tailscale/ufw).
+- **Before returning the GX10 (A):** from a plain SSH session, `unset HISTFILE`, then `bash ~/resetBeforeReturn.sh --dry-run` and for real, then reboot. It now also covers Codex, the stable VS Code server, the voice test checkouts and packages, `/tmp` leftovers and AI-tool lines in shell history (`SETUP_LOG.md`, "Undo all at once"). Then revoke the server-side logins it lists.
+- **Sign-in page (A, at Jason's request):** phones and tablets (<1024px) now show two small saplings at the bottom corners in the desktop trees' style instead of the four corner sprigs; desktop unchanged (`109abf2`).
 
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
