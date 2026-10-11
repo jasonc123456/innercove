@@ -1,12 +1,12 @@
 # Isolated GX10 browser voice verification
 
-This is a proposed operator runbook, not a record of GX10 API/browser acceptance. Hour 2 is published at `914ff6b`; the live GX10 checkout was reported at `c214ac9`. Leave that checkout, Compose services, database, firewall and Qwen unchanged. This native test uses a new clone, its own freshly generated encrypted fictional database, one loopback port, real D47 session authentication and existing host whisper/base.en/FFmpeg. Replies use FakeProvider (text); this acceptance does not verify Qwen.
+This runbook includes user-observed isolated GX10 browser results below; it does not establish full acceptance. Hour 2 is published at `914ff6b`; the live GX10 checkout was reported at `c214ac9`. Leave that checkout, Compose services, database, firewall and Qwen unchanged. This native test uses a new clone, its own freshly generated encrypted fictional database, one loopback port, real D47 session authentication and existing host whisper/base.en/FFmpeg. Replies use FakeProvider (text); this acceptance does not verify Qwen.
 
 Ownership coordination: the user explicitly authorized microphone permission for this isolated app. The new `scripts/voice-verify.mjs` entry point changes only `microphone=()` to `microphone=(self)` after A's standard security hook; CSP and every other directive stay intact. A's production app/main/Compose remain unchanged and continue disabling microphone. A should review this isolated entry point before broader deployment. C's existing composer/UI is reused.
 
 ## GX10 setup (new SSH session)
 
-Replace `<published-test-commit>` with the published commit containing this runbook/runner. Do not pull or build inside the running checkout. New dependency downloads/builds happen only inside the test clone; no apt installation is needed.
+The observed run used `3a4cc97`. Replace `<published-test-commit>` with the intended published test commit. At `3a4cc97`, web has no committed lockfile: `npm ci --prefix web` failed; `npm install --prefix web --no-audit --no-fund` succeeded before passing builds/smoke. Newer main has a web lockfile; its presence does not change this historical result. Do not pull or build inside the running checkout. New dependency downloads/builds happen only inside the test clone; no apt installation is needed.
 
 ```bash
 set -eu
@@ -28,7 +28,7 @@ git clone https://github.com/jasonc123456/innercove.git "$voice_checkout"
 git -C "$voice_checkout" checkout --detach '<published-test-commit>'
 cd "$voice_checkout"
 npm ci
-npm ci --prefix web
+npm install --prefix web --no-audit --no-fund
 npm run build
 npm run build --prefix web
 node --test scripts/voice-verify-smoke.mjs
@@ -62,7 +62,7 @@ ssh -N -o ExitOnForwardFailure=yes \
 
 Open `http://localhost:18081` in a normal browser. Localhost is the intended secure microphone context; plain HTTP at a LAN address is insufficient. UI and API share the same tunneled origin, preserving Host/Origin checks. Cookies are scoped by host, not port: avoid other InnerCove sessions on `localhost` during this experiment (or use a dedicated browser profile), so the test cookie cannot replace a live session cookie.
 
-Acceptance: sign in → type a fictional draft → Microphone → speak a short fictional sentence → Stop → wait for editable appended transcript → edit it → explicitly Send → receive a text reply from FakeProvider. Record browser/version/MIME, actual latency and pass/fail without audio/transcript content. Confirm no chat request before Send. Test Cancel during capture/processing, microphone denial, lock/sign-out/unmount cleanup, 60-second stop and server rejection of codec-padded overlong audio. This is pending real hardware/browser acceptance; local automated tests only exercise the isolated configuration with HTTP injection.
+Acceptance: sign in → type a fictional draft → Microphone → speak a short fictional sentence → Stop → wait for editable appended transcript → edit it → explicitly Send → receive a text reply from FakeProvider. Record browser/version/MIME, actual latency and pass/fail without audio/transcript content. Confirm no chat request before Send. Test Cancel during capture/processing, microphone denial, lock/sign-out/unmount cleanup, 60-second stop and server rejection of codec-padded overlong audio. The basic path and recording cancellation/approximately 60-second stop were user-observed at `3a4cc97` as recorded below; the remaining cases are pending real browser acceptance. Local automated tests separately exercise configuration with HTTP injection.
 
 ## Cleanup / undo (operator only)
 
@@ -75,3 +75,13 @@ rm -rf "$HOME/innercove-voice-browser-verify"
 No Docker cleanup, package removal, model deletion, firewall changes or live service restart belongs to this browser test. The existing runtime/provisioning undo remains in SETUP_LOG. None of these setup/undo commands was executed on GX10 while preparing this runbook.
 
 Local preparation checks (2026-10-10): compiled isolated smoke PASS, including actual ephemeral loopback listener, real D47 session/Origin checks, SQLCipher header and cleanup; default app microphone policy unchanged. Full suite 195/195, typecheck, backend/web builds, validate 52/52, safety 33/33, JS/Bash syntax and whitespace checks PASS. Initial smoke setup assertion corrected from 200 to the existing 201 API response. No browser microphone or GX10 API run was performed.
+
+## User-observed GX10 browser verification — 2026-10-10
+
+Isolated checkout `3a4cc97`: backend/web builds and isolated configuration smoke passed, exit 0. Separate native test server on loopback port 18080, reached through a local SSH tunnel; production deployment unchanged. Generated fictional encrypted DB directory: `/tmp/innercove-voice-verify-0joVoy`. Browser/version, selected MIME and transcription latency were not supplied.
+
+- Recording → Stop → transcription appended to an editable draft worked. Existing typed text was preserved; editing and explicit Send worked. A text reply was received from **FakeProvider, not Qwen**.
+- Cancel during recording worked without appending a transcript. Automatic stop at approximately 60 seconds worked; this does not prove decoded duration or codec-padding rejection.
+- **Cleanup is not confirmed.** Processing cancellation, microphone denial, lock/sign-out/navigation cleanup, codec-padded overlong rejection, content-log/audio cleanup checks and production voice-to-Qwen operation remain unverified on GX10/browser. Prior local automated assertions remain local evidence only; full acceptance is not claimed.
+
+After stopping the isolated server/children and tunnel, verify whether the exact generated directory still exists. If graceful shutdown did not remove it, remove only `/tmp/innercove-voice-verify-0joVoy` after confirming the test process has stopped. No cleanup or undo was executed while recording this report; see SETUP_LOG for the remaining resources.

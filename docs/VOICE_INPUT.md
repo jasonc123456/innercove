@@ -109,3 +109,9 @@ Final post-session integration verification: 195/195 tests across 19 files PASS 
 ## Isolated browser verification preparation
 
 See [VOICE_VERIFY.md](VOICE_VERIFY.md) for the separate native clone, loopback/SSH tunnel, temporary encrypted fictional DB, real D47 sign-in and self-only microphone policy. A’s production policy stays unchanged. Runtime/model are reused read-only by native whisper; no container binary compatibility assumption. Real GX10 API/browser acceptance remains pending; text reply uses FakeProvider to avoid Qwen traffic.
+
+## User-observed isolated GX10 browser checkpoint — 2026-10-10
+
+At `3a4cc97`, backend/web builds and isolated configuration smoke passed (exit 0), followed by recording → Stop → transcription appended to editable draft, preserved typed text, editing, explicit Send and a FakeProvider text reply. Cancel during recording appended no transcript; automatic stop at approximately 60 seconds worked. Separate native server used loopback 18080 via local SSH tunnel; production deployment unchanged. This closes the basic isolated browser path, not full acceptance or Qwen verification.
+
+At that checkout web had no committed lockfile: `npm ci --prefix web` failed; `npm install --prefix web --no-audit --no-fund` succeeded. Corrected runbook and detailed results are in [VOICE_VERIFY.md](VOICE_VERIFY.md). Fictional DB `/tmp/innercove-voice-verify-0joVoy` cleanup remains unconfirmed. Processing cancellation, microphone denial, lock/sign-out/navigation cleanup, codec-padded overlong rejection, content-log/audio cleanup checks and production voice-to-Qwen operation remain unverified on GX10/browser; local mocked/API tests are separate evidence.

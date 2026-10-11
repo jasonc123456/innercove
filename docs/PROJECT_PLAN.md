@@ -1098,6 +1098,13 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - GX10 setup/tunnel/fictional setup and exact cleanup in `docs/VOICE_VERIFY.md`; no actual GX10 provisioning, API or browser verification performed for this preparation.
 - Local checks PASS: isolated compiled smoke (loopback, real session/Origin guard, SQLCipher, self-only mic/other headers/default-policy preservation, cleanup), 195/195 tests, typecheck, backend/web builds, validate 52/52, safety 33/33, script/runbook syntax and `git diff --check`. Next acceptance: real microphone → authenticated transcription → editable draft → explicit Send → FakeProvider text reply.
 
+**B, user-observed isolated GX10 voice browser checkpoint (2026-10-10, `3a4cc97`; partial acceptance):**
+- Backend/web builds and isolated configuration smoke PASS, exit 0. Historical web install correction: no committed lockfile at this checkout; `npm ci --prefix web` failed, then `npm install --prefix web --no-audit --no-fund` succeeded. Newer main's web lockfile is separate evidence.
+- User observed recording/Stop → appended editable transcript, typed-text preservation, edit → explicit Send → FakeProvider text reply (not Qwen); recording Cancel appended nothing; auto-stop at approximately 60 seconds worked.
+- Separate native loopback server on 18080 via local SSH tunnel; production unchanged. Fictional DB `/tmp/innercove-voice-verify-0joVoy`; cleanup not confirmed. Results/runbook in VOICE_VERIFY; resource/undo record in SETUP_LOG.
+- Still unverified on GX10/browser: processing cancellation, microphone denial, lock/sign-out/navigation cleanup, codec-padded overlong rejection, content-log/audio cleanup checks, production voice-to-Qwen. Prior local automated evidence remains separate; no full/team acceptance claimed.
+- Documentation-only update; no runtime checks repeated and no cleanup/deployment operation performed. Preserved newer teammate session/two-factor/UI/voice commits; Bash runbook syntax and `git diff --check` PASS.
+
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
 1. Write diary entries A and B. Allow AI access to A only.
