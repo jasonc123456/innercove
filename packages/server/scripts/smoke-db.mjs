@@ -15,7 +15,7 @@ const cwd = fileURLToPath(new URL("../", import.meta.url));
 function launch(encryption = "sqlcipher") {
   const child = spawn(process.execPath, ["dist/main.js"], { cwd, env: {
     ...process.env, INFERENCE_PROVIDER: "fake", HOST: "127.0.0.1", PORT: "0",
-    DB_PATH: file, DB_ENCRYPTION: encryption, DEV_STORE: "", WEB_DIST: path.join(dir, "no-web"),
+    DB_PATH: file, DB_ENCRYPTION: encryption, DEV_STORE: "demo", WEB_DIST: path.join(dir, "no-web"),
   }, stdio: ["ignore", "pipe", "pipe"] });
   let output = "";
   child.stdout.on("data", (chunk) => { output += chunk.toString(); });
@@ -51,21 +51,42 @@ try {
   assert.deepEqual(await call("POST", "/api/lock", undefined, 200), { locked: true });
   await call("POST", "/api/unlock", { passphrase: "wrong-fixture" }, 401);
   assert.deepEqual(await call("POST", "/api/unlock", { passphrase }, 200), { locked: false });
+  // Production Phase 2 paths: the legacy demo flag must not select volatile
+  // persistence, and these HTTP requests use the real compiled registration.
+  const diary = await call("POST", "/api/diary", { origin: "manual", content: "runtimefixturetoken" }, 201);
+  assert.equal(diary.accessLevel, "private");
+  assert.equal((await call("GET", "/api/diary?q=runtimefixturetoken", undefined, 200)).entries[0].id, diary.id);
+  const saved = await fetch(address + "/api/chat", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ conversationId: null, message: "fixture question", useMemories: false, pinnedMemoryIds: [] }) });
+  assert.equal(saved.status, 200);
+  const sse = await saved.text();
+  const meta = JSON.parse(/event: meta\ndata: (.+)/.exec(sse)[1]);
+  assert.match(sse, /event: done/);
+  const loaded = await call("GET", `/api/conversations/${meta.conversationId}/messages`, undefined, 200);
+  assert.deepEqual(loaded.messages.map(message => message.role), ["user", "assistant"]);
+  await call("PATCH", `/api/diary/${diary.id}`, { content: "updatedruntimefixture" }, 200);
+  assert.equal((await call("GET", "/api/diary?q=runtimefixturetoken", undefined, 200)).entries.length, 0);
+  await call("DELETE", `/api/diary/${diary.id}`, undefined, 200);
+  assert.equal((await call("GET", "/api/diary?q=updatedruntimefixture", undefined, 200)).entries.length, 0);
   running.child.kill("SIGTERM");
   assert.equal(await running.exited, 0, "SIGTERM exit");
   assert.ok(!running.output().includes(passphrase), "credential absent from process output");
+  assert.ok(!running.output().includes("runtimefixturetoken"), "diary text absent from process output");
+  assert.ok(!running.output().includes("fixture question"), "chat text absent from process output");
   reopened = new DatabaseStore(file);
   await reopened.unlock(passphrase);
   const lease = reopened.acquire();
   try {
     assert.equal(lease.db.prepare("SELECT count(*) n FROM __drizzle_migrations").get().n, 1);
     assert.ok(lease.db.prepare("SELECT user_id FROM settings WHERE user_id=?").get(lease.userId));
+    assert.equal(lease.db.prepare("SELECT count(*) n FROM messages WHERE user_id=? AND conversation_id=?").get(lease.userId, meta.conversationId).n, 2);
+    assert.equal(lease.db.prepare("SELECT count(*) n FROM diary_entries WHERE user_id=? AND id=?").get(lease.userId, diary.id).n, 0);
   } finally { lease.release(); }
   await reopened.shutdown();
   running = launch("off");
   assert.equal(await running.exited, 1, "plaintext mode explicitly rejected");
   assert.match(running.output(), /supports SQLCipher only/);
-  console.log("PASS: compiled server setup/lock/unlock, packaged migrations, SIGTERM, encrypted reopen, plaintext rejection");
+  console.log("PASS: compiled server setup/lock/unlock, diary CRUD/FTS, SQL saved chat/reopen (including legacy demo flag), packaged migrations, SIGTERM, plaintext rejection");
 } finally {
   if (running && running.child.exitCode === null && running.child.signalCode === null) {
     running.child.kill("SIGTERM"); await running.exited;

@@ -34,8 +34,8 @@ cross-user endpoints. Hard deletion removes content and FTS hits. FTS
 secure-delete is enabled and checked on both indexes, alongside ordinary
 SQLite secure_delete, WAL and temp_store=MEMORY. Content-free source IDs
 survive source deletion so later permission/history filtering can reject
-unresolved sources (D16/D33); owner deletion removes those links. This does
-not implement those permission policies or data repositories yet. Inserts must
+unresolved sources (D16/D33); owner deletion removes those links. This
+implements the Phase 2 repositories and the read/context/history ports below. Inserts must
 explicitly supply `includeInHandoff` after shared-schema defaults are applied;
 a database default cannot distinguish a support note from an ordinary entry.
 
@@ -54,14 +54,57 @@ Run from the repo root: `npm run typecheck`, `npm run validate`, `npm test`,
 `npm run smoke:db --workspace=@innercove/server` (compiled entrypoint + HTTP).
 Native database dependencies remain in the server workspace. Docker packages
 migration assets and provides a writable `/app/data`; a bind mount must also
-be writable by the container's `node` user. This foundation has only been
-verified locally on WSL Linux x64 / Node 22.22.1. Its Docker build/runtime and
-GX10 ARM64 validation remain pending; teammate reports for the earlier spike
-are not evidence for this new foundation.
+be writable by the container's `node` user. The foundation passed GX10 host and isolated ARM64 image checks at `8e96d52`;
+see the Phase log. The new Phase 2 repositories/routes and saved-chat adapter
+are locally verified only until separately tested on the deployed GX10.
 
-A's opt-in `DEV_STORE=demo` and Phase 3 test store remain in-memory and do not
-persist to SQLCipher. They are gated by the same database lifecycle; production
-`ChatStore`/history/permission ports still need B's repositories.
+## Phase 2 repositories and API handoff
 
-Next: conversation/diary repositories and APIs, with user-scoping and deletion
-checks, then A's saved-chat persistence integration. Phase 2 is incomplete.
+`repos/conversations.ts` provides scoped CRUD, recency pagination, ordered
+message reads and transactional message append/deletion. Deleting a
+conversation hard-deletes its messages and owned context links; content-free
+source IDs remain for unresolved-source filtering. `repos/diary.ts` provides
+CRUD, FTS5 MATCH search, immutable source provenance, user settings defaults
+and D30's stronger support-note privacy defaults. Search includes private
+entries in the user's own UI route; AI reads use the filtered port instead.
+All routes derive ownership from the request lease, never client `userId`.
+Malformed requests/FTS queries return a generic 400; foreign or absent IDs
+(including cursors and excerpt sources) return 404 without content.
+
+`api/data.ts` registers the existing §3c conversation and diary routes. Create
+returns 201; deletion returns only a content-free tombstone. List routes use
+`limit` and an opaque last-ID cursor, ordered by updatedAt descending with ID
+as a tie-breaker. Message reads return the most recent `limit` rows oldest
+first. A's shared `ConversationHistoryPort` reads the full ordered history so
+D33 filtering occurs before A truncates the prompt. An empty PATCH is a no-op;
+omitted fields preserve values, explicit null clears nullable fields.
+
+`chat-store.ts` binds A's existing persistence/read/context/history seams to
+one admitted request's SQLCipher lease. Completed assistant messages and
+context IDs commit atomically via the additive optional
+`appendMessageWithContext` port; older test adapters keep their existing
+methods. There is no public message-create route. Saved `/api/chat` uses SQL
+by default and reloads after lock/reopen or process restart. Temporary
+`/api/infer` only reads eligible context; it never persists conversations,
+messages, context links or other table changes, and content is never logged.
+
+Normal `main.ts` no longer selects the volatile store via `DEV_STORE=demo`;
+the legacy flag is ignored. Existing in-memory adapters/persona helpers stay
+available for A's isolated tests, and no deployed GX10 service/config was
+changed. Fictional persona seeding into SQL and memory CRUD APIs remain later
+work; switching to this server version does not auto-import demo content.
+
+Read ports are scoped to the lease user; approved/eligible memories and
+eligible diary entries are returned only when their provenance resolves to
+eligible same-user sources. Missing, private or cyclic sources fail closed.
+Message-based derived sources have no independent access flag and remain
+excluded conservatively, matching the earlier demo adapter's policy, until
+Phase 3's permission workflow is implemented. This slice supplies the existing
+read seams, not Phase 3 memory APIs or full revoke/re-confirmation workflows.
+A's ranking, prompt assembly, safety and D33 exclusion remain unchanged.
+
+C can wire setup/unlock/status, diary CRUD/search, `/api/chat` and conversation
+reload to these contracts. C's current mock-only diary/Save UI and lock-screen
+crisis/help acceptance remain separate team work. Backend Phase 2 acceptance
+is locally covered by `api/data.test.ts` and the expanded compiled-entrypoint
+smoke. Whole-team Phase 2 and deployment verification remain incomplete.

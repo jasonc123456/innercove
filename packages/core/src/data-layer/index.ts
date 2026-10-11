@@ -12,12 +12,12 @@
  * find out that something WAS revoked/deleted, and to hand it an
  * already-eligible candidate pool to rank over).
  */
-import type { UserId, DiaryEntryId, MemoryId, MessageId } from "../types/ids.js";
+import type { UserId, DiaryEntryId, MemoryId, MessageId, ConversationId } from "../types/ids.js";
 import type { ConversationCreateInput, ConversationRecord, MessageCreateInput, MessageRecord } from "../types/conversation.js";
 import type { DiaryEntryCandidate } from "../types/diary.js";
 import type { MemoryCandidate } from "../types/memory.js";
 import type { ProvenanceLinkRecord } from "../types/provenance.js";
-import type { MessageContextCreateInput, MessageContextRecord } from "../types/message-context.js";
+import type { MessageContextCreateInput, MessageContextRecord, MessageContextSourceRef } from "../types/message-context.js";
 import type { TombstoneRecord } from "../types/tombstone.js";
 
 // -------------------------------------------------- 1. persisting saved chat --
@@ -37,6 +37,9 @@ export interface ConversationPersistencePort {
    * for the assistant's reply, with EXACTLY the sources A's retrieval
    * step decided to inject (never more, never re-derived later). */
   recordMessageContext(input: MessageContextCreateInput & { userId: UserId }): Promise<MessageContextRecord>;
+  /** Atomic production write for a completed reply and its context IDs.
+   * Optional for older test adapters; no public HTTP payload changes. */
+  appendMessageWithContext?(input: MessageCreateInput & { userId: UserId }, sources: MessageContextSourceRef[]): Promise<MessageRecord>;
 }
 
 // --------------------------------- 2. reading user-scoped candidates for A --
@@ -111,4 +114,10 @@ export interface RevocationReportingPort {
    * state. Tombstones carry no content (tombstone.ts) -- this is safe
    * to poll frequently without itself becoming a content-leak channel. */
   listTombstonesSince(params: { userId: UserId; since: string }): Promise<TombstoneRecord[]>;
+}
+
+/** Saved messages in chronological order, scoped to the user. A applies
+ * D33 history exclusion before choosing its bounded prompt history. */
+export interface ConversationHistoryPort {
+  listMessages(params: { userId: UserId; conversationId: ConversationId }): Promise<MessageRecord[]>;
 }
