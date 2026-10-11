@@ -67,6 +67,15 @@ Compared with the original plan, retrieval and prompt assembly move from D to A,
 | By 10 | A handoff note of at most 15 lines in the `PROJECT_PLAN.md` Phase log. **Then D is done.** | — |
 | Optional | Rehearse the demo or present at judging. | — |
 
+## Added during the event (beyond the original split)
+Recorded so ownership stays clear; see "Added during the event" in `PROJECT_PLAN.md` §5 for status.
+| Role | Added work |
+|---|---|
+| A (Jason) | Desktop UI and phone tab bar; Settings and Admin pages; server sessions (Phase 5a); Tailscale for overnight access (D48); integration lead backup for C's diary/memories wiring |
+| B (Angela) | Voice input backend: local whisper.cpp transcription (`/api/transcribe`), isolated GX10 voice runner (`docs/VOICE_VERIFY.md`) |
+| C (Mia) | Sign-in page grove, light/dark theme toggle and animations; voice recorder in chat |
+| D (Meowie) | Home dashboard (daily thought, mood check-in, growing sapling); Wellness Toolkit with guided breathing and the chat `suggestedExercise` offer; trauma-informed prompt guidance and cases; hardened safety checks |
+
 ## Timeline
 | Hour | Milestone |
 |---|---|

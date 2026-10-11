@@ -7,7 +7,7 @@ Legend: ✅ verified (sources at end) · ⚠️ assumption/unverified · 🧪 me
 InnerCove is a privacy-first local AI wellness companion. It combines chat, a diary, permission-controlled memory and an app-level safety layer, and it runs on an ASUS GX10 for a 24-hour hackathon. The product is built around a **hub**: one computer (a home PC, a GX10, or later an organization's server) holds the diary and runs the main model. Browsers, and later an Android companion app, connect to it (§3a). This document sets the architecture, the MVP scope and the phased plan before any code is written.
 
 **Status:** the event has started and code is in progress in the repo ([github.com/jasonc123456/innercove](https://github.com/jasonc123456/innercove); these docs live in its `docs/` folder, D40). **Every decision is confirmed, including the chat model: Qwen3.8-27B (D12).** The quantization is Q6_K (D43), loaded at 262K context (D45). **Phase 0 is done on the GX10** (prompt v3: companion 89.8%, safety 95.8%, 0 critical fails; D to review the scores). The app is reachable on the team LAN (D46) and, overnight, over the team's Tailscale network (D48); **sign-in with the hub passphrase is mandatory and two-factor is optional (D47)**. See `DECISIONS.md`, D01–D48. An external review (2026-10-10) added D31–D34 and tightened the safety, revocation and deletion tests. Pre-event tests of Qwen3.8-27B on the team's own server are recorded in `DECISIONS.md` (prompt v2: companion 89.8%, safety 96.1%, no critical fails). Under D08, all code is written after the official start. Phase 0 starts only when the team explicitly says go.
-**Last updated 2026-10-10 (night):** Phase 5a sign-in is in: the API itself now requires a session (D47); phone layout has a bottom tab bar. Before that: B's Phase 2, 3 and 5 backends are in (encrypted DB, conversations, diary, memories, settings, delete-all, persona seed); saved chats now persist from the UI; desktop UI and mood-tree fix; dev mode with hot reload on the GX10; CI on every push; `scripts/demo-check.mjs` passes on the GX10. Before that: Phase 0 checks and the 40 tests done on the GX10; model loaded at 262K (D45); Q6_K chosen (D43); repo layout settled as two workspaces (D44); GX10 set up (`SETUP_LOG.md`). Earlier the same day: added the hub-and-companion model, desktop packaging, model strategy, remote access, connecting your own model server, SQLCipher encryption from day one, crisis comfort and support notes (D29, D30), the pre-event model tests, the eval runner spec (§5 Phase 0), the "Start here" section, the API contracts (§3c), the demo persona and the pitch plan (§10).
+**Last updated 2026-10-10 (night):** features added beyond the plan are now listed in "Added during the event" (§5); Phase 5a sign-in is in: the API itself now requires a session (D47); phone layout has a bottom tab bar. Before that: B's Phase 2, 3 and 5 backends are in (encrypted DB, conversations, diary, memories, settings, delete-all, persona seed); saved chats now persist from the UI; desktop UI and mood-tree fix; dev mode with hot reload on the GX10; CI on every push; `scripts/demo-check.mjs` passes on the GX10. Before that: Phase 0 checks and the 40 tests done on the GX10; model loaded at 262K (D45); Q6_K chosen (D43); repo layout settled as two workspaces (D44); GX10 set up (`SETUP_LOG.md`). Earlier the same day: added the hub-and-companion model, desktop packaging, model strategy, remote access, connecting your own model server, SQLCipher encryption from day one, crisis comfort and support notes (D29, D30), the pre-event model tests, the eval runner spec (§5 Phase 0), the "Start here" section, the API contracts (§3c), the demo persona and the pitch plan (§10).
 
 Environment note: the planning workstation is x86_64. Phase 0 must run on the GX10.
 
@@ -53,7 +53,7 @@ For anyone, human or a Claude Code/Codex session, picking this up on the GX10.
 4. **The mobile goal changes the backend decision.** On-device mode with on-device data means the phone needs the whole domain layer: retrieval, permissions, safety and prompt assembly. With a Python backend that becomes a second implementation in TS or Kotlin, which means two safety implementations that drift apart. **I recommend TypeScript end-to-end with a shared `core` package.** It also fits the hub plan: Electron runs a TypeScript server as-is for the desktop app, and Capacitor reuses the web UI for Android. I'm raising this as a challenge to your choice, not replacing it (Q1).
 5. **Docker for the frontend adds nothing.** Build the SPA as static files and serve it from the app server, so there's one container.
 6. **Temporary mode is weaker than it sounds.** Content still passes through the app server and LM Studio, so we have to verify that neither logs request bodies (canary test, Phase 0/1).
-7. **Postpone:** wearables, voice, org hosting, multi-user auth, automatic journaling and clinician integration. Check-in trend charts are P1.
+7. **Postpone:** wearables, voice (except the push-to-talk draft added during the event; see "Added during the event"), org hosting, multi-user auth, automatic journaling and clinician integration. Check-in trend charts are P1.
 8. **A standalone mobile app plus sync is the hardest path.** Build around a hub with the phone as a companion instead. That gives one diary and no two-way sync (§3a).
 
 ---
@@ -483,17 +483,30 @@ If the client aborts, the server stops generating. In a saved chat the user's me
 2. **Two-factor sign-in (D47):** TOTP enrollment in Settings (locally rendered QR code, confirm with a code, 10 recovery codes), the code step at sign-in, replay protection, and a hub-shell reset. **Required before anyone port-forwards the hub.**
 3. **Phone pairing (D31):** a phone browser on our travel router opens the hub over HTTPS from a local CA installed on our demo phone. The QR code carries the URL and a one-time token, which becomes a per-device cookie (`devices` table). Bring our own travel router, because venue Wi-Fi often blocks traffic between devices.
 4. AI diary draft from a conversation: structured output, then edit, then save.
-5. One curated exercise (box breathing or 5-4-3-2-1 grounding) as a UI flow with a "not now" option.
+5. ~~One curated exercise~~ **Done early (D, 2026-10-10):** guided breathing (4-7-8 and a no-hold 4-in/6-out option) under the Wellness Toolkit; grounding is still planned.
 6. Memory proposals after a conversation (approve or reject).
 7. Export/import, first plain JSON, then encrypted.
-8. Check-ins with a Recharts trend.
+8. Check-ins with a Recharts trend. (The Home page's daily mood check-in exists but is session-only; nothing is stored yet.)
 9. Embedding retrieval.
 10. An escalate-only LLM risk classifier. Together with the embeddings in item 9, it turns the privacy panel into a **"models resident on this GX10"** view, which serves the hardware-acceleration criterion.
 11. **Model switcher** in settings: list LM Studio's models and switch between them live (⚠️ loading the 27B takes time). It shows off the adapter and the GX10's capacity.
 12. **A printable recovery key** for the encrypted diary.
 
+**Added during the event (beyond the original plan, 2026-10-10).** Built by teammates on their own initiative or at the team's request; none of it replaces a P0 item, and the 3-minute pitch spine (§10) is unchanged. Details are in the Phase log.
+| Feature | Owner | State | Notes |
+|---|---|---|---|
+| **Home dashboard:** daily thought, color-coded mood check-in, a sapling that grows a leaf per check-in | D (Meowie); tree fix + desktop layout A | ✅ in the app | Session-only: nothing is stored or sent. Persisting check-ins is P1 #8 |
+| **Wellness Toolkit + guided breathing** (`/exercises`, `/exercises/breathing`): 4-7-8 and no-hold 4/6, 1–4 cycles, pause/resume, reduced motion | D | ✅ | Chat can offer it through an allowlisted `suggestedExercise` SSE event (never for crisis tiers, never a model-chosen route). Grounding, guided journaling and thought reflection are shown as planned |
+| **Trauma-informed companion guidance** in the system prompt + 4 review cases (`tests/trauma-informed-cases.json`) | D | ✅ prompt; ⏳ eval | Run the cases with the next GX10 prompt-quality eval |
+| **Hardened safety checks** (medication requests, more blocked output categories, fail-closed config) | D | ✅ | Wellness prototype, not a clinical tool |
+| **Voice input** (`POST /api/transcribe`, local whisper.cpp `base.en`, ≤60 s, editable draft, explicit Send; recorder in chat) | B (API), C (recorder) | ✅ code; ⏳ GX10 browser check | The app's `Permissions-Policy` blocks the microphone and browsers allow it only on HTTPS or localhost, so voice works in B's isolated runner (`docs/VOICE_VERIFY.md`), not yet over the LAN/Tailscale HTTP demo. Needs an A review before enabling in the main app |
+| **Sign-in page design:** decorative "grove" of leaves, light/dark theme toggle, entrance animation | C (Mia) | ✅ | Theme applies to the sign-in page |
+| **Desktop UI** (translucent sidebar, ambient background, two-column home) and **phone tab bar** with a "More" menu | A | ✅ | apple-design guidance; reduced motion/transparency honoured |
+| **Settings** (per account) and **Admin** (hub status, users, lock) pages | A | ✅ | Admin "Add user" and two-factor shown as roadmap/planned |
+| **Overnight remote access over Tailscale** (D48) | A | ✅ | Logged out again at return |
+
 **P2 — needs new infrastructure, or doesn't serve the GX10 demo**
-- Voice (whisper.cpp + Piper, push-to-talk).
+- Voice: ~~whisper.cpp~~ push-to-talk transcription into an editable draft was built during the event (B, see below); Piper speech output and continuous listening stay P2.
 - The Android companion app (Capacitor), with an offline mode (on-device model plus outbox).
 - The desktop app per OS (Electron, bundled llama.cpp, hardware detection, hub dashboard).
 - Remote access: the encrypted relay, opt-in port forwarding, and Cloudflare Tunnel with app-layer encryption (§3a).
@@ -609,7 +622,7 @@ Estimates are uncertain. P0 is about **18–25 engineer-hours, or 8–10 wall-cl
   - A backup screen recording exists.
   - The README has the run steps.
 
-**P1 phases (1.5–3 h each, one at a time, in priority order):** 7 Summary to share · 8 two-factor sign-in (D47; see Phase 5a) · 9 phone pairing (D31) · 10 diary draft · 11 exercise · 12 memory proposals · 13 export/import · 14 check-ins · 15 embeddings · 16 model switcher. Realistically only 7 and 8 fit; Phase 5a's sign-in itself is P0. Feature freeze is around hour 20.
+**P1 phases (1.5–3 h each, one at a time, in priority order):** 7 Summary to share · 8 two-factor sign-in (D47; see Phase 5a) · 9 phone pairing (D31) · 10 diary draft · 11 exercise (breathing done early) · 12 memory proposals · 13 export/import · 14 check-ins · 15 embeddings · 16 model switcher. Realistically only 7 and 8 fit; Phase 5a's sign-in itself is P0. Feature freeze is around hour 20.
 
 ---
 
@@ -1005,6 +1018,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 | 7. Data controls + privacy panel | ✅ `/api/privacy-status` (A), `/api/settings` and `/api/delete-all` (B), **CSP + security headers (A): verified in Firefox on the production build: UI renders fully, `fetch("https://example.com")` blocked by `connect-src 'self'`, same-origin API OK** | ✅ **Settings** (`/settings`): defaults and "Delete all my data" (typed `DELETE`); **Admin** (`/admin`): the privacy/hub-status panel (model, endpoint, CUDA, memory, last-reply speed, encryption, data path) (A) | none (C may restyle) |
 | 8. Verified offline demo | ✅ `scripts/demo-check.mjs` passes online; **`--delete-all` (demo step 8) passes on a throwaway hub**: a canary stored in a diary entry, a memory, search and a sent prompt is gone from rows, search, memories, conversations and the next prompt, and the hub stays unlocked | | **Descoped for the event (Jason, 2026-10-10):** no fully offline demo; the check stays available (`--offline`, runs over SSH or xrdp from the LAN with only the router's uplink unplugged; no monitor needed). **B (bug):** `GET /api/diary?q=` returns 400 for any hyphen (`self-care`, `check-in`): user text goes to FTS5 as raw syntax; quote each term |
 | Sign-in (D47, P0 #9) / lock screen | ✅ setup/unlock/lock (B); ✅ **sessions + `401` guard (A):** `POST/GET/DELETE /api/session`, `DELETE /api/sessions`, cookie, Origin check, backoff; 6 new tests; LAN calls without the cookie get `401` | ✅ the login page signs in through `POST /api/session` (`admin` / `admin@innercove.local` + the hub passphrase; also unlocks after a restart); a reload keeps the session (`GET /api/session`); any `401`/`423` returns to sign-in; Sign out calls `DELETE /api/session`. Verified in Firefox over the LAN; one account, the admin. **Settings** (`/settings`, per account): account and sign out, two-factor (planned), defaults (`/api/settings`), delete all my data (typed `DELETE`). **Admin** (`/admin`, hub-wide): users (one owner; "Add user" roadmap), live hub status, lock the hub | **A:** two-factor (P1 #2) |
+| Added during the event | ✅ `/api/transcribe` (B) | ✅ Home dashboard, Wellness Toolkit/breathing (D); sign-in grove/theme (C); desktop UI, tab bar, Settings/Admin (A) | **A:** review microphone policy before voice is enabled in the main app; **D:** run the trauma-informed cases in the next eval; see "Added during the event" |
 | Phase 6 extras | ✅ persona seed: `npm run seed:persona --workspace=@innercove/server -- --db <path> --confirm-fictional` (B; API stopped first) | | ✅ root README run steps (B); backup recording (C) remains unverified |
 
 
