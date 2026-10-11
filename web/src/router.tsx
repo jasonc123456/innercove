@@ -1,5 +1,6 @@
 import { Link, BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
+import { AdminPage } from "./pages/AdminPage";
 import { ChatPage } from "./pages/ChatPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { HelpPage } from "./pages/HelpPage";
@@ -18,6 +19,7 @@ export function AppRouter() {
           <Route path="diary" element={<DiaryPage />} />
           <Route path="memories" element={<MemoryPage />} />
           <Route path="help" element={<HelpPage />} />
+          <Route path="admin" element={<AdminPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

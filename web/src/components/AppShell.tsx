@@ -57,6 +57,11 @@ const SECTIONS = [
     ),
   },
   { to: "/memories", label: "Memories", icon: <path d="M7 4.5h10v15l-5-3-5 3z" strokeLinejoin="round" /> },
+  {
+    to: "/admin",
+    label: "Admin",
+    icon: <path d="M12 4 5.5 6.5v5c0 4 2.8 7.2 6.5 8.5 3.7-1.3 6.5-4.5 6.5-8.5v-5z" strokeLinejoin="round" />,
+  },
 ] as const;
 
 export function AppShell() {

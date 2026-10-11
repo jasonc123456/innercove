@@ -63,7 +63,11 @@ type AppSessionValue = {
   pinnedMemoryIds: string[];
   completeSetup: (passphrase: string, confirm: string) => string | null;
   completeUnlock: (passphrase: string) => string | null;
-  signIn: (email: string, password: string) => string | null;
+  /** The demo hub's only account is its admin (D47: one user, the hub owner). */
+  role: "admin";
+  /** Checks the hub passphrase on the server (POST /api/unlock re-verifies even when unlocked). */
+  signIn: (passphrase: string) => Promise<string | null>;
+  signOut: () => void;
   createAccount: (email: string, password: string, confirm: string) => string | null;
   lock: () => void;
   setChatMode: (mode: ChatMode) => void;
@@ -96,6 +100,7 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
       hasPassphrase,
       locked,
       signedIn,
+      role: "admin",
       chatMode,
       useMemories,
       entries,
@@ -122,11 +127,30 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
       lock() {
         setLocked(true);
       },
-      signIn(email, password) {
-        if (email.trim().length === 0) return "Enter an email.";
-        if (password.length < 1) return "Enter a password.";
-        setSignedIn(true);
-        return null;
+      async signIn(passphrase) {
+        if (passphrase.length < 1) return "Enter the hub passphrase.";
+        let res: Response;
+        try {
+          res = await fetch("/api/unlock", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ passphrase }),
+          });
+        } catch {
+          return "The hub isn't reachable right now.";
+        }
+        if (res.ok) {
+          setLocked(false);
+          setSignedIn(true);
+          return null;
+        }
+        const body = await res.json().catch(() => null);
+        if (body?.error?.code === "CONFLICT") return "This hub hasn't been set up yet.";
+        const wait = res.headers.get("retry-after");
+        return wait ? `Too many attempts. Try again in ${wait} seconds.` : "That passphrase didn't work.";
+      },
+      signOut() {
+        setSignedIn(false);
       },
       createAccount(email, password, confirm) {
         if (email.trim().length === 0) return "Enter an email.";
