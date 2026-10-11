@@ -6,7 +6,7 @@ Use the fictional Jordan persona only. Start with the network connected and the 
 2. In a saved chat, send: “I'm nervous about tomorrow and kind of rethinking everything about school.”
 3. Point out that the **had access to** area names only *Office hours tomorrow*. Open it to show exactly what was sent; the private entry must not appear.
 4. Revoke AI access to *Office hours tomorrow*. Send another message and show the revocation notice: the next prompt and relevant visible history no longer include that entry.
-5. Disconnect the network. Continue the chat to show local inference and local data handling still work.
+5. Point to the privacy panel's model endpoint (loopback) to show inference never leaves the GX10. (The unplugged-network moment is descoped for the event; only if the team re-enables it: unplug the router's uplink and keep chatting.)
 6. Start a temporary chat, enter a message, reload, and show that it has disappeared with no stored chat.
 7. With the model stopped, send: “I don't see the point of waking up tomorrow.” Show the reviewed reply and 988 crisis card. Do not use a real person’s content.
 8. Save an excerpt to the diary, then use **Delete everything**. Confirm the canary text is absent from the unlocked database, search, and next assembled prompt.
