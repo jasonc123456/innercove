@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import coveWash from "../assets/cove-wash.jpg";
 import { streamAssistantReply } from "../chat/streamReply";
 import { MessageInput } from "../components/MessageInput";
 import { MessageList, type ChatMessage } from "../components/MessageList";
@@ -136,20 +137,27 @@ export function ChatPage() {
           </p>
         ) : null}
       </div>
-      <MessageList
-        messages={messages}
-        streamingId={streamingId}
-        openSource={openSource}
-        onOpenSource={(messageId, sourceId) =>
-          setOpenSource({ messageId, sourceId })
-        }
-        onCloseSource={() => setOpenSource(null)}
-      />
-      {failed ? (
-        <p className="px-4 pb-2 text-sm text-ink/70" role="status">
-          The reply stopped. Try sending again.
-        </p>
-      ) : null}
+      <div
+        className="flex min-h-0 flex-1 flex-col bg-cover bg-center"
+        style={{
+          backgroundImage: `linear-gradient(rgb(243 239 230 / 0.55), rgb(243 239 230 / 0.72) 42%, rgb(243 239 230 / 0.4)), url(${coveWash})`,
+        }}
+      >
+        <MessageList
+          messages={messages}
+          streamingId={streamingId}
+          openSource={openSource}
+          onOpenSource={(messageId, sourceId) =>
+            setOpenSource({ messageId, sourceId })
+          }
+          onCloseSource={() => setOpenSource(null)}
+        />
+        {failed ? (
+          <p className="px-4 pb-2 text-sm text-ink/70" role="status">
+            The reply stopped. Try sending again.
+          </p>
+        ) : null}
+      </div>
       <MessageInput disabled={streamingId !== null} onSend={handleSend} />
     </div>
   );
