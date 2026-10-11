@@ -803,7 +803,12 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Files:** `packages/core/src/safety/**`, root `config/**`, `tests/safety-cases.json`, `tests/output-screen-cases.json`, and `docs/DEMO_SCRIPT.md`.
 - **Integration:** `packages/server/src/chat/rules-safety.ts` loads static config at startup; tier 2 never calls the model, and tiers 0–1 are screened before display.
 - **Tests:** `npm test` runs the 30 tier cases and output-screen cases through `/api/chat`; `node scripts/check-safety.mjs` remains a quick config check. Live fake-provider `/api/infer` verification returned tier 2 and `modelId: reviewed-reply` for an explicit-risk test message.
+- **Prompt-quality follow-up:** based on the GX10 prompt-v3 evaluation, the current prompt explicitly covers imminent plans and threats (911 first), abuse/coercive-control resources including the Domestic Violence Hotline, context discipline, and no unsolicited first-reply advice. This is a candidate improvement only: rerun all 40 Q6_K prompts before claiming a new score.
 - **Next:** C verifies the crisis card and support-note UX against the static config; the team runs the offline demo script after the real model is ready.
+
+**D (Meowie), dashboard extension (2026-10-10):**
+- **Done:** added an animated Home dashboard before Chat with a rotating daily thought, color-coded mood check-in choices, and a session-only sapling that adds a matching leaf and grows branches with each check-in. Chat remains available at `/chat`; no mood data is stored outside the current session.
+- **Verification:** `cd web && npm run build` passes. Persisting check-ins requires a future reviewed data model and API rather than hidden browser storage.
 
 **B (Angela), Phase 2 database foundation (2026-10-10; Phase 2 incomplete):**
 - **Done:** encrypted setup/reopen with actual-read credential verification, native connection cleanup, and serialized setup/unlock/lock/shutdown; five failed unlocks impose a 30-second cooldown.

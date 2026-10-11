@@ -75,3 +75,52 @@ textarea:focus-visible {
     transform: none;
   }
 }
+
+@keyframes dashboard-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes leaf-grow {
+  from {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scale(0.2);
+  }
+  to {
+    opacity: 1;
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scale(1);
+  }
+}
+
+.dashboard-welcome {
+  animation: dashboard-enter 520ms ease-out both;
+}
+
+.mood-choice:hover {
+  transform: translateY(-2px);
+}
+
+.tree-leaf {
+  animation: leaf-grow 420ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-welcome,
+  .tree-leaf {
+    animation: none;
+  }
+
+  .mood-choice {
+    transition: none;
+  }
+}
