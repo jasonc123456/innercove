@@ -1159,6 +1159,14 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 
 **No fake replies (A, 2026-10-11 04:00, D54):** Jason: no canned reply unless the model is offline. `createProvider` now refuses `INFERENCE_PROVIDER=fake` outside `NODE_ENV=test`; with LM Studio unreachable the chat shows an offline notice instead of a reply (checked on a throwaway server pointed at a closed port: `MODEL_UNAVAILABLE`). README and AGENTS.md no longer tell teammates to run the fake model; use the GX10 or `ssh -L 1234:127.0.0.1:1234 gx10`. Tests 221/221, web build OK. **Teammates:** a local `INFERENCE_PROVIDER=fake npm run dev` now fails at start on purpose.
 
+**2026-10-11 — microphone level UI (scoped user-authorized C composer edit):**
+- Added matching SVG mic beside draft, accent/visible Stop and five RMS level bars; processing spinner and fixed meter slot.
+- Reuses recording stream; no playback/logging/storage; optional Web Audio fails gracefully.
+- Cleans RAF/nodes/context on existing recorder/session cancellation paths; reduced-motion sampling/display.
+- Local: 26 focused mocked/SSR tests; 234 full tests after latest A integration; web typecheck/build, server typecheck, validation 52/52 and safety 33/33 passed.
+- Browser visual/real-mic, mobile, reduced-motion and session teardown verification remain pending; see VOICE_INPUT.md.
+- Backend/auth/policy/deployment unchanged; no live GX10 access or changes.
+
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
 1. Write diary entries A and B. Allow AI access to A only.
