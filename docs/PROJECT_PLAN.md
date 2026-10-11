@@ -975,6 +975,13 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - Golden inputs now cover ordinary stress, ambiguous distress, and medication requests; output cases cover the new blocked categories. Tests prove missing configuration and a throwing assessment fail closed before the model runs.
 - This remains a hackathon emotional-wellness prototype, not a clinically validated, certified, monitored, or emergency service.
 
+**Optional breathing exercise — session-local wellness tool (2026-10-10):**
+- Added `/exercises` plus `/exercises/breathing`: an optional 4-7-8 guide and 4-in/6-out no-hold alternative. Users choose 1–4 cycles; the guide never auto-starts, supports pause/resume/restart/end, feedback, keyboard access, and reduced motion.
+- The timer is timestamp-based, cleans up on unmount, and refreshes after visibility changes. Completion and feedback are not persisted.
+- `/api/chat` and `/api/infer` can emit a typed, allowlisted `suggestedExercise` SSE event. Conservative rules require expressed stress context, honor dismissals, suppress consecutive offers, select no-hold breathing for breath discomfort, and never run for crisis tiers.
+- The chat card routes only to the server-approved breathing page. The model never supplies a route; prompt guidance keeps offers optional and non-diagnostic.
+- Automated coverage: breathing phase/completion calculations and suggestion positive/negative/ambiguous/dismissal/repeat/crisis cases. This feature is an optional wellness tool, not treatment or clinically validated care.
+
 | P0 item | Server | UI | Missing |
 |---|---|---|---|
 | 1. Streaming local chat, reasoning off | ✅ `/api/infer`, `/api/chat` (A) | ✅ chat page streams from Qwen | none |

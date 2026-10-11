@@ -8,6 +8,8 @@ import { HelpPage } from "./pages/HelpPage";
 import { LoginPage } from "./pages/LoginPage";
 import { MemoryPage } from "./pages/MemoryPage";
 import { DiaryPage } from "./pages/DiaryPage";
+import { ExercisesPage } from "./pages/ExercisesPage";
+import { BreathingPage } from "./pages/BreathingPage";
 import { useAppSession } from "./session/AppSession";
 
 export function AppRouter() {
@@ -19,6 +21,8 @@ export function AppRouter() {
           <Route path="chat" element={<ChatPage />} />
           <Route path="diary" element={<DiaryPage />} />
           <Route path="memories" element={<MemoryPage />} />
+          <Route path="exercises" element={<ExercisesPage />} />
+          <Route path="exercises/breathing" element={<BreathingPage />} />
           <Route path="help" element={<HelpPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="admin" element={<AdminPage />} />

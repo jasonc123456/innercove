@@ -36,6 +36,12 @@ Automated, deterministic coverage is deliberately split across the safety-rule, 
 
 The test suite does **not** certify clinical safety or prove an LLM will always follow an instruction. Before a demo, A must run the trauma-informed cases and the full prompt set on the GX10 model, inspect the replies, and record any failures rather than claiming validation.
 
+## Optional breathing exercise
+
+`web/src/exercises/breathingTimer.test.ts` checks the reusable timer's phase transitions, completion, and timestamp-based delayed-tick behavior. `packages/server/src/chat/exercise-suggestion.test.ts` checks positive, negative, discomfort, dismissal, repeat-offer, and crisis-override policy cases. The exercise is session-local: neither completion nor feedback is written to diary or memory.
+
+Manual browser checks: open `/exercises` and `/exercises/breathing`; confirm the page does not auto-start; select both 4-7-8 and comfortable breathing; test start, pause, resume, restart and end; then complete a one-cycle session and select “More uncomfortable.” Verify the stop guidance appears and Return to chat works. With reduced motion enabled, the circle must remain static while text and timers continue to work.
+
 For the current frontend:
 
 ```sh

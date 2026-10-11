@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import type { ReplyContext } from "../chat/streamReply";
 import { CrisisCard } from "./CrisisCard";
+import { ExerciseSuggestionCard, type ExerciseSuggestion } from "./ExerciseSuggestionCard";
 
 export type ChatMessage = {
   id: string;
@@ -10,6 +11,7 @@ export type ChatMessage = {
   context?: ReplyContext;
   historyExcluded?: number;
   tier?: 0 | 1 | 2;
+  suggestedExercise?: ExerciseSuggestion;
 };
 
 type MessageListProps = {
@@ -18,6 +20,7 @@ type MessageListProps = {
   openSource: { messageId: string; sourceId: string } | null;
   onOpenSource: (messageId: string, sourceId: string) => void;
   onCloseSource: () => void;
+  onDismissExercise: (id: ExerciseSuggestion["id"]) => void;
 };
 
 export function MessageList({
@@ -26,6 +29,7 @@ export function MessageList({
   openSource,
   onOpenSource,
   onCloseSource,
+  onDismissExercise,
 }: MessageListProps) {
   const endRef = useRef<HTMLLIElement>(null);
 
@@ -71,6 +75,9 @@ export function MessageList({
             ) : null}
             {!isUser && message.tier !== undefined && message.tier >= 1 ? (
               <CrisisCard />
+            ) : null}
+            {!isUser && message.suggestedExercise && message.tier === 0 ? (
+              <ExerciseSuggestionCard suggestion={message.suggestedExercise} onDismiss={onDismissExercise} />
             ) : null}
             {!isUser && message.historyExcluded && message.historyExcluded > 0 ? (
               <p className="mt-3 text-sm leading-snug text-ink/80" role="status">

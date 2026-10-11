@@ -22,6 +22,7 @@ export function ChatPage() {
     sourceId: string;
   } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const dismissedExerciseIds = useRef<("breathing478" | "comfortable-breathing")[]>([]);
 
   useEffect(() => {
     return () => {
@@ -65,6 +66,7 @@ export function ChatPage() {
           history,
           useMemories,
           pinnedMemoryIds,
+          dismissedExerciseIds: dismissedExerciseIds.current,
           ...(chatMode === "saved" ? { saved: { conversationId: conversationIdRef.current } } : {}),
         },
         {
@@ -92,6 +94,7 @@ export function ChatPage() {
               ),
             );
           },
+          onSuggestedExercise: (suggestion) => setMessages((current) => current.map((message) => message.id === assistantId ? { ...message, suggestedExercise: suggestion } : message)),
         },
         controller.signal,
       );
@@ -159,6 +162,10 @@ export function ChatPage() {
             setOpenSource({ messageId, sourceId })
           }
           onCloseSource={() => setOpenSource(null)}
+          onDismissExercise={(id) => {
+            dismissedExerciseIds.current = [...new Set([...dismissedExerciseIds.current, id])];
+            setMessages((current) => current.map((message) => message.suggestedExercise?.id === id ? { ...message, suggestedExercise: undefined } : message));
+          }}
         />
         {failed ? (
           <p className="px-4 pb-2 text-sm text-ink/70" role="status">

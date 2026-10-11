@@ -1,4 +1,4 @@
-import type { SafetyTier } from "@innercove/core";
+import type { SafetyTier, SuggestedExercise } from "@innercove/core";
 import {
   ModelUnavailableError,
   type ChatMessage,
@@ -29,6 +29,8 @@ export interface TurnHooks {
   prepare?(): Promise<PreparedTurn>;
   /** After the reply is complete and screened. Returns the saved assistant message id, if any. */
   finish?(reply: { text: string; modelId: string; tier: SafetyTier; context: ContextItem[] }): Promise<string | null>;
+  /** A server-owned optional wellness suggestion; never used for crisis tiers. */
+  suggestExercise?(tier: SafetyTier): SuggestedExercise | null;
 }
 
 export interface TurnInput {
@@ -68,6 +70,8 @@ export async function runTurn(input: TurnInput): Promise<ReplyStats | null> {
 
   const prepared = (await hooks.prepare?.()) ?? { history: [], context: [], historyExcluded: 0 };
   send("context", contextEvent(prepared.context));
+  const suggestedExercise = hooks.suggestExercise?.(tier);
+  if (suggestedExercise) send("suggestedExercise", suggestedExercise);
   if (prepared.historyExcluded > 0) send("historyExcluded", { count: prepared.historyExcluded });
 
   const messages = assemblePrompt({

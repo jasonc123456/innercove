@@ -8,6 +8,7 @@
   --color-cove: #1e4f4c;
   --color-foam: #e4efec;
   --color-line: #d5cfc3;
+  --color-lavender: #e8e2f2;
 }
 
 html,
@@ -111,6 +112,26 @@ textarea:focus-visible {
   transform-box: fill-box;
   transform-origin: left center;
   animation: leaf-grow 420ms ease-out both;
+}
+
+.breathing-circle {
+  display: flex;
+  width: 10rem;
+  height: 10rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: linear-gradient(145deg, #d9e9e2, #e9e3f2);
+  box-shadow: 0 12px 30px -16px rgb(30 79 76 / 0.45);
+  transition: transform 300ms ease-in-out, background-color 300ms ease-in-out;
+}
+
+.breathing-inhale { transform: scale(1.25); transition-duration: 4000ms; }
+.breathing-exhale { transform: scale(0.78); transition-duration: 8000ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .breathing-circle { transition: none; }
+  .breathing-inhale, .breathing-exhale { transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

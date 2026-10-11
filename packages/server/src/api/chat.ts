@@ -12,6 +12,7 @@ import { filterHistory } from "../chat/history.js";
 import { NotFoundError, type ChatStore } from "../chat/ports.js";
 import { eligibleIds, loadEligiblePool, selectContext } from "../chat/retrieval.js";
 import { runTurn, type TurnHooks } from "../chat/turn.js";
+import { suggestExercise } from "../chat/exercise-suggestion.js";
 import { sendError, validationDetails } from "./errors.js";
 import { SqlChatStore } from "../store/chat-store.js";
 import { openSse } from "./sse.js";
@@ -21,7 +22,7 @@ export function chatRoutes(app: FastifyInstance, deps: AppDeps) {
   app.post("/api/chat", async (request, reply) => {
     const parsed = ChatRequestSchema.safeParse(request.body);
     if (!parsed.success) return sendError(reply, "VALIDATION_ERROR", "Invalid chat request", validationDetails(parsed.error));
-    const { conversationId, message, useMemories, pinnedMemoryIds } = parsed.data;
+    const { conversationId, message, useMemories, pinnedMemoryIds, dismissedExerciseIds } = parsed.data;
     const store = deps.store ?? new SqlChatStore(request.databaseLease!);
 
     let prior: MessageRecord[] = [];
@@ -33,14 +34,14 @@ export function chatRoutes(app: FastifyInstance, deps: AppDeps) {
         throw error;
       }
     }
-    return stream(request, reply, deps, message, savedChatHooks(store, conversationId, prior, message, useMemories, pinnedMemoryIds));
+    return stream(request, reply, deps, message, savedChatHooks(store, conversationId, prior, message, useMemories, pinnedMemoryIds, dismissedExerciseIds));
   });
 
   /** Temporary chats (D35): history comes from the browser; never writes rows or content logs. */
   app.post("/api/infer", async (request, reply) => {
     const parsed = InferRequestSchema.safeParse(request.body);
     if (!parsed.success) return sendError(reply, "VALIDATION_ERROR", "Invalid infer request", validationDetails(parsed.error));
-    const { history, message, useMemories, pinnedMemoryIds } = parsed.data;
+    const { history, message, useMemories, pinnedMemoryIds, dismissedExerciseIds } = parsed.data;
     const store = deps.store ?? new SqlChatStore(request.databaseLease!);
     return stream(request, reply, deps, message, {
       prepare: async () => ({
@@ -50,6 +51,14 @@ export function chatRoutes(app: FastifyInstance, deps: AppDeps) {
             ? selectContext(await loadEligiblePool(store.reads, store.userId), message, pinnedMemoryIds)
             : [],
         historyExcluded: 0,
+      }),
+      suggestExercise: (tier) => suggestExercise({
+        message,
+        safetyTier: tier,
+        dismissedIds: dismissedExerciseIds,
+        // InferRequestSchema permits only user/assistant roles; preserve that
+        // narrower contract for the suggestion policy.
+        recentHistory: history.map(({ role, content }) => ({ role: role as "user" | "assistant", content })),
       }),
     });
   });
@@ -62,6 +71,7 @@ function savedChatHooks(
   message: string,
   useMemories: boolean,
   pinnedMemoryIds: readonly string[],
+  dismissedExerciseIds: readonly ("breathing478" | "comfortable-breathing")[],
 ): TurnHooks {
   const userId = store.userId;
   let conversationId = existingId;
@@ -118,6 +128,14 @@ function savedChatHooks(
       }
       return saved.id;
     },
+    suggestExercise: (tier) => suggestExercise({
+      message,
+      safetyTier: tier,
+      dismissedIds: dismissedExerciseIds,
+      recentHistory: prior
+        .filter((item): item is typeof item & { role: "user" | "assistant" } => item.role === "user" || item.role === "assistant")
+        .map(({ role, content }) => ({ role, content })),
+    }),
   };
 }
 

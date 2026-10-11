@@ -24,6 +24,13 @@ export interface ReplyDone {
   tokPerS: number | null;
 }
 
+export interface SuggestedExercise {
+  id: "breathing478" | "comfortable-breathing";
+  title: string;
+  route: "/exercises/breathing";
+  reason: string;
+}
+
 /** SSE `context` event: chips and the exact text that was sent (§3c). */
 export interface ReplyContext {
   sources: { type: "diary_entry" | "memory"; id: string; title: string }[];
@@ -39,6 +46,7 @@ export interface StreamHandlers {
   onContext?: (context: ReplyContext) => void;
   /** Present only when the server dropped earlier exchanges (D33). */
   onHistoryExcluded?: (count: number) => void;
+  onSuggestedExercise?: (suggestion: SuggestedExercise) => void;
 }
 
 export class ReplyError extends Error {
@@ -58,6 +66,7 @@ export async function streamAssistantReply(
     history: ChatTurn[];
     useMemories?: boolean;
     pinnedMemoryIds?: string[];
+    dismissedExerciseIds?: ("breathing478" | "comfortable-breathing")[];
     /** Present for saved chats: `null` starts a new conversation (its id arrives in `onMeta`). */
     saved?: { conversationId: string | null };
   },
@@ -75,12 +84,14 @@ export async function streamAssistantReply(
             message: request.message,
             useMemories: request.useMemories ?? true,
             pinnedMemoryIds,
+            dismissedExerciseIds: request.dismissedExerciseIds ?? [],
           }
         : {
             history: request.history.slice(-MAX_HISTORY),
             message: request.message,
             useMemories: request.useMemories ?? false,
             pinnedMemoryIds,
+            dismissedExerciseIds: request.dismissedExerciseIds ?? [],
           },
     ),
     signal,
@@ -122,6 +133,9 @@ function dispatch(block: string, handlers: StreamHandlers) {
       break;
     case "historyExcluded":
       handlers.onHistoryExcluded?.(payload.count);
+      break;
+    case "suggestedExercise":
+      handlers.onSuggestedExercise?.(payload);
       break;
     case "delta":
       handlers.onDelta(payload.text);
