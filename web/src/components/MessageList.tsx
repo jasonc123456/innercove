@@ -19,8 +19,17 @@ export type ChatMessage = {
   offline?: boolean;
 };
 
-/** Chips shown before "+N more": every memory is sent now (D49), so a reply can have many. */
-const CHIP_LIMIT = 4;
+/** "3 memories and 1 diary entry": every memory is sent now (D49), so a reply can draw on many. */
+function sourceSummary(sources: ReplyContext["sources"]): string {
+  const memories = sources.filter((s) => s.type === "memory").length;
+  const entries = sources.length - memories;
+  return [
+    memories ? `${memories} ${memories === 1 ? "memory" : "memories"}` : null,
+    entries ? `${entries} diary ${entries === 1 ? "entry" : "entries"}` : null,
+  ]
+    .filter(Boolean)
+    .join(" and ");
+}
 
 type MessageListProps = {
   messages: ChatMessage[];
@@ -40,6 +49,7 @@ export function MessageList({
   onDismissExercise,
 }: MessageListProps) {
   const { chatMode } = useAppSession();
+  // "Had access to" starts collapsed; the user opens it to see each source and exactly what was sent.
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const endRef = useRef<HTMLLIElement>(null);
 
@@ -101,40 +111,61 @@ export function MessageList({
               </p>
             ) : null}
             {!isUser && message.context && message.context.sources.length > 0 ? (
-              <div className="mt-3 flex flex-col gap-2">
-                <p className="text-sm text-ink/70">Had access to</p>
-                <div className="flex flex-wrap gap-2">
-                  {(expanded.has(message.id) ? message.context.sources : message.context.sources.slice(0, CHIP_LIMIT)).map((source) => (
-                    <button
-                      key={source.id}
-                      type="button"
-                      aria-pressed={
-                        openSource?.messageId === message.id &&
-                        openSource.sourceId === source.id
-                      }
-                      onClick={() => onOpenSource(message.id, source.id)}
-                      className="inline-flex min-h-11 items-center rounded-2xl border border-line bg-paper px-3 text-sm text-cove"
-                    >
-                      {source.type === "memory" ? "Memory" : "Diary"}
-                      {source.title ? ` · ${source.title}` : ""}
-                    </button>
-                  ))}
-                  {!expanded.has(message.id) && message.context.sources.length > CHIP_LIMIT ? (
-                    <button
-                      type="button"
-                      onClick={() => setExpanded((current) => new Set(current).add(message.id))}
-                      className="inline-flex min-h-11 items-center rounded-2xl px-3 text-sm text-cove underline decoration-cove/40 underline-offset-2"
-                    >
-                      +{message.context.sources.length - CHIP_LIMIT} more
-                    </button>
-                  ) : null}
-                </div>
-                {openSource?.messageId === message.id ? (
-                  <SentPanel
-                    context={message.context}
-                    sourceId={openSource.sourceId}
-                    onClose={onCloseSource}
-                  />
+              <div className="mt-2 flex flex-col gap-2">
+                <button
+                  type="button"
+                  aria-expanded={expanded.has(message.id)}
+                  aria-controls={`sources-${message.id}`}
+                  onClick={() => {
+                    const open = expanded.has(message.id);
+                    setExpanded((current) => {
+                      const next = new Set(current);
+                      if (open) next.delete(message.id);
+                      else next.add(message.id);
+                      return next;
+                    });
+                    if (open && openSource?.messageId === message.id) onCloseSource();
+                    // Opening near the bottom of the chat: bring the sources into view.
+                    if (!open) requestAnimationFrame(() => document.getElementById(`sources-${message.id}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+                  }}
+                  className="-mx-1 inline-flex min-h-9 items-center gap-1.5 self-start rounded-full px-1 text-sm text-ink/70 hover:text-cove focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cove"
+                >
+                  <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 4.5h9l3 3v12H6z" /><path d="M9 11h6M9 14.5h6" />
+                  </svg>
+                  Had access to {sourceSummary(message.context.sources)}
+                  <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+                    className={expanded.has(message.id) ? "rotate-180 transition-transform motion-reduce:transition-none" : "transition-transform motion-reduce:transition-none"}>
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+                {expanded.has(message.id) ? (
+                  <div id={`sources-${message.id}`} className="flex flex-col gap-2">
+                    <div className="flex flex-wrap gap-2">
+                      {message.context.sources.map((source) => (
+                        <button
+                          key={source.id}
+                          type="button"
+                          aria-pressed={
+                            openSource?.messageId === message.id &&
+                            openSource.sourceId === source.id
+                          }
+                          onClick={() => onOpenSource(message.id, source.id)}
+                          className="inline-flex min-h-11 items-center rounded-2xl border border-line bg-paper px-3 text-sm text-cove"
+                        >
+                          {source.type === "memory" ? "Memory" : "Diary"}
+                          {source.title ? ` · ${source.title}` : ""}
+                        </button>
+                      ))}
+                    </div>
+                    {openSource?.messageId === message.id ? (
+                      <SentPanel
+                        context={message.context}
+                        sourceId={openSource.sourceId}
+                        onClose={onCloseSource}
+                      />
+                    ) : null}
+                  </div>
                 ) : null}
               </div>
             ) : null}

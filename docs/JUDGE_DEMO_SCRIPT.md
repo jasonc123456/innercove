@@ -36,7 +36,7 @@ InnerCove is a private companion that runs completely on this ASUS GX10. No clou
 
 "Jordan writes to InnerCove the way they'd write in a journal. While the reply comes in, look under it."
 
-▶ Point to **Had access to**, then open the chip to show **What was sent**.
+▶ Tap **Had access to … ⌄** under the reply (it starts collapsed), then tap the *Office hours tomorrow* chip to show **What was sent**.
 
 "InnerCove shows exactly what it read to answer: the office-hours entry Jordan chose to share, word for word. Jordan's private entry about switching majors is right there in the diary, and it was never sent. Every entry has its own switch: **AI may use this**."
 
