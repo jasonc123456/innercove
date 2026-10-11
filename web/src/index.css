@@ -107,6 +107,82 @@ textarea:focus-visible {
   transform: translateY(-2px);
 }
 
+/* Diary feeling picker. Light matches the editor; dark follows the OS, unless the
+   sign-in toggle has pinned a theme on the document. */
+.feeling-picker {
+  --feeling-card: #fff;
+  --feeling-ink: #1c2430;
+  --feeling-note: rgb(28 36 48 / 0.7);
+  --feeling-line: #d5cfc3;
+  --feeling-surface: #fff;
+  --feeling-selected: #e4efec;
+  --feeling-accent: #1e4f4c;
+  border-color: var(--feeling-line);
+  background: var(--feeling-card);
+  color: var(--feeling-ink);
+}
+
+.feeling-note {
+  color: var(--feeling-note);
+}
+
+.feeling-option {
+  border-color: var(--feeling-line);
+  background: var(--feeling-surface);
+  color: var(--feeling-ink);
+}
+
+.feeling-option-label {
+  font-weight: 500;
+}
+
+.feeling-option[aria-checked="true"] {
+  border-color: var(--feeling-accent);
+  background: var(--feeling-selected);
+  box-shadow: inset 0 0 0 1px var(--feeling-accent);
+}
+
+.feeling-option[aria-checked="true"] .feeling-option-label {
+  font-weight: 600;
+}
+
+.feeling-clear {
+  border-color: var(--feeling-line);
+  background: var(--feeling-surface);
+  color: var(--feeling-ink);
+}
+
+.feeling-clear:disabled {
+  opacity: 0.45;
+}
+
+.feeling-picker :focus-visible {
+  outline: 2px solid var(--feeling-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .feeling-picker {
+    --feeling-card: #16211e;
+    --feeling-ink: #f3efe6;
+    --feeling-note: rgb(243 239 230 / 0.72);
+    --feeling-line: #4a615b;
+    --feeling-surface: #1c2b28;
+    --feeling-selected: #243f3b;
+    --feeling-accent: #9fd4cc;
+  }
+}
+
+html[data-theme="dark"] .feeling-picker {
+  --feeling-card: #16211e;
+  --feeling-ink: #f3efe6;
+  --feeling-note: rgb(243 239 230 / 0.72);
+  --feeling-line: #4a615b;
+  --feeling-surface: #1c2b28;
+  --feeling-selected: #243f3b;
+  --feeling-accent: #9fd4cc;
+}
+
 .tree-leaf {
   /* Grow from the base, where the leaf meets its branch. */
   transform-box: fill-box;
