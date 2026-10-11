@@ -1,3 +1,5 @@
+import { microphoneLevel } from './microphoneLevel';
+
 // web/ is its own npm project (D44) and can't import @innercove/core: neither the web Docker
 // stage, the dev web container nor CI's web job has the workspace packages. These mirror
 // packages/core/src/api/transcribe.ts (B's contract); keep them in step with it.
@@ -15,6 +17,8 @@ function parseTranscription(body: unknown): { text: string; durationMs: number }
 export type VoiceState = { phase: 'idle' | 'requesting' | 'recording' | 'processing'; seconds: number; error?: string };
 export function appendTranscript(draft: string, text: string) { return draft ? `${draft}\n${text}` : text; }
 export class VoiceRecording {
+  private stopLevel?: () => void;
+  private level: (level: number) => void;
   private generation = 0;
   private stream?: MediaStream;
   private recorder?: MediaRecorder;
@@ -24,11 +28,12 @@ export class VoiceRecording {
   private phase: VoiceState['phase'] = 'idle';
   private update: (state: VoiceState) => void;
   private draft: (text: string) => void;
-  constructor(update: (state: VoiceState) => void, draft: (text: string) => void) { this.update = update; this.draft = draft; }
+  constructor(update: (state: VoiceState) => void, draft: (text: string) => void, level: (level: number) => void = () => {}) { this.update = update; this.draft = draft; this.level = level; }
   private publish(phase: VoiceState['phase'], seconds = 0, error?: string) {
     this.phase = phase; this.update({ phase, seconds, error });
   }
   private release() {
+    this.stopLevel?.(); this.stopLevel = undefined;
     clearInterval(this.timer); clearTimeout(this.deadline);
     this.stream?.getTracks().forEach(track => track.stop()); this.stream = undefined;
   }
@@ -94,6 +99,7 @@ export class VoiceRecording {
         finally { clearTimeout(timeout); if (this.abort === controller) this.abort = undefined; }
       };
       recorder.start(1000); this.publish('recording');
+      this.stopLevel = microphoneLevel(stream, this.level);
       const began = performance.now();
       this.timer = setInterval(() => this.update({ phase: 'recording', seconds: Math.min(60, Math.floor((performance.now() - began) / 1000)) }), 250);
       this.deadline = setTimeout(() => this.stop(), TRANSCRIPTION_MAX_SECONDS * 1000);

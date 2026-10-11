@@ -21,6 +21,38 @@ describe('recording-to-draft controller (mocked browser)', () => {
     update = vi.fn(); draft = vi.fn(); controller = new VoiceRecording(update, draft);
   });
   afterEach(() => { controller.cancel(); vi.useRealTimers(); vi.unstubAllGlobals(); vi.clearAllMocks(); });
+  it.each(['stop', 'cancel', 'error', 'deadline'])('disposes the level meter on %s through the real controller', async action => {
+    const close = vi.fn().mockResolvedValue(undefined);
+    const disconnect = vi.fn(); const connect = vi.fn();
+    const createSource = vi.fn(); const frameCancel = vi.fn();
+    vi.stubGlobal('requestAnimationFrame', vi.fn(() => 42));
+    vi.stubGlobal('cancelAnimationFrame', frameCancel);
+    vi.stubGlobal('AudioContext', class {
+      close = close;
+      resume = () => Promise.resolve();
+      createMediaStreamSource(stream: unknown) { createSource(stream); return { connect, disconnect }; }
+      createAnalyser() { return { fftSize: 1024, disconnect, getFloatTimeDomainData: vi.fn() }; }
+    });
+    await controller.start();
+    expect(getUserMedia).toHaveBeenCalledTimes(1);
+    expect(createSource).toHaveBeenCalledTimes(1);
+    expect(trackStop).not.toHaveBeenCalled();
+    if (action === 'stop') controller.stop();
+    if (action === 'cancel') controller.cancel();
+    if (action === 'error') Recorder.latest.onerror?.();
+    if (action === 'deadline') await vi.advanceTimersByTimeAsync(60000);
+    await flush();
+    expect(frameCancel).toHaveBeenCalledWith(42);
+    expect(close).toHaveBeenCalledTimes(1);
+    expect(disconnect).toHaveBeenCalledTimes(2);
+    expect(trackStop).toHaveBeenCalled();
+  });
+  it('still transcribes when Web Audio construction fails', async () => {
+    vi.stubGlobal('AudioContext', class { constructor() { throw new Error('optional visualization'); } });
+    await controller.start(); controller.stop(); await flush();
+    expect(draft).toHaveBeenCalledWith('fictional draft');
+    expect(getUserMedia).toHaveBeenCalledTimes(1);
+  });
   it('probes format, uploads raw Blob, releases tracks and only produces a draft', async () => {
     await controller.start(); expect(getUserMedia).toHaveBeenCalledWith({ audio: true, video: false });
     controller.stop(); await flush(); expect(trackStop).toHaveBeenCalled(); expect(draft).toHaveBeenCalledWith('fictional draft');

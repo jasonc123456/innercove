@@ -1155,6 +1155,14 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Not started (P1):** Summary to share, phone pairing, stored check-ins. Low: no first-run setup screen; `/api/diary?q=` 400s on hyphens (the Diary page filters in the browser, so the UI is unaffected).
 - **After the event:** `resetBeforeReturn.sh` from a plain SSH session, then revoke the logins it lists.
 
+**2026-10-11 — microphone level UI (scoped user-authorized C composer edit):**
+- Added matching SVG mic beside draft, accent/visible Stop and five RMS level bars; processing spinner and fixed meter slot.
+- Reuses recording stream; no playback/logging/storage; optional Web Audio fails gracefully.
+- Cleans RAF/nodes/context on existing recorder/session cancellation paths; reduced-motion sampling/display.
+- Local: 26 focused mocked/SSR tests; 231 full tests; web typecheck/build passed.
+- Browser visual/real-mic, mobile, reduced-motion and session teardown verification remain pending; see VOICE_INPUT.md.
+- Backend/auth/policy/deployment unchanged; no live GX10 access or changes.
+
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
 1. Write diary entries A and B. Allow AI access to A only.

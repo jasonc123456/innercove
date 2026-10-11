@@ -115,3 +115,32 @@ See [VOICE_VERIFY.md](VOICE_VERIFY.md) for the separate native clone, loopback/S
 At `3a4cc97`, backend/web builds and isolated configuration smoke passed (exit 0), followed by recording → Stop → transcription appended to editable draft, preserved typed text, editing, explicit Send and a FakeProvider text reply. Cancel during recording appended no transcript; automatic stop at approximately 60 seconds worked. Separate native server used loopback 18080 via local SSH tunnel; production deployment unchanged. This closes the basic isolated browser path, not full acceptance or Qwen verification.
 
 At that checkout web had no committed lockfile: `npm ci --prefix web` failed; `npm install --prefix web --no-audit --no-fund` succeeded. Corrected runbook and detailed results are in [VOICE_VERIFY.md](VOICE_VERIFY.md). Fictional DB `/tmp/innercove-voice-verify-0joVoy` cleanup remains unconfirmed. Processing cancellation, microphone denial, lock/sign-out/navigation cleanup, codec-padded overlong rejection, content-log/audio cleanup checks and production voice-to-Qwen operation remain unverified on GX10/browser; local mocked/API tests are separate evidence.
+
+## Microphone level UI — 2026-10-11
+
+The composer uses the existing inline-SVG icon style (no installed icon library):
+a microphone beside the draft, accent + visible Stop while recording, five
+compact bars labelled Mic level below it, and a processing spinner. The meter
+uses one AnalyserNode on the recorder's existing stream, never a second capture
+or a speaker connection. Smoothed RMS has a .008 noise floor, compressed/clamped
+display range and 50 ms updates; reduced motion uses 250 ms updates with no
+height transitions/spinner rotation. Meter samples remain transient in memory.
+
+Stop, Cancel, recorder errors, automatic 60-second stop and the existing
+session/lock/mode/unmount cancellation path dispose animation frames, source/
+analyser nodes and AudioContext. Visualization disposal never stops tracks;
+that remains the recorder's responsibility. Web Audio absence, initialization,
+resume or sampling failure leaves recording/transcription available with a
+static recording indicator. Levels are outside aria-live and do not represent
+recognition confidence or emotion. Draft append/edit/explicit Send, API/auth,
+policy and deployment interfaces remain unchanged.
+
+Local checks: focused controlled recorder/meter/SSR composer tests 26/26;
+web typecheck and production build passed; integrated npm test 231/231;
+server typecheck, validation 52/52, safety 33/33 and git diff --check passed. SSR
+render assertions and mocked audio lifecycle tests are not browser/microphone
+verification. No browser tool or installed Chromium was available for visual
+inspection. C/user should verify quiet/noisy mic responsiveness, five-bar
+layout/mobile focus/reduced motion, static fallback, and disposal across
+Stop/Cancel/error/lock/sign-out/navigation in an isolated browser. Previous
+GX10 results remain historical evidence for the earlier UI. Live GX10 untouched.
