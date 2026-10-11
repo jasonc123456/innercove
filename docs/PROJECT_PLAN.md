@@ -550,7 +550,7 @@ Estimates are uncertain. P0 is about **18–25 engineer-hours, or 8–10 wall-cl
   - Without the passphrase, the database file is unreadable: the `sqlite3` CLI can't open it, and `strings` shows no diary text.
 
 **Phase 3 — Memory, permission-controlled retrieval and citations.** Owner A for core, B for the API and permission tests, C for the UI (see `TEAM_PLAN.md`) · 3–4 h · Prerequisite: Phase 2.
-**Backend status (2026-10-10): B implementation complete and locally verified; reuses A’s retrieval/prompt/history. Whole-team Phase 3 remains incomplete: real UI/API integration and GX10 verification of the new Phase 3 code remain pending.**
+**Backend status (2026-10-10): B implementation complete, locally verified and verified by isolated GX10 ARM64 spike/compiled smoke at `62989a7`; reuses A’s retrieval/prompt/history. Whole-team Phase 3 remains incomplete: real memory/re-confirmation/Qwen/UI integration remains pending.**
 - **Files:** `core/retrieval`, `core/prompt`, `store/repos/memories`, provenance, `/api/memories`, the memory page and the context chips.
 - **Acceptance:** `FakeProvider` tests assert on the **assembled prompt**:
   - An entry with `ai_access=false` or a deleted entry is never present.
@@ -919,6 +919,17 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Run/handoff:** repo-root `npm run typecheck`, `npm run typecheck --workspace=@innercove/core`, `npm run validate`, `npm test`, `npm run build`, `npm run spike:sqlcipher --workspace=@innercove/server`, `npm run smoke:db --workspace=@innercove/server`; API/re-confirmation details in `packages/server/src/store/README.md`.
 - **B Phase 3 complete locally; team incomplete:** latest origin/main retains C’s mock-backed memory/chip/panel work. A’s newer GX10 handoff records the Phase 2 SQL store live, saved-chat API persistence and a 17-check real-model API demo (context, D33, temporary chat and safety); this supersedes earlier backend-deployment-pending notes but does not verify the new Phase 3 memory APIs or C’s UI integration. Connect real memory CRUD/access/pins and saved-chat history, then verify linked chips, exact-sent panel and D33 notice against the SQL backend. Run isolated GX10 ARM64 verification of this new code and real memory/re-confirmation/Qwen/UI integration with A/C; Phase 2's `6d8a89c` result does not verify these additions.
 - **Separate/preserved:** whole-team Phase 2 real setup/unlock, diary and Save/reload UI checks stay open; C’s newer static lock-screen help/crisis checks are preserved. Its earlier diary-route blocker is now resolved by B’s backend, while the real UI save still needs verification. Phase 5 settings/delete-all/seed and external SQLCipher/Android interoperability are outside this work. No live GX10 deployment, teammate-owned pipeline/UI, plaintext fallback or runtime encryption configuration changed.
+
+**B (Angela), Phase 3 isolated GX10 verification (2026-10-10, checkout `62989a7`):**
+- **Evidence:** operator-reported actual GX10 results for the completed Phase 3 merge, separate from the historical WSL suite and Phase 2 target runs.
+- **Build/runtime:** isolated image `innercove-phase3-verify:62989a7` built successfully, exit 0; runtime linux arm64, Node v22.23.3.
+- **Checks:** SQLCipher spike 18/18 PASS; compiled production smoke PASS; combined verification exit 0.
+- **Smoke coverage:** setup/lock/unlock, diary CRUD/FTS, SQL saved chat/reopen including legacy demo flag, memory CRUD/review/provenance, durable revocation/re-confirmation, D33 history, packaged migrations, SIGTERM and plaintext rejection.
+- **Isolation:** separate detached worktree `~/innercove-phase3-verify`; container used `--network none` and no live data mounts. No live deployment changes. Smoke/Fake provider only: no live Qwen or browser/UI verification.
+- **B status:** Phase 3 backend implementation now verified locally and in the isolated GX10 ARM64 image. This closes the earlier isolated-target-smoke item, without claiming a new GX10 full test-suite run or whole-team Phase 3 completion.
+- **Remaining team checks:** C’s real memory CRUD/access/pins and saved-history integration; linked chips/exact-sent panel and D33 notice against SQL; live memory/re-confirmation/Qwen/UI verification with A/C. Phase 2 real setup/unlock, diary and Save/reload UI checks remain separate.
+- **Rerun/undo:** repo-root `npm run spike:sqlcipher --workspace=@innercove/server` and `npm run smoke:db --workspace=@innercove/server`; image/worktree creation and exact undo logged in `SETUP_LOG.md`. Cleanup not executed; encrypted configuration unchanged, no plaintext fallback or external SQLCipher/Android interoperability claim.
+- **Next B assignment (assessment only):** no Phase 4 implementation ownership (D safety, A integration/backup, C UI). Phase 5 settings/delete-all with VACUUM and unlocked-database/FTS/derived-item/next-prompt canary checks; reuse existing privacy-status implementation. TEAM_PLAN assigns persona seed to B, while A’s latest P0 table lists A: coordinate seed ownership and D’s reviewed persona. C UI, A CSP/offline/deployment and live integration are team dependencies; no next-phase implementation started.
 
 **P0 gap check (A, integration lead, 2026-10-10 evening, at `63c2ab1`):** what the code does today vs §4 P0 and §5 acceptance.
 
