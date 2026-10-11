@@ -91,6 +91,12 @@ async function main() {
   });
   if (!check("create entry A (AI access) and B (private)", a.status === 201 && b.status === 201, `${a.status}/${b.status}`)) return;
   cleanup.push(() => api("DELETE", `/api/diary/${a.json.id}`), () => api("DELETE", `/api/diary/${b.json.id}`));
+  // D49: saved chats make InnerCove write memories; delete the ones this run created (last, after its chats).
+  const memoryIds = async () => ((await api("GET", "/api/memories?limit=100")).json?.memories ?? []).map((m) => m.id);
+  const memoriesBefore = new Set(await memoryIds());
+  cleanup.push(async () => {
+    for (const id of await memoryIds()) if (!memoriesBefore.has(id)) await api("DELETE", `/api/memories/${id}`);
+  });
 
   // 2. Chat about both: chips show only A, and "what was sent" is exactly A's text.
   const first = await turn("/api/chat", { conversationId: null, message: "I'm still stressed about the chem midterm.", useMemories: true, pinnedMemoryIds: [] });
