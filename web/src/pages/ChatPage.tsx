@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import coveWash from "../assets/cove-wash.jpg";
+import chatTreeBackground from "../assets/chatTreeBackground.png";
 import { streamAssistantReply } from "../chat/streamReply";
 import { MessageInput } from "../components/MessageInput";
 import { MessageList } from "../components/MessageList";
@@ -158,7 +158,7 @@ export function ChatPage() {
       <div
         className="flex min-h-0 flex-1 flex-col bg-cover bg-center"
         style={{
-          backgroundImage: `linear-gradient(rgb(243 239 230 / 0.55), rgb(243 239 230 / 0.72) 42%, rgb(243 239 230 / 0.4)), url(${coveWash})`,
+          backgroundImage: `linear-gradient(rgb(243 239 230 / 0.78), rgb(243 239 230 / 0.88) 42%, rgb(243 239 230 / 0.7)), url(${chatTreeBackground})`,
         }}
       >
         <MessageList
