@@ -28,7 +28,7 @@ export function LoginPage() {
           <h1 className="text-3xl font-semibold tracking-tight text-cove">Inner Cove</h1>
         </div>
         <p className="mt-4 text-base leading-relaxed text-ink/80">
-          Sign in to your hub. It has one account: its owner, the admin.
+          Sign in to your hub.
         </p>
 
 
@@ -70,6 +70,9 @@ export function LoginPage() {
           >
             {busy ? "Checking…" : "Sign in"}
           </button>
+          <p className="mt-1 text-center text-sm text-ink/60">
+            Forgot your password or sign-in details? Contact your hub administrator.
+          </p>
         </form>
       </div>
       <Link
