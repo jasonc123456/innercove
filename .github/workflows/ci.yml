@@ -23,6 +23,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Web component tests (run by the root vitest) import react from web/node_modules.
+      - run: npm install --no-audit --no-fund --prefix web
       - run: npm run typecheck
       - run: npm test
       - run: npm run validate
