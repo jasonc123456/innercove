@@ -7,12 +7,15 @@ const DEFAULT_TITLE = "Saved from tonight's conversation";
 
 type SupportNoteFormProps = {
   onClose: () => void;
+  /** From the crisis card: the user's own words, saved with one tap (no review step). */
+  initialContent?: string;
 };
 
-export function SupportNoteForm({ onClose }: SupportNoteFormProps) {
+export function SupportNoteForm({ onClose, initialContent }: SupportNoteFormProps) {
+  const quick = initialContent !== undefined;
   const { chatMode } = useAppSession();
   const [title, setTitle] = useState(DEFAULT_TITLE);
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState(initialContent ?? "");
   const [aiMayUse, setAiMayUse] = useState(false);
   const [includeInHandoff, setIncludeInHandoff] = useState(true);
   const [step, setStep] = useState<"edit" | "approve">("edit");
@@ -31,6 +34,10 @@ export function SupportNoteForm({ onClose }: SupportNoteFormProps) {
       return;
     }
     setError(null);
+    if (quick) {
+      void approve();
+      return;
+    }
     setStep("approve");
   }
 
@@ -61,7 +68,9 @@ export function SupportNoteForm({ onClose }: SupportNoteFormProps) {
   if (saved) {
     return (
       <div className="flex flex-col gap-3" role="status">
-        <p className="text-base text-ink">Saved.</p>
+        <p className="text-base text-ink">
+          Saved. It&rsquo;s in your Diary as a support note, where you can edit or delete it.
+        </p>
         <button
           type="button"
           onClick={onClose}
@@ -79,9 +88,12 @@ export function SupportNoteForm({ onClose }: SupportNoteFormProps) {
         Support note
       </h2>
       <p className="text-sm leading-relaxed text-ink/80">
+        {quick
+          ? "Your words from this chat are below; edit them if you like. "
+          : null}
         The AI cannot use this note unless you turn that on. It is included in
         the handoff summary unless you turn that off. Nothing is saved until
-        you approve it.
+        you {quick ? "tap Save" : "approve it"}.
       </p>
       {chatMode === "temporary" ? (
         <p className="text-base text-ink">This note will be saved to your diary.</p>
@@ -132,9 +144,10 @@ export function SupportNoteForm({ onClose }: SupportNoteFormProps) {
           <button
             type="submit"
             value="review"
-            className="inline-flex h-11 items-center justify-center rounded-2xl bg-cove px-4 text-base font-medium text-white"
+            disabled={saving}
+            className="inline-flex h-11 items-center justify-center rounded-2xl bg-cove px-4 text-base font-medium text-white disabled:opacity-60"
           >
-            Review this note
+            {quick ? "Save this note" : "Review this note"}
           </button>
           <button
             type="button"

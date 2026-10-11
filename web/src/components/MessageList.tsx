@@ -59,7 +59,7 @@ export function MessageList({
 
   return (
     <ol className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto page-x px-4 py-4">
-      {messages.map((message) => {
+      {messages.map((message, index) => {
         const isUser = message.role === "user";
         const isStreaming = message.id === streamingId;
 
@@ -84,7 +84,7 @@ export function MessageList({
               </span>
             ) : null}
             {!isUser && message.tier !== undefined && message.tier >= 1 ? (
-              <CrisisCard />
+              <CrisisCard userText={messages.slice(0, index).reverse().find((m) => m.role === "user")?.content} />
             ) : null}
             {!isUser && message.suggestedExercise && message.tier === 0 ? (
               <ExerciseSuggestionCard suggestion={message.suggestedExercise} onDismiss={onDismissExercise} />
