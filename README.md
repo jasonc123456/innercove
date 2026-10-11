@@ -101,7 +101,7 @@ This also switches back from the Compose development overlay. Use `sudo` if requ
 
 ### Loopback and the approved LAN demo
 
-The default UI/API bind is `127.0.0.1:8000`; LM Studio stays on loopback at port 1234. Docker `ports:` publishing is intentionally absent. D46 permits the event's approved demo LAN over plain HTTP, with firewall access restricted to that LAN subnet, fictional data only, and the hub locked when not in use. Traffic is unencrypted and there is no per-device authentication. Every protected API route needs a sign-in session (D47): sign in on the home page with `admin` (or `admin@innercove.local`) and the hub passphrase, or `POST /api/session` with `{ "login", "passphrase" }`; calls without the session cookie get `401`.
+The default UI/API bind is `127.0.0.1:8000`; LM Studio stays on loopback at port 1234. Docker `ports:` publishing is intentionally absent. D46 permits the event's approved demo LAN over plain HTTP, with firewall access restricted to that LAN subnet, fictional data only, and the hub locked when not in use. Traffic is unencrypted and there is no per-device authentication. Every protected API route needs a sign-in session (D47): sign in on the home page with `admin` (or `admin@innercove.local`) and the hub passphrase, or `POST /api/session` with `{ "login", "passphrase" }`; calls without the session cookie get `401`. Two-factor (an authenticator-app code, plus 10 recovery codes) can be switched on in Settings; if the authenticator is lost, stop the API and run `npm run two-factor:reset --workspace=@innercove/server -- --db <path>` on the hub.
 
 For that approved Compose option, edit the local `.env`:
 

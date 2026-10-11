@@ -3,6 +3,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { DatabaseError, type DatabaseStore } from "../store/db.js";
 import { sendError } from "./errors.js";
+import { consumeCode, readTwoFactor } from "./two-factor.js";
 
 /**
  * D47 sign-in: one owner per hub, signed in with a username or email plus the hub passphrase.
@@ -13,7 +14,9 @@ export const ADMIN_LOGINS = ["admin", "admin@innercove.local"] as const;
 export const SESSION_COOKIE = "innercove_session";
 export const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 const MAX_FAILURES = 5;
+// D47: 5 failures → 30 s, doubling on each further round, up to 15 min.
 const BACKOFF_MS = 30_000;
+const MAX_BACKOFF_MS = 15 * 60_000;
 
 // Every /api route needs a session except these (route template AND method, as in lock.ts).
 // POST /api/unlock stays open for scripts: the passphrase is its credential, it shares the
@@ -37,7 +40,8 @@ export class SessionStore implements SessionGuard {
   #sessions = new Map<string, number>(); // token hash → expiresAt
   #failures = 0;
   #blockedUntil = 0;
-  constructor(private readonly now: () => number = Date.now) {}
+  #rounds = 0;
+  constructor(readonly now: () => number = Date.now) {}
 
   create(): { token: string; expiresAt: number } {
     const token = randomBytes(32).toString("base64url");
@@ -79,13 +83,16 @@ export class SessionStore implements SessionGuard {
   fail(): number {
     if (++this.#failures < MAX_FAILURES) return 0;
     this.#failures = 0;
-    this.#blockedUntil = this.now() + BACKOFF_MS;
-    return BACKOFF_MS / 1000;
+    const ms = Math.min(BACKOFF_MS * 2 ** this.#rounds, MAX_BACKOFF_MS);
+    this.#rounds++;
+    this.#blockedUntil = this.now() + ms;
+    return ms / 1000;
   }
 
   succeed() {
     this.#failures = 0;
     this.#blockedUntil = 0;
+    this.#rounds = 0;
   }
 }
 
@@ -118,6 +125,7 @@ export function sessionRoutes(app: FastifyInstance, database: DatabaseStore, ses
     if (wait > 0) return tooMany(reply, wait);
     const login = parsed.data.login.trim().toLowerCase();
     if (!(ADMIN_LOGINS as readonly string[]).includes(login)) return failed(reply, sessions.fail());
+    const wasLocked = database.locked;
     try {
       // Unlocks the database after a restart; when already unlocked it re-verifies the passphrase.
       await database.unlock(parsed.data.passphrase);
@@ -129,18 +137,47 @@ export function sessionRoutes(app: FastifyInstance, database: DatabaseStore, ses
       if (error instanceof DatabaseError) return sendError(reply, error.code, error.message);
       return sendError(reply, "INTERNAL_ERROR", "Sign-in failed");
     }
+    // Two-factor (D47): the secret is inside the database the passphrase just opened.
+    let twoFactor = false;
+    let codeProblem: "missing" | "wrong" | null = null;
+    const lease = database.acquire();
+    try {
+      const state = readTwoFactor(lease);
+      if (state?.enabled) {
+        twoFactor = true;
+        const code = parsed.data.code?.trim();
+        if (!code) codeProblem = "missing";
+        else if (!consumeCode(lease, state, code, sessions.now())) codeProblem = "wrong";
+      }
+    } finally { lease.release(); }
+    if (codeProblem) {
+      // No session without the code; a hub this attempt unlocked goes back to locked.
+      if (wasLocked) await database.lock().catch(() => {});
+      if (codeProblem === "missing") {
+        return sendError(reply, "UNAUTHORIZED", "Enter the code from your authenticator app", { twoFactorRequired: true });
+      }
+      const wait = sessions.fail();
+      if (wait > 0) return tooMany(reply, wait);
+      return sendError(reply, "UNAUTHORIZED", "That code didn't work", { twoFactorRequired: true });
+    }
     sessions.succeed();
     sessions.revoke(readCookie(request));
     const { token, expiresAt } = sessions.create();
     setCookie(request, reply, token, SESSION_TTL_MS / 1000);
-    return { signedIn: true, twoFactor: false, expiresAt: new Date(expiresAt).toISOString() };
+    return { signedIn: true, twoFactor, expiresAt: new Date(expiresAt).toISOString() };
   });
 
   app.get("/api/session", async (request) => {
     const expiresAt = sessions.expiresAt(readCookie(request));
+    const signedIn = expiresAt !== null && !database.locked;
+    let twoFactor = false;
+    if (signedIn) {
+      const lease = database.acquire();
+      try { twoFactor = readTwoFactor(lease)?.enabled ?? false; } finally { lease.release(); }
+    }
     return {
-      signedIn: expiresAt !== null && !database.locked,
-      twoFactor: false,
+      signedIn,
+      twoFactor,
       expiresAt: expiresAt === null ? null : new Date(expiresAt).toISOString(),
     };
   });

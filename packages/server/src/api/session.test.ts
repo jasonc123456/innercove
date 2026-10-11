@@ -73,6 +73,18 @@ describe("D47 sign-in and the session guard", () => {
     expect((await signIn("admin")).statusCode).toBe(401);
   });
 
+  it("doubles the backoff on each further round of failures, up to 15 minutes (D47)", async () => {
+    const { SessionStore } = await import("./session.js");
+    let now = 0;
+    const store = new SessionStore(() => now);
+    const round = () => { let wait = 0; for (let i = 0; i < 5; i++) wait = store.fail(); return wait; };
+    const waits = [];
+    for (let i = 0; i < 7; i++) { waits.push(round()); now += 10 * 60_000 * 2; }
+    expect(waits).toEqual([30, 60, 120, 240, 480, 900, 900]);
+    store.succeed();
+    expect(round()).toBe(30);
+  });
+
   it("unlocks a locked hub on sign-in; locking the hub signs everyone out", async () => {
     const { app, database, signIn, cookieOf } = await fixture();
     await database.lock();

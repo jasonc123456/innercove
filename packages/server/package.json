@@ -11,7 +11,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "spike:sqlcipher": "npm run build && node dist/store/sqlcipher-spike.js",
     "smoke:db": "npm run build && node scripts/smoke-db.mjs",
-    "seed:persona": "npm run build && node scripts/seed-persona.mjs"
+    "seed:persona": "npm run build && node scripts/seed-persona.mjs",
+    "two-factor:reset": "npm run build && node scripts/two-factor-reset.mjs"
   },
   "dependencies": {
     "@innercove/core": "*",

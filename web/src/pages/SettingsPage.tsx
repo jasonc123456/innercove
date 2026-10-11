@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card, PageHeader, Problem, Row, secondaryButton, useHubApi } from "../components/Panel";
+import { TwoFactorCard } from "../components/TwoFactorCard";
 import { ADMIN_LOGINS, useAppSession } from "../session/AppSession";
 
 type Settings = {
@@ -53,16 +54,7 @@ export function SettingsPage() {
         <button type="button" onClick={signOut} className={`${secondaryButton} mt-4`}>Sign out</button>
       </Card>
 
-      <Card title="Security">
-        <Row label="Two-factor" value="Not set up" />
-        <button type="button" disabled className={`${secondaryButton} mt-3`} title="Planned: P1 #2 (D47)">
-          Set up two-factor
-        </button>
-        <p className="mt-2 text-xs text-ink/55">
-          Codes from an authenticator app, with recovery codes. Planned next (D47); needed before the hub is ever
-          reachable from outside your home network.
-        </p>
-      </Card>
+      <TwoFactorCard />
 
       <Card title="Defaults">
         {settings ? (

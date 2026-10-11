@@ -13,6 +13,7 @@ import { dataRoutes } from "./api/data.js";
 import { privacyRoutes } from "./api/privacy.js";
 import { databaseRoutes } from "./api/lock.js";
 import { SessionStore, sessionRoutes, type SessionGuard } from "./api/session.js";
+import { twoFactorRoutes } from "./api/two-factor.js";
 import type { DatabaseStore } from "./store/db.js";
 
 export const CONTENT_SECURITY_POLICY = [
@@ -65,6 +66,7 @@ export async function buildApp(deps: AppDeps, logger: FastifyServerOptions["logg
   const guard = deps.sessionGuard ?? sessions;
   sessionRoutes(app, deps.database, sessions, guard);
   databaseRoutes(app, deps.database);
+  twoFactorRoutes(app, deps.database, sessions.now);
 
   // Phase 5 / §3: everything comes from the hub itself; the browser may not call out,
   // be framed, or send referrers. SSE replies are hijacked and carry their own headers.

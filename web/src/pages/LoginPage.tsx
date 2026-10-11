@@ -11,15 +11,21 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Two-factor (D47): after a correct passphrase, the hub asks for the authenticator code.
+  const [needsCode, setNeedsCode] = useState(false);
+  const [code, setCode] = useState("");
   const { theme, toggleTheme } = useSignInTheme();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
-    const nextError = await signIn(login, password);
+    const result = await signIn(login, password, needsCode ? code : undefined);
     setBusy(false);
-    setPassword("");
-    setError(nextError);
+    setCode("");
+    // Keep the passphrase only while the code step is open; it's sent again with the code.
+    if (!result.needsCode) setPassword("");
+    setNeedsCode(result.needsCode);
+    setError(result.error || null);
   }
 
   return (
@@ -70,6 +76,21 @@ export function LoginPage() {
                 className="h-11 rounded-2xl border border-line bg-white px-4 text-base text-ink outline-none focus:border-cove"
               />
             </label>
+            {needsCode ? (
+              <label className="flex flex-col gap-2 text-sm text-ink/80">
+                Code from your authenticator app (or a recovery code)
+                <input
+                  type="text"
+                  name="code"
+                  value={code}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  autoFocus
+                  onChange={(event) => setCode(event.target.value.slice(0, 16))}
+                  className="h-11 rounded-2xl border border-line bg-white px-4 text-base tracking-widest text-ink outline-none focus:border-cove"
+                />
+              </label>
+            ) : null}
             {error ? (
               <p className="text-sm leading-relaxed text-ink" role="alert">
                 {error}
@@ -77,7 +98,7 @@ export function LoginPage() {
             ) : null}
             <button
               type="submit"
-              disabled={busy || login.trim().length === 0 || password.length === 0}
+              disabled={busy || login.trim().length === 0 || password.length === 0 || (needsCode && code.trim().length < 6)}
               className="inline-flex h-11 items-center justify-center rounded-2xl bg-cove px-4 text-base font-medium text-white disabled:opacity-60"
             >
               {busy ? "Checking…" : "Sign in"}

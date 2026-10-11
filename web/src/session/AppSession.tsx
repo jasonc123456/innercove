@@ -79,7 +79,7 @@ type AppSessionValue = {
   role: "admin";
   /** Username or email of the hub's admin plus the hub passphrase (D47): POST /api/session checks
    * both, unlocks the hub if needed, and sets an HttpOnly session cookie. */
-  signIn: (login: string, passphrase: string) => Promise<string | null>;
+  signIn: (login: string, passphrase: string, code?: string) => Promise<SignInResult>;
   signOut: () => void;
   createAccount: (email: string, password: string, confirm: string) => string | null;
   lock: () => void;
@@ -97,6 +97,9 @@ type AppSessionValue = {
 /** The hub's single account (D47), for display; the server checks them. Identifiers aren't secrets; the passphrase is. */
 export const ADMIN_LOGINS = ["admin", "admin@innercove.local"] as const;
 const SIGN_IN_FAILED = "That username or passphrase didn't work.";
+
+/** `needsCode`: the passphrase was right and two-factor is on (D47); ask for the app's code. */
+export type SignInResult = { error: string | null; needsCode: boolean };
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
@@ -234,29 +237,34 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
       lock() {
         setLocked(true);
       },
-      async signIn(login, passphrase) {
-        if (login.trim().length === 0) return "Enter your username or email.";
-        if (passphrase.length < 1) return "Enter the hub passphrase.";
+      async signIn(login, passphrase, code) {
+        const fail = (error: string, needsCode = false): SignInResult => ({ error, needsCode });
+        if (login.trim().length === 0) return fail("Enter your username or email.");
+        if (passphrase.length < 1) return fail("Enter the hub passphrase.");
         let res: Response;
         try {
           res = await fetch("/api/session", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ login: login.trim(), passphrase }),
+            body: JSON.stringify({ login: login.trim(), passphrase, ...(code ? { code: code.trim() } : {}) }),
           });
         } catch {
-          return "The hub isn't reachable right now.";
+          return fail("The hub isn't reachable right now.");
         }
         if (res.ok) {
           setLocked(false);
           setSignedIn(true);
-          return null;
+          return { error: null, needsCode: false };
         }
         const body = await res.json().catch(() => null);
-        if (body?.error?.code === "CONFLICT") return "This hub hasn't been set up yet.";
-        // Same message for a wrong username or passphrase, so the page doesn't say which one was wrong.
         const wait = res.headers.get("retry-after");
-        return wait ? `Too many attempts. Try again in ${wait} seconds.` : SIGN_IN_FAILED;
+        if (wait) return fail(`Too many attempts. Try again in ${wait} seconds.`, Boolean(code));
+        if (body?.error?.code === "CONFLICT") return fail("This hub hasn't been set up yet.");
+        if (body?.error?.details?.twoFactorRequired) {
+          return fail(code ? "That code didn't work. Try the newest code, or a recovery code." : "", true);
+        }
+        // Same message for a wrong username or passphrase, so the page doesn't say which one was wrong.
+        return fail(SIGN_IN_FAILED);
       },
       signOut() {
         void fetch("/api/session", { method: "DELETE" }).catch(() => {});
