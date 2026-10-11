@@ -920,6 +920,21 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **B Phase 3 complete locally; team incomplete:** latest origin/main retains C’s mock-backed memory/chip/panel work. A’s newer GX10 handoff records the Phase 2 SQL store live, saved-chat API persistence and a 17-check real-model API demo (context, D33, temporary chat and safety); this supersedes earlier backend-deployment-pending notes but does not verify the new Phase 3 memory APIs or C’s UI integration. Connect real memory CRUD/access/pins and saved-chat history, then verify linked chips, exact-sent panel and D33 notice against the SQL backend. Run isolated GX10 ARM64 verification of this new code and real memory/re-confirmation/Qwen/UI integration with A/C; Phase 2's `6d8a89c` result does not verify these additions.
 - **Separate/preserved:** whole-team Phase 2 real setup/unlock, diary and Save/reload UI checks stay open; C’s newer static lock-screen help/crisis checks are preserved. Its earlier diary-route blocker is now resolved by B’s backend, while the real UI save still needs verification. Phase 5 settings/delete-all/seed and external SQLCipher/Android interoperability are outside this work. No live GX10 deployment, teammate-owned pipeline/UI, plaintext fallback or runtime encryption configuration changed.
 
+**P0 gap check (A, integration lead, 2026-10-10 evening, at `63c2ab1`):** what the code does today vs §4 P0 and §5 acceptance.
+
+| P0 item | Server | UI | Missing |
+|---|---|---|---|
+| 1. Streaming local chat, reasoning off | ✅ `/api/infer`, `/api/chat` (A) | ✅ chat page streams from Qwen | none |
+| 2. Saved vs temporary + Use memories | ✅ both routes; saved chats persist in SQLCipher (B) | ⚠️ "Save" still calls `/api/infer` and says "Not saved" | **C:** saved mode → `/api/chat` + conversation list/reload |
+| 3. Diary CRUD, search, AI access | ✅ `/api/diary` incl. `?q=` (B) | ⚠️ diary page is tab-local; only the support note calls `/api/diary` | **C:** wire the diary page |
+| 4. Memories, D27 retrieval, chips + "what was sent" | ✅ `/api/memories` (B), retrieval/prompt/D33 (A) | ⚠️ chips/panel render from SSE; memories page is a placeholder | **C:** wire memories; pinned IDs from the hub |
+| 5. Save chat messages to the diary (excerpt) | ✅ `/api/diary` `origin: "excerpt"` | ❌ | **C** |
+| 6. Safety layer, crisis card, Get help | ✅ tiers, D32 screen, tier-2 replies (D/A) | ✅ crisis card, help page, support note | D: review Phase 0 scores |
+| 7. Data controls + privacy panel | ⚠️ `/api/privacy-status` ✅ (A); **`/api/settings` and `/api/delete-all` missing** (B); **no CSP header** | ❌ settings/privacy panel not wired | **B:** settings, delete-all; **A:** CSP; **C:** panel + delete UI |
+| 8. Verified offline demo | ✅ `scripts/demo-check.mjs` passes online | | **A:** `--offline` run with the router's uplink unplugged |
+| Lock screen (Phase 2) | ✅ setup/unlock/lock | ❌ `SetupPage`/`UnlockPage` exist but aren't routed or calling the API | **C** (top priority: every restart locks the hub) |
+| Phase 6 extras | | | seed script for the persona (A), README (B), backup recording (C) |
+
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
 1. Write diary entries A and B. Allow AI access to A only.
