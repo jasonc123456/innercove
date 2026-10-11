@@ -495,7 +495,7 @@ If the client aborts, the server stops generating. In a saved chat the user's me
 - The Android companion app (Capacitor), with an offline mode (on-device model plus outbox).
 - The desktop app per OS (Electron, bundled llama.cpp, hardware detection, hub dashboard).
 - Remote access: the encrypted relay, opt-in port forwarding, and Cloudflare Tunnel with app-layer encryption (§3a).
-- Org hosting and multi-user.
+- Org hosting and multi-user: an **admin account creates user accounts in an admin panel** after signing in; never public sign-up (D47). Each user gets their own passphrase-derived key or a per-user key wrapped by it.
 - Wearables.
 - Clinician integration.
 - Automatic journaling.
@@ -597,7 +597,7 @@ Estimates are uncertain. P0 is about **18–25 engineer-hours, or 8–10 wall-cl
   - The session cookie is `HttpOnly` and `SameSite=Strict` (and `Secure` over HTTPS); sign-out and "sign out everywhere" end it; a restart signs everyone out.
   - A wrong passphrase backs off (5 failures → 30 s, doubling to 15 min); a cross-origin `Origin` on a state-changing request is refused.
   - With two-factor on: no session without a valid code; ±1 step accepted; the same code can't be used twice; each recovery code works once; turning it off needs a code.
-  - The front-end-only login (any email/password) is gone; there is no email field.
+  - The front-end-only login (any email/password) is gone; there is no email field and no "Create account" (removed 2026-10-10; one user per hub).
   - `scripts/demo-check.mjs` signs in first and still passes.
 
 **Phase 6 — Integration, offline test and demo hardening.** Everyone · 2–3 h · This is the **P0 gate, around hour 14**.
