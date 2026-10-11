@@ -38,6 +38,8 @@ services:
       INNERCOVE_API: http://127.0.0.1:8001
     volumes:
       - ./web:/app/web
+      # The help page bundles D's crisis resources from config/.
+      - ./config:/app/config:ro
       - dev_web_node_modules:/app/web/node_modules
     command: >-
       sh -c "npm install --no-audit --no-fund --no-package-lock
