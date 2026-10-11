@@ -46,3 +46,6 @@ Every system change on the borrowed GX10, one line each, with its exact undo ste
 ## Phase 2 verification follow-up (2026-10-10, checkout `6d8a89c`)
 - Expanded production smoke passed setup/lock/unlock, diary CRUD/FTS, SQL saved chat/reopen including legacy demo flag, packaged migrations, SIGTERM shutdown and plaintext rejection. Build exit 0; spike/smoke combined exit 0.
 - This verifies the isolated backend image, not live Qwen, browser integration or the running Compose deployment. Image/worktree undo is recorded in #21/#20; cleanup has not been executed.
+
+## Undo all at once
+`~/resetBeforeReturn.sh` (on the GX10, not in the repo) reverses #1–#19 and wipes everything the team created in `~`: the repo, the encrypted DB, LM Studio and the model, Claude Code, Roo Code, the VS Code server, Docker images/volumes/cache, xrdp/Xfce and their session files. It leaves the owner's files (Ollama, `~/llama.cpp`, `~/unsloth`, `~/venv`, `~/.openclaw*`, `~/run_*.sh`, `~/.npm*`, `~/.bash_history`). Run `bash ~/resetBeforeReturn.sh --dry-run` first, then for real **from a plain SSH session** (not VS Code or RDP), then reboot. It deletes itself.
