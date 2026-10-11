@@ -533,6 +533,7 @@ Estimates are uncertain. P0 is about **18–25 engineer-hours, or 8–10 wall-cl
   - `docker compose up` works on the GX10, bound to 127.0.0.1 by default; D46 explicitly amends the event deployment to opt-in LAN access restricted by UFW to the approved subnet.
 
 **Phase 2 — Persistence: encrypted database, conversations, diary.** Owner B for the backend, C for the UI · 4–5 h · Prerequisites: Phase 1 and decisions 5, 7 and D26.
+**Backend status (2026-10-10): B implementation complete and locally verified; whole-team Phase 2 remains incomplete (C integration/lock-screen UX and new deployment verification pending).**
 - **Files:**
   - `store/db` (SQLCipher open, key derivation, lock and unlock).
   - `store/schema` and migrations, including the `devices` table, which stays unused until P1.
@@ -851,6 +852,21 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Criterion 5 — Compose deployment/network:** earlier Compose deployment evidence plus the live container/mount/network checks support the running GX10 deployment. The repo retains a loopback default; D46 explicitly amends D18/D31 for the event to the verified firewall-restricted LAN deployment.
 - **Phase 1 complete under D46:** all five criteria are supported by the combined evidence; no Phase 1 acceptance item remains unverified under that confirmed amendment. Earlier teammate handoffs and incomplete assessments remain historical.
 - **Separate remaining work:** Phase 2 conversation/diary repositories and APIs, SQL-backed persistent chat/history and permission enforcement remain incomplete. External SQLCipher/Android interoperability remains unverified. No runtime encryption configuration changed and no plaintext database fallback enabled.
+
+**B (Angela), Phase 2 repositories/API/persistent-chat handoff (2026-10-10; backend locally complete):**
+- **Already implemented:** encrypted DatabaseStore setup/migrations/FTS secure-delete, seeded identity/settings and lock/request-lease lifecycle; retained without changes. Phase 1 closure in `04c1f53` is preserved, not reverified.
+- **Implemented:** user-scoped conversation and diary CRUD, recency cursor pagination, FTS MATCH search, ordered message reload, immutable excerpt provenance and transactional hard deletion/content-free tombstones. Foreign IDs/cursors/source links return 404; invalid inputs/FTS return generic 400 without content.
+- **Endpoints:** §3c `GET/POST /api/conversations`, `GET/PATCH/DELETE /api/conversations/:id`, `GET /api/conversations/:id/messages`, and `GET/POST /api/diary`, `GET/PATCH/DELETE /api/diary/:id`; create returns 201. No public message-create route or payload-shape changes.
+- **Saved chat/history:** production `/api/chat` uses SQL-backed request-bound ports; shared `ConversationHistoryPort` added and completed reply/context writes atomic. History and context IDs survive encrypted reopen/restart. Existing A retrieval/prompt/D33 and D safety stay in place.
+- **Privacy/lifecycle:** `/api/infer` only reads eligible context and changes no encrypted table; no input/output content logs. Lock drains admitted SSE work; disconnect/model failure keeps the user message and discards the partial reply. SQL adapters never retain native handles beyond the request lease.
+- **Defaults/read seam:** settings-derived ordinary diary access; support notes remain private by default with explicit per-note opt-in. Existing read/context ports filter user/access/approved status and fail closed on missing/private/cyclic provenance; message-source derived candidates conservatively excluded pending Phase 3's permission workflow.
+- **Files:** `store/repos/{common,conversations,diary}.ts`, `store/chat-store.ts`, `api/data.ts`, `api/data.test.ts`; minimal app/main/chat seam wiring, shared history/atomic-write port, expanded runtime smoke, store README and dev instructions. Native dependencies and migrations unchanged.
+- **Locally verified:** WSL Linux x64 / Node 22.22.1: 111/111 tests in 9 files (12 new persistence/API tests), 52 schema checks, core/server typechecks/build, SQLCipher spike 18/18, expanded compiled-runtime smoke and safety config 30/30; every command exit 0.
+- **Acceptance evidence:** model-stopped diary CRUD/search; SQL saved messages/history reload after lock/reopen and compiled-process shutdown; FTS hits removed after update/delete; user-scoping and content-free deletion tests; locked routes/lease draining retained. Plain SQLite CLI (`python3 -m sqlite3`) rejects the encrypted diary and `strings` contains no fixture text; original schema/lifecycle checks cover ownership columns and cipher settings.
+- **Rerun:** `npm run typecheck --workspace=@innercove/core`, `npm run typecheck`, `npm run validate`, `npm test`, `npm run build`, `npm run spike:sqlcipher --workspace=@innercove/server`, `npm run smoke:db --workspace=@innercove/server`, `node scripts/check-safety.mjs`.
+- **Production adapter change:** legacy `DEV_STORE=demo` no longer selects volatile persistence in main; in-memory adapters/persona helpers remain for A's tests. No automatic SQL persona import; seed tooling is later work. Live GX10 service/config untouched; new repository/API/chat code is deployment-unverified there.
+- **Whole-team Phase 2 incomplete:** C's latest handoff still has mock diary/setup/unlock and Save does not call `/api/chat`; C must connect real endpoints, saved reload and lock-screen crisis/help UX. Run the new backend/API/runtime acceptance on the deployed GX10 before claiming deployment completion.
+- **Next/separate:** hand C the existing contracts and coordinate target verification with A. Phase 3 memory CRUD/revoke/re-confirmation and Phase 5 settings/delete-all/seed remain separate; external SQLCipher/Android interoperability remains unverified. No plaintext fallback or runtime encryption configuration change.
 
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**

@@ -3,7 +3,7 @@ Local-first wellness companion for the GX10 hackathon. Read `docs/TEAM_PLAN.md` 
 
 ## Run and test
 - `npm install` at the root (npm workspaces; `web/` has its own `npm install`).
-- `INFERENCE_PROVIDER=fake npm run dev`: builds `@innercove/core`, then runs the API on 127.0.0.1:8000 with the fake model. Add `DEV_STORE=demo` for an in-memory store seeded with the fictional persona (memories, chips, D33) until B's store lands. `cd web && npm run dev` proxies `/api` to it.
+- `INFERENCE_PROVIDER=fake npm run dev`: builds `@innercove/core`, then runs the API on 127.0.0.1:8000 with the fake model. Saved chat/history now use the SQLCipher request lease; set up/unlock the database before chatting. The legacy `DEV_STORE=demo` flag no longer selects an in-memory production store. `cd web && npm run dev` proxies `/api` to it.
 - Real model: copy `.env.example` to `.env` (untracked), set `LOCAL_AI_API_KEY` from `~/.config/innercove/lmstudio.token`, set `INFERENCE_PROVIDER=lmstudio`.
 - `npm test` (vitest), `npm run typecheck`, `npm run validate` (B's contract checks). `@innercove/core` resolves to its `dist/`, so these scripts build it first.
 - `sudo docker compose up -d --build`: the demo build (web + API in one container, host network, 127.0.0.1:8000).

@@ -13,6 +13,7 @@ import { NotFoundError, type ChatStore } from "../chat/ports.js";
 import { eligibleIds, loadEligiblePool, selectContext } from "../chat/retrieval.js";
 import { runTurn, type TurnHooks } from "../chat/turn.js";
 import { sendError, validationDetails } from "./errors.js";
+import { SqlChatStore } from "../store/chat-store.js";
 import { openSse } from "./sse.js";
 
 export function chatRoutes(app: FastifyInstance, deps: AppDeps) {
@@ -21,12 +22,7 @@ export function chatRoutes(app: FastifyInstance, deps: AppDeps) {
     const parsed = ChatRequestSchema.safeParse(request.body);
     if (!parsed.success) return sendError(reply, "VALIDATION_ERROR", "Invalid chat request", validationDetails(parsed.error));
     const { conversationId, message, useMemories, pinnedMemoryIds } = parsed.data;
-    const store = deps.store;
-    if (!store) {
-      // No store yet (before Phase 2): new conversations only, nothing persisted.
-      if (conversationId !== null) return sendError(reply, "NOT_FOUND", "Conversation not found");
-      return stream(request, reply, deps, message, {});
-    }
+    const store = deps.store ?? new SqlChatStore(request.databaseLease!);
 
     let prior: MessageRecord[] = [];
     if (conversationId !== null) {
@@ -45,7 +41,7 @@ export function chatRoutes(app: FastifyInstance, deps: AppDeps) {
     const parsed = InferRequestSchema.safeParse(request.body);
     if (!parsed.success) return sendError(reply, "VALIDATION_ERROR", "Invalid infer request", validationDetails(parsed.error));
     const { history, message, useMemories, pinnedMemoryIds } = parsed.data;
-    const store = deps.store;
+    const store = deps.store ?? new SqlChatStore(request.databaseLease!);
     return stream(request, reply, deps, message, {
       prepare: async () => ({
         history,
@@ -97,6 +93,14 @@ function savedChatHooks(
       };
     },
     finish: async ({ text, modelId, tier, context }) => {
+      if (store.persistence.appendMessageWithContext) {
+        const saved = await store.persistence.appendMessageWithContext({
+          userId, conversationId: conversationId!, role: "assistant", content: text, safetyTier: tier, modelId,
+        }, context.map(item => item.type === "memory"
+          ? { sourceType: "memory", sourceId: item.id as MemoryId }
+          : { sourceType: "diary_entry", sourceId: item.id as DiaryEntryId }));
+        return saved.id;
+      }
       const saved = await store.persistence.appendMessage({
         userId,
         conversationId: conversationId!,

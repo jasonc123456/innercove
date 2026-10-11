@@ -9,6 +9,7 @@ import type { ReplyStats } from "./chat/turn.js";
 import { sendError } from "./api/errors.js";
 import { chatRoutes } from "./api/chat.js";
 import { healthRoutes } from "./api/health.js";
+import { dataRoutes } from "./api/data.js";
 import { databaseRoutes } from "./api/lock.js";
 import type { DatabaseStore } from "./store/db.js";
 
@@ -19,7 +20,7 @@ export interface AppDeps {
   /** Speed of the last reply, for the privacy panel (plan §3c, A's fields). In memory only. */
   stats: { lastReply: ReplyStats | null };
   database: DatabaseStore;
-  /** B's store (Phase 2), or the in-memory dev store. Without it, chats have no memories and nothing is saved. */
+  /** Explicit test adapter; production uses the request-bound SQL store. */
   store?: ChatStore;
   webDist?: string;
 }
@@ -42,6 +43,7 @@ export async function buildApp(deps: AppDeps, logger: FastifyServerOptions["logg
     return sendError(reply, "INTERNAL_ERROR", "Internal error");
   });
 
+  dataRoutes(app);
   healthRoutes(app, deps);
   chatRoutes(app, deps);
 
