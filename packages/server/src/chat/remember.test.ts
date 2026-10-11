@@ -60,6 +60,8 @@ describe("note writer (D49)", () => {
   it("treats reworded notes as duplicates", () => {
     expect(similar("Has a biology exam on Friday", "Has a biology exam Friday")).toBe(true);
     expect(similar("Has a biology exam on Friday", "Finds lake walks calming")).toBe(false);
+    // One shared word isn't a duplicate: news about an exam is new.
+    expect(similar("Did well on their exam", "Has two upcoming exams and is feeling stressed about them")).toBe(false);
   });
 
   it("drops clinical notes, crisis notes and anything the user already excluded", async () => {

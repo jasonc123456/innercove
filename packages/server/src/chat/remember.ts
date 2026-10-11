@@ -23,12 +23,16 @@ const METHOD =
 export const NOTE_WRITER_PROMPT = [
   "You keep InnerCove's private notes about the user, so later conversations can be more personal and, when things are hard, gentler.",
   `Read the user's latest message and write at most ${MAX_NEW_NOTES} short notes about lasting facts worth remembering:`,
-  "plans and deadlines, important people and how they relate to the user, routines, preferences, goals, what helps them.",
+  "plans and deadlines, results and milestones (e.g. \"Did well on their exam\"), important people and how they relate to the user,",
+  "changes in those relationships (e.g. \"A friend recently stopped talking to them\"), routines, preferences, goals, what helps them.",
+  "News about an existing note is new: an exam that has now happened, a plan that changed, a friendship that ended.",
   "If they share that they have hurt themselves before, or worry they might when things get overwhelming, you may write one support note in kind, plain words,",
   "e.g. \"Has hurt themself before when exam stress built up\" or \"Worries about hurting themself again during exams\".",
   "Write each note in the third person without a name, under 120 characters, e.g. \"Has a biology exam on Friday\".",
   "Never note: diagnoses or guesses about mental or physical health, medication, how someone hurt themselves or could, injuries, plans or timing,",
-  "passing moods, details about other people beyond their name and relation, or anything already in the existing notes.",
+  "a passing mood on its own (\"Is tired today\"), other people's own lives: their health, family, relationships or secrets",
+  "(for \"my friend Sam has an eating disorder and her parents are divorcing\" write only \"Has a friend named Sam\"); note only who they are to the user and what they did with or to the user,",
+  "or anything the existing notes already say.",
   "If nothing qualifies, return []. Reply with only a JSON array of strings.",
 ].join(" ");
 
@@ -99,7 +103,10 @@ export function parseNotes(raw: string): string[] {
   }
 }
 
-/** Same words, ignoring order and small differences: most content terms shared. */
+/**
+ * Same words, ignoring order and small differences: most content terms shared, and at least two,
+ * so a short note ("Did well on their exam" → "exam") isn't dropped for one word in common.
+ */
 export function similar(a: string, b: string): boolean {
   if (a.trim().toLowerCase() === b.trim().toLowerCase()) return true;
   const ta = new Set(terms(a));
@@ -107,5 +114,5 @@ export function similar(a: string, b: string): boolean {
   if (!ta.size || !tb.size) return false;
   let shared = 0;
   for (const t of ta) if (tb.has(t)) shared++;
-  return shared / Math.min(ta.size, tb.size) >= 0.75;
+  return shared >= 2 && shared / Math.min(ta.size, tb.size) >= 0.75;
 }
