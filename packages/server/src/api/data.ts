@@ -1,3 +1,4 @@
+import { transcriptionRoutes } from "./transcribe.js";
 import {
   UpdateSettingsRequestSchema,
   ConversationIdSchema, DiaryEntryIdSchema, MemoryIdSchema,
@@ -5,7 +6,7 @@ import {
   CreateConversationRequestSchema, UpdateConversationRequestSchema, ListConversationsQuerySchema, ListMessagesQuerySchema,
   CreateDiaryEntryRequestSchema, UpdateDiaryEntryRequestSchema, ListDiaryEntriesQuerySchema,
 } from "@innercove/core";
-import type { FastifyInstance, FastifyReply } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import type { ZodType } from "zod";
 import { NotFoundError } from "../chat/ports.js";
 import { DatabaseError } from "../store/db.js";
@@ -27,7 +28,8 @@ function handle(reply: FastifyReply, action: () => unknown) {
     throw error;
   }
 }
-export function dataRoutes(app: FastifyInstance) {
+export function dataRoutes(app: FastifyInstance, hasValidSession?: (request: FastifyRequest) => boolean) {
+  transcriptionRoutes(app, undefined, undefined, undefined, hasValidSession);
   app.get("/api/settings", async (request, reply) => handle(reply, () => {
     const lease = request.databaseLease!;
     return new SettingsRepository(lease).get(lease.userId);

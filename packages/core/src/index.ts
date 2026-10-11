@@ -26,3 +26,5 @@ export * from "./data-layer/index.js";
 
 export * from "./safety/index.js";
 export * from "./safety/golden.js";
+
+export * from "./api/transcribe.js";

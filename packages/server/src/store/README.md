@@ -311,3 +311,14 @@ git worktree remove ~/innercove-phase5-verify
 ```
 
 These undo commands have not been executed.
+
+## Hour 1 local voice API handoff
+
+B's draft-only `POST /api/transcribe` prototype uses the existing unlocked
+request lease without writing any database tables. Contract, limits, local
+whisper.cpp/FFmpeg configuration, actual x86_64 metrics, pending GX10 commands
+and privacy/cleanup tests are in [the voice handoff](../../../../docs/VOICE_INPUT.md).
+D47 session authorization fails closed until A supplies a server-verified
+session callback; no loopback/development bypass exists. A also owns microphone
+security/deployment coordination, C the future recorder/editable draft UI.
+The voice prototype does not change encrypted store, chat or safety behavior.
