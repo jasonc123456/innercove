@@ -191,6 +191,146 @@ textarea:focus-visible {
   }
 }
 
+/* Sign-in grove: the same flat sapling language, as a frame around the login box.
+   Color changes are a short fill/stroke fade. Reduced motion drops the fade. */
+.sign-in-page {
+  color-scheme: light dark;
+  --grove-branch: light-dark(#6d5239, #e4c7a8);
+  --grove-ground: light-dark(#c7dfc2, #2b4338);
+  --grove-shade: light-dark(#a6c99e, #3e5c4c);
+  --sign-in-heading: light-dark(#1e4f4c, #d7ebe6);
+  --color-paper: light-dark(#f3efe6, #16211e);
+  --color-ink: light-dark(#1c2430, #f3efe6);
+  --color-line: light-dark(#d5cfc3, #4a615b);
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+}
+
+html[data-theme="light"] .sign-in-page {
+  color-scheme: light;
+}
+
+html[data-theme="dark"] .sign-in-page {
+  color-scheme: dark;
+}
+
+.sign-in-page h1,
+.sign-in-page a.border-cove {
+  color: var(--sign-in-heading);
+}
+
+.sign-in-page a.border-cove {
+  border-color: var(--sign-in-heading);
+}
+
+.sign-in-page input {
+  background-color: light-dark(#ffffff, #24312e);
+  color: light-dark(#1c2430, #f3efe6);
+  border-color: light-dark(#d5cfc3, #4a615b);
+}
+
+.cove-mark-tile {
+  fill: light-dark(#1e4f4c, #d7ebe6);
+}
+
+.cove-mark-arch {
+  stroke: light-dark(#e4efec, #1e4f4c);
+}
+
+.cove-mark-shore {
+  stroke: light-dark(#f3efe6, #1e4f4c);
+}
+
+.sign-in-grove,
+.sign-in-grove svg,
+.grove-corner {
+  pointer-events: none;
+}
+
+.grove-leaf {
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.grove-leaf:focus {
+  outline: none;
+}
+
+.grove-leaf:focus-visible .grove-leaf-fill {
+  stroke: var(--sign-in-heading);
+  stroke-width: 1.6;
+}
+
+.grove-leaf-fill {
+  transition: fill 280ms ease;
+}
+
+.grove-leaf-vein {
+  transition: stroke 280ms ease;
+}
+
+.grove-desktop {
+  display: none;
+}
+
+.grove-corner {
+  position: absolute;
+  width: min(28vw, 7.5rem);
+  height: min(24vw, 6.75rem);
+  overflow: hidden;
+}
+
+.grove-corner-tl {
+  top: 0;
+  left: 0;
+}
+
+.grove-corner-tr {
+  top: 0;
+  right: 0;
+}
+
+.grove-corner-bl {
+  bottom: 0;
+  left: 0;
+}
+
+.grove-corner-br {
+  bottom: 0;
+  right: 0;
+}
+
+@media (max-height: 640px) {
+  .grove-corner {
+    width: min(22vw, 5.5rem);
+    height: min(18vw, 4.75rem);
+  }
+}
+
+@media (min-width: 64rem) {
+  .grove-desktop {
+    display: block;
+  }
+
+  .grove-mobile {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grove-leaf-fill,
+  .grove-leaf-vein {
+    transition: none;
+  }
+}
+
+.sign-in-page :focus-visible {
+  outline-color: var(--sign-in-heading);
+}
+
 @media (min-width: 64rem) and (prefers-contrast: more) {
   .glass,
   .glass-panel,
