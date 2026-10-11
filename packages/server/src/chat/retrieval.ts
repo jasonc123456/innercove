@@ -12,6 +12,8 @@ export interface ContextItem {
   title: string;
   /** ISO date for diary entries. */
   date?: string;
+  /** Diary only: the feeling the user picked for the entry (a `feeling:<id>` tag). */
+  feeling?: string;
   text: string;
   /** Matched the user's message by keyword. Used with the reply to decide what this exchange drew on (D33). */
   relevant: boolean;
@@ -118,11 +120,18 @@ export function selectContext(
         id: d.id,
         title: d.title ?? d.createdAt.slice(0, 10),
         date: d.createdAt.slice(0, 10),
+        ...feelingOf(d.tags),
         text: shorten(d.content, limits.diaryChars),
         relevant: s > 0,
       };
     }),
   ];
+}
+
+/** The picker's ids are short lowercase words; anything else in a tag is ignored. */
+function feelingOf(tags: readonly string[]): { feeling?: string } {
+  const id = tags.find((t) => t.startsWith("feeling:"))?.slice("feeling:".length);
+  return id && /^[a-z]{2,20}$/.test(id) ? { feeling: id } : {};
 }
 
 /**
