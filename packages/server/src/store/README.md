@@ -251,8 +251,9 @@ WAL checkpoints/VACUUM and the next full prompt with no deleted canary.
 reopen and refusal to overwrite. The compiled smoke now covers Phase 5 HTTP
 routes, empty post-delete context, persisted settings/reset after restart and
 the seed CLI's consent/key/nonempty-store checks. Exact local counts are in
-the Phase log; GX10 ARM64 Phase 5 smoke and real C settings/delete/privacy UI
-integration remain pending. Whole-team Phase 5 completion is not claimed;
+the Phase log; GX10 ARM64 Phase 5 smoke passed at `b6082ef` as recorded below.
+Real C settings/delete/privacy UI integration remains pending. Whole-team
+Phase 5 completion is not claimed;
 A owns CSP and deployment/offline verification per the latest integration handoff, C owns the UI.
 
 Recovery verification (2026-10-10, local Node v22.22.1): reused the canceled
@@ -261,8 +262,8 @@ run’s implementation and reran all checks; no prior Phase 5 pass was assumed.
 backend/web builds, SQLCipher spike 18/18 and compiled HTTP/seed smoke passed.
 Python scripts compile and `git diff --check` passed. Docker Desktop WSL
 integration is unavailable, so no local Compose runtime pass is claimed.
-All runtime checks used scratch databases; ARM64/GX10 and real UI checks above
-remain open.
+All local runtime checks used scratch databases. The later isolated ARM64/GX10
+smoke below closes the target-smoke item; real UI/deployment checks remain open.
 
 Integration with origin/main `6ca2ef8` preserved teammate prompt, safety,
 dashboard and saved-chat wiring. The first integrated suite exposed its new
@@ -270,3 +271,43 @@ SQLite CLI check missing on WSL; the follow-up keeps the CLI and performs a
 real Python SQLite read only when it is absent, asserting process startup.
 The final merged suite passed 149/149; merged typechecks/contracts/safety,
 backend/web builds and compiled smoke passed again.
+
+## Phase 5 GX10 verification and remaining assignments (2026-10-10)
+
+Operator-reported verification at `b6082ef`: image
+`innercove-phase5-verify:b6082ef` built with exit 0; runtime linux arm64,
+Node v22.23.3. SQLCipher spike passed 18/18; expanded compiled smoke passed;
+combined exit 0. Coverage includes settings/delete-all/VACUUM/prompt cleanup,
+the opt-in fictional seed CLI, and previous setup/lock/unlock, diary CRUD/FTS,
+SQL saved chat/reopen (legacy demo flag included), memory CRUD/review/provenance,
+durable revocation/re-confirmation, D33 history, packaged migrations, SIGTERM
+and plaintext rejection.
+
+The separate detached worktree `~/innercove-phase5-verify` and container used
+`--network none` and no live data mounts. Live deployment/data were untouched.
+B’s Phase 5 backend and seed now have local and isolated ARM64 smoke evidence;
+no new GX10 full test-suite, live Qwen/UI, deployed Compose or unplugged demo
+result is claimed. Local full-prompt/derived-item tests remain local evidence.
+No completed runtime checks were repeated for this documentation update.
+
+C still owns real settings/defaults/delete/privacy UI and stale ID/cache reset,
+including browser-held temporary history; A/team owns deployed Qwen/UI reset
+canary, privacy-speed verification, CSP external-fetch and unplugged offline
+checks per the latest integration handoff. Earlier real setup/unlock, diary,
+memory/pins/chips/exact-sent/D33, conversation list/reopen and excerpt/support-note
+flows remain team acceptance gaps. Preserve A’s verified Save-to-chat wiring
+and C’s static crisis/help evidence. Whole-team Phase 5 remains incomplete.
+
+B’s next concrete deliverable is the Phase 6 root README with encrypted setup,
+unlock, explicit fictional seed, settings/reset and existing demo-gate run steps
+(root README is absent), alongside A/C integration support. Seed tooling is
+already complete; C’s backup recording and A’s offline journey remain separate.
+No next phase or P1 implementation started; D34 Summary to share stays the first
+later stretch feature. Exact undo is recorded in SETUP_LOG #25/#24:
+
+```sh
+docker image rm innercove-phase5-verify:b6082ef
+git worktree remove ~/innercove-phase5-verify
+```
+
+These undo commands have not been executed.

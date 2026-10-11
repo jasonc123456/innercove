@@ -39,6 +39,8 @@ Every system change on the borrowed GX10, one line each, with its exact undo ste
 | 21 | 2026-10-10 | Built isolated image `innercove-phase2-verify:6d8a89c` (build exit 0); linux arm64 / Node v22.23.3; SQLCipher spike 18/18 and expanded production smoke passed (combined exit 0). Separate container with no network or live data mounts; running teammate containers preserved; smoke/Fake provider only | `docker image rm innercove-phase2-verify:6d8a89c` |
 | 22 | 2026-10-10 | Created separate detached verification worktree `~/innercove-phase3-verify` at checkout `62989a7`; no live deployment changes | `git worktree remove ~/innercove-phase3-verify` |
 | 23 | 2026-10-10 | Built isolated ARM64 image `innercove-phase3-verify:62989a7`, build exit 0; linux arm64 / Node v22.23.3; SQLCipher spike 18/18 and compiled Phase 3 production smoke passed, combined exit 0. Container used `--network none`, no live data mounts; isolated smoke only, not live Qwen/UI verification | `docker image rm innercove-phase3-verify:62989a7` |
+| 24 | 2026-10-10 | Created separate detached verification worktree `~/innercove-phase5-verify` at checkout `b6082ef`; live deployment/data untouched | `git worktree remove ~/innercove-phase5-verify` |
+| 25 | 2026-10-10 | Built isolated image `innercove-phase5-verify:b6082ef`, build exit 0; runtime linux arm64 / Node v22.23.3; SQLCipher spike 18/18 and expanded compiled smoke passed, combined exit 0. Container used `--network none`, no live data mounts; isolated smoke only | `docker image rm innercove-phase5-verify:b6082ef` |
 
 ## Verification follow-up (2026-10-10; no system change)
 - Operator confirmed Qwen replies in the deployed UI and progressive `/api/infer` SSE (`delta` events at distinct timestamps, then `done`). A successful temporary-chat canary left every encrypted table's row count/content hash unchanged; the input canary was absent from current container app logs.
@@ -52,6 +54,13 @@ Every system change on the borrowed GX10, one line each, with its exact undo ste
 ## Phase 3 verification follow-up (2026-10-10, checkout `62989a7`)
 - Compiled production smoke passed setup/lock/unlock, diary CRUD/FTS, SQL saved chat/reopen including legacy demo flag, memory CRUD/review/provenance, durable revocation/re-confirmation, D33 history, packaged migrations, SIGTERM and plaintext rejection. Image build exit 0; spike 18/18 and smoke combined verification exit 0.
 - Separate detached worktree and isolated container (`--network none`, no live data mounts); no live deployment changes or Qwen/UI verification. Image/worktree undo is logged in #23/#22; cleanup has not been executed. The existing reset-script note below covers #1–#19 and is not evidence that these verification resources are cleaned up.
+
+## Phase 5 verification follow-up (2026-10-10, checkout `b6082ef`)
+
+- Operator-reported image build exit 0; runtime linux arm64 / Node v22.23.3; SQLCipher spike 18/18 PASS and expanded compiled smoke PASS, combined exit 0.
+- Smoke covered settings/delete-all/VACUUM/prompt cleanup, opt-in fictional seed CLI, and previous setup/lock/unlock, diary CRUD/FTS, SQL saved chat/reopen including legacy demo flag, memory CRUD/review/provenance, durable revocation/re-confirmation, D33 history, packaged migrations, SIGTERM and plaintext rejection.
+- Separate detached worktree and container with `--network none` and no live data mounts; live deployment/data untouched. Isolated smoke results do not verify live Qwen/UI, current deployed Compose, the unplugged offline demo or a full GX10 test-suite run.
+- Undo recorded in #25/#24: `docker image rm innercove-phase5-verify:b6082ef`, then `git worktree remove ~/innercove-phase5-verify`. Neither command executed. The reset-script note below covers #1–#19 and does not establish cleanup of these verification resources.
 
 ## Undo all at once
 `~/resetBeforeReturn.sh` (on the GX10, not in the repo) reverses #1–#19 and wipes everything the team created in `~`: the repo, the encrypted DB, LM Studio and the model, Claude Code, Roo Code, the VS Code server, Docker images/volumes/cache, xrdp/Xfce and their session files. It leaves the owner's files (Ollama, `~/llama.cpp`, `~/unsloth`, `~/venv`, `~/.openclaw*`, `~/run_*.sh`, `~/.npm*`, `~/.bash_history`). Run `bash ~/resetBeforeReturn.sh --dry-run` first, then for real **from a plain SSH session** (not VS Code or RDP), then reboot. It deletes itself.
