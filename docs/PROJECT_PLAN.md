@@ -1058,6 +1058,13 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Checks:** `cd web && npm run build` passed. A DOM harness checked independent colors, touch, Enter and Space, branch clicks doing nothing, sign-in fields and Get help, remount reset, and check-in still adding leaves. Gutter math keeps the desktop trees beside the form from 1024px to 1440px.
 - **Limitations:** No browser screenshot; browser tools were unavailable. The app has no theme switch, so the sign-in page follows `prefers-color-scheme` and `html[data-theme]`. Side trees stop at 36rem, so very wide screens keep a gap. Mobile uses corner sprigs so the form stays readable.
 
+**B, Hour 2 recording-to-draft (2026-10-10; user-authorized C composer integration):**
+- Preserved latest UI through `ceaf2cd`; no unfinished merge or uncommitted work at start. Inspected A/C handoffs; kept session/security, App/router and live deployment untouched.
+- GX10 CLI feasibility now reported PASS: ARM64 whisper.cpp v1.8.2/base.en CPU/two threads, short 2.85 s / 288000 KiB, repeated 59 s 8.38 s / 336380 KiB, recognizable fixture, combined exit 0. CLI only, not API/browser/natural speech; details and provisioning undo in VOICE_INPUT/SETUP_LOG.
+- Added supported-format probing, tap start/Stop, 60 s auto-stop, elapsed time, Cancel, processing/errors, raw Blob API, editable appended draft and explicit Send; track/upload cleanup on cancellation/unmount/session-lock/mode transitions. No logging/storage/auto-send/speech replies.
+- Integration: A's D47 verifier arrived in `c214ac9` and is reused through the existing callback; real session-cookie/cross-origin/revocation tests added, no bypass. Remaining blockers: A must approve secure-origin microphone policy and isolated runtime configuration. C must review UX/session lifecycle; real browser microphone/API and natural-speech acceptance pending. GX10 apt history confirms 71 new packages plus pre-existing libssh-4 upgrade; targeted undo recorded, never executed.
+- Local integrated checks PASS: 195/195 tests across 19 files including 13 mocked recorder/API-client tests; server typecheck, backend/core build, web production build, validate 52/52, safety 33/33 and `git diff --check`. Mocked lifecycle/API-client tests are not actual microphone/UI acceptance. Initial web TypeScript constructor syntax failure corrected before final passing build.
+
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
 1. Write diary entries A and B. Allow AI access to A only.

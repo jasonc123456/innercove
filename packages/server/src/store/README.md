@@ -322,3 +322,5 @@ D47 session authorization fails closed until A supplies a server-verified
 session callback; no loopback/development bypass exists. A also owns microphone
 security/deployment coordination, C the future recorder/editable draft UI.
 The voice prototype does not change encrypted store, chat or safety behavior.
+
+Hour 2 recorder handoff is in [VOICE_INPUT.md](../../../../docs/VOICE_INPUT.md): GX10 ARM64 CLI measurements are recorded; mocked recorder/client tests pass, A’s real D47 session guard/cookie callback is now connected. Approved secure-origin microphone policy, packaged runtime and actual browser/API acceptance remain pending with A/C; unauthenticated requests remain rejected.

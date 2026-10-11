@@ -44,7 +44,17 @@ describe("bounded local draft transcription API", () => {
     cleanup.unshift(async () => { await app.close(); });
     const unavailable = await app.inject({ method: "POST", url: "/api/transcribe", headers: { "content-type": "audio/wav" }, payload: Buffer.from("fixture") });
     expect(unavailable.statusCode).toBe(401);
+    const signIn = await app.inject({ method: "POST", url: "/api/session", payload: { login: "admin", passphrase: "fictional-stt-secret" } });
+    expect(signIn.statusCode).toBe(200);
+    const cookie = String(signIn.headers["set-cookie"]).split(";")[0]!;
+    const headers = { cookie, "content-type": "audio/wav" };
+    // Real D47 cookie reaches the route's shared validation; no test auth adapter.
+    expect((await app.inject({ method: "POST", url: "/api/transcribe", headers, payload: Buffer.alloc(0) })).statusCode).toBe(400);
+    expect((await app.inject({ method: "POST", url: "/api/transcribe", headers: { ...headers, origin: "https://untrusted.invalid" }, payload: Buffer.from("fixture") })).statusCode).toBe(403);
+    await app.inject({ method: "DELETE", url: "/api/session", headers: { cookie } });
+    expect((await app.inject({ method: "POST", url: "/api/transcribe", headers, payload: Buffer.from("fixture") })).statusCode).toBe(401);
     await database.lock();
+    // Existing locked-store gate remains 423; unlocked requests require the real session.
     expect((await app.inject({ method: "POST", url: "/api/transcribe", headers: { "content-type": "audio/wav" }, payload: Buffer.from("fixture") })).statusCode).toBe(423);
   });
   it("returns an editable draft without changing any encrypted table or logging audio/text", async () => {
