@@ -1065,6 +1065,12 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - Integration: A's D47 verifier arrived in `c214ac9` and is reused through the existing callback; real session-cookie/cross-origin/revocation tests added, no bypass. Remaining blockers: A must approve secure-origin microphone policy and isolated runtime configuration. C must review UX/session lifecycle; real browser microphone/API and natural-speech acceptance pending. GX10 apt history confirms 71 new packages plus pre-existing libssh-4 upgrade; targeted undo recorded, never executed.
 - Local integrated checks PASS: 195/195 tests across 19 files including 13 mocked recorder/API-client tests; server typecheck, backend/core build, web production build, validate 52/52, safety 33/33 and `git diff --check`. Mocked lifecycle/API-client tests are not actual microphone/UI acceptance. Initial web TypeScript constructor syntax failure corrected before final passing build.
 
+**B, isolated voice browser verification preparation (2026-10-10):**
+- Added separate native runner/runbook using real D47 authentication, a unique temporary encrypted fictional DB, loopback test port, existing whisper/base.en + host FFmpeg, tmpfs audio and FakeProvider text replies. No live Compose/data/Qwen changes.
+- User authorized self-only microphone policy for this isolated entry point; A's app/main/default policy unchanged, other security headers preserved. A review required before broader deployment; C's recorder is reused.
+- GX10 setup/tunnel/fictional setup and exact cleanup in `docs/VOICE_VERIFY.md`; no actual GX10 provisioning, API or browser verification performed for this preparation.
+- Local checks PASS: isolated compiled smoke (loopback, real session/Origin guard, SQLCipher, self-only mic/other headers/default-policy preservation, cleanup), 195/195 tests, typecheck, backend/web builds, validate 52/52, safety 33/33, script/runbook syntax and `git diff --check`. Next acceptance: real microphone → authenticated transcription → editable draft → explicit Send → FakeProvider text reply.
+
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
 1. Write diary entries A and B. Allow AI access to A only.

@@ -105,3 +105,7 @@ Hour 2 local verification: 189/189 tests across 18 files, including 13 controlle
 Latest integration correction: A’s real D47 implementation arrived during the pre-merge pull (`c214ac9`), closing the missing-session blocker. Added production-registration assertions for real sign-in cookie, empty-upload validation, cross-origin refusal and revoked-cookie refusal. The locked-store gate retains 423; unlocked unauthenticated requests are 401. Microphone Permissions-Policy remains disabled and requires A’s approval; no live deployment changes.
 
 Final post-session integration verification: 195/195 tests across 19 files PASS (includes real SessionStore cookie/Origin/revocation assertions), server typecheck, core/backend build, web production build, validate 52/52, safety 33/33 PASS. Initial integration test incorrectly expected 401 for the locked gate; corrected to existing 423 and reran full suite successfully. Both upstream reset-log changes and voice provisioning records preserved in conflict resolution. No actual browser/API transcription or live deployment verification performed.
+
+## Isolated browser verification preparation
+
+See [VOICE_VERIFY.md](VOICE_VERIFY.md) for the separate native clone, loopback/SSH tunnel, temporary encrypted fictional DB, real D47 sign-in and self-only microphone policy. A’s production policy stays unchanged. Runtime/model are reused read-only by native whisper; no container binary compatibility assumption. Real GX10 API/browser acceptance remains pending; text reply uses FakeProvider to avoid Qwen traffic.
