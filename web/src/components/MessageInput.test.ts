@@ -27,7 +27,7 @@ it('renders five bounded bars outside the live status, with Stop and elapsed rec
   expect(html).toContain('>Stop</button>');
   expect(html).toContain('>Cancel</button>');
   expect(html).toContain('inert=""');
-  expect(html).toContain('visibility:hidden');
+  expect(html).toContain('display:none');
   expect(html).toContain('Listening…');
   expect(html).toContain('aria-label="Microphone level"');
   expect(html.match(/style="height:/g)).toHaveLength(5);
@@ -45,12 +45,12 @@ it('hides levels during processing, shows a reduced-motion-aware spinner and ret
   expect(html).toContain('Transcribing…');
   expect(html).toContain('>Cancel</button>');
   expect(html).not.toContain('>Stop</button>');
-  expect(html).toContain('visibility:hidden');
+  expect(html).toContain('display:none');
   state.voice = { phase: 'idle', seconds: 0, error: 'Audio could not be transcribed.' };
   const restored = render();
   expect(restored).toContain('Audio could not be transcribed.');
   expect(restored).toContain('typed draft');
-  expect(restored).not.toContain('visibility:hidden');
+  expect(restored).not.toContain('display:none');
 });
 
 it('keeps announcement independent of waveform and elapsed-time changes', () => {
@@ -62,7 +62,7 @@ it('keeps announcement independent of waveform and elapsed-time changes', () => 
 
 it('groups 44px microphone and circular arrow inside the rounded composer, after the textarea', () => {
   const html = render();
-  expect(html).toContain('min-h-44 rounded-2xl border border-line');
+  expect(html).toContain('rounded-2xl border border-line');
   expect(html).toContain('shrink-0 items-center justify-end gap-1');
   expect(html.match(/h-11 w-11 shrink-0/g)).toHaveLength(2);
   expect(html).toContain('aria-label="Send message"');
@@ -79,4 +79,17 @@ it('keeps both action buttons disabled while submitting', () => {
   for (const label of ['Record voice message', 'Send message']) {
     expect(html.split(`aria-label="${label}"`)[1].split('</button>')[0]).toContain('disabled=""');
   }
+});
+
+it('uses one compact grid row with a one-line, borderless textarea and bounded growth', () => {
+  const html = render();
+  expect(html).toContain('rows="1"');
+  expect(html).toContain('grid-cols-[minmax(0,1fr)_auto] items-end');
+  expect(html).toContain('min-h-16');
+  expect(html).not.toContain('min-h-44');
+  expect(html).not.toContain('min-h-[72px]');
+  const textarea = html.split('<textarea')[1].split('</textarea>')[0];
+  expect(textarea).toContain('border-0 bg-transparent');
+  expect(textarea).toContain('max-h-48');
+  expect(html).toContain('focus-within:ring-2');
 });

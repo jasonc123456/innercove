@@ -40,7 +40,7 @@ export function MessageInput({ disabled, onSend }: MessageInputProps) {
     const input = textarea.current;
     if (!input) return;
     input.style.height = "auto";
-    input.style.height = `${Math.min(192, Math.max(72, input.scrollHeight))}px`;
+    input.style.height = `${Math.min(192, Math.max(44, input.scrollHeight))}px`;
   }, [draft]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -64,15 +64,15 @@ export function MessageInput({ disabled, onSend }: MessageInputProps) {
       onSubmit={handleSubmit}
       className="shrink-0 border-t border-line bg-paper page-x px-4 py-3 lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
-      <div className="relative min-h-44 rounded-2xl border border-line bg-white focus-within:border-cove">
-        <div aria-hidden={busy || undefined} inert={busy || undefined} style={busy ? { visibility: "hidden" } : undefined}
-          className="voice-composer-enter flex min-h-44 min-w-0 flex-col gap-2 p-2">
+      <div className="voice-composer relative rounded-2xl border border-line bg-white focus-within:border-cove focus-within:ring-2 focus-within:ring-cove/30">
+        <div aria-hidden={busy || undefined} inert={busy || undefined} style={busy ? { display: "none" } : undefined}
+          className="voice-composer-enter grid min-h-16 min-w-0 grid-cols-[minmax(0,1fr)_auto] items-end gap-2 p-2">
           <label htmlFor="message" className="sr-only">Message</label>
-          <textarea ref={textarea} id="message" name="message" rows={3} value={draft}
+          <textarea ref={textarea} id="message" name="message" rows={1} value={draft}
             disabled={disabled || busy} onChange={event => setDraft(event.target.value)} onKeyDown={handleKeyDown}
             placeholder="Write a message"
-            className="min-h-[72px] max-h-48 w-full min-w-0 resize-none overflow-y-auto border-0 bg-transparent px-2 py-2 text-base leading-6 text-ink outline-none placeholder:text-ink/55 focus:border-cove disabled:opacity-60" />
-          <div className="mt-auto flex h-11 shrink-0 items-center justify-end gap-1">
+            className="min-h-11 max-h-48 w-full min-w-0 resize-none overflow-y-auto border-0 bg-transparent px-2 py-2.5 text-base leading-6 text-ink outline-none placeholder:text-ink/55 disabled:opacity-60" />
+          <div className="flex h-11 shrink-0 items-center justify-end gap-1">
             <button type="button" aria-label="Record voice message"
               disabled={disabled || locked || !signedIn || busy}
               onClick={() => void recording.current?.start()}
@@ -90,25 +90,25 @@ export function MessageInput({ disabled, onSend }: MessageInputProps) {
             </button>
           </div>
         </div>
-        {busy && <div key={voice.phase} className="voice-composer-enter absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-2xl border border-cove/40 bg-cove/5 px-3 py-2">
-          <p className="font-medium text-cove" aria-hidden="true">
+        {busy && <div key={voice.phase} className="voice-composer-enter grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 rounded-2xl bg-cove/5 px-3 py-2">
+          <p className="min-w-0 font-medium text-cove" aria-hidden="true">
             {voice.phase === "recording" ? "Listening…" : voice.phase === "processing" ? "Transcribing…" : "Waiting for microphone…"}
           </p>
-          <div className="flex h-10 items-center justify-center">
+          <p className="text-right text-xs text-ink/75" aria-hidden="true">
+            {voice.phase === "recording" ? `${voice.seconds}s / 60s` : "Draft preserved"}
+          </p>
+          <div className="flex h-11 min-w-0 items-center justify-center">
             {voice.phase === "recording" ? <div role="img" aria-label="Microphone level" className="flex h-10 items-center gap-2">
               {[.55, .8, 1, .8, .55].map((weight, index) => <span key={index}
                 className="w-2 rounded-full bg-cove transition-[height] duration-100 motion-reduce:transition-none"
                 style={{ height: `${4 + 32 * level * weight}px` }} />)}
             </div> : <span aria-hidden="true" className="h-6 w-6 rounded-full border-2 border-line border-t-cove animate-spin motion-reduce:animate-none" />}
           </div>
-          <p className="h-4 text-xs text-ink/75">
-            {voice.phase === "recording" ? <><span aria-hidden="true">{voice.seconds}s / 60s · </span>Microphone level</> : "Your draft is kept until you return."}
-          </p>
-          <div className="flex h-11 items-center justify-center gap-3">
+          <div className="flex h-11 items-center justify-end gap-2">
             {voice.phase === "recording" && <button ref={stopButton} type="button" onClick={() => recording.current?.stop()}
-              className="min-h-11 rounded-xl bg-cove px-5 font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cove">Stop</button>}
+              className="min-h-11 rounded-xl bg-cove px-3 font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cove">Stop</button>}
             <button ref={cancelButton} type="button" onClick={() => recording.current?.cancel()}
-              className="min-h-11 rounded-xl border border-line px-5 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cove">Cancel</button>
+              className="min-h-11 rounded-xl border border-line px-3 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cove">Cancel</button>
           </div>
         </div>}
       </div>

@@ -173,3 +173,23 @@ in a separate flex row. Listening/Transcribing, draft restoration and explicit
 submission are unchanged. Local focused tests 29/29, web typecheck/build and
 diff check passed. Browser tooling is unavailable: desktop and 375/390/430 px
 visual checks, real iPhone behavior and microphone verification remain pending.
+
+### Compact composer correction — 2026-10-11
+
+Removed the two 176 px minimums, three textarea rows, 72 px text minimum
+and separately reserved action row. A single grid row now places the growing
+text area beside the bottom-aligned 44 px mic/arrow group; the outer boundary
+owns the border/background/focus ring, with no inner textarea outline. Text
+grows from 44 px to 192 px and then scrolls. Busy panels use two compact grid
+rows and keep the mounted draft hidden without reserving its old height.
+
+Actual Chromium fixture inspection at 1024/375/390/430 px: empty/one-line
+composer 66 px, three lines 110 px, Listening/Transcribing 90 px; long drafts
+cap the composer at 210 px. All 24 state/width measurements passed non-overlap,
+no horizontal overflow and 44 px targets; textarea focus has no inner outline.
+Screenshots of empty/one-line/multiline/Listening/Transcribing were reviewed at
+all four widths. These use the real component/CSS with controlled session and
+recorder state, not actual iPhone, microphone or GX10 verification. Temporary
+Playwright/Chromium tooling and extracted libraries were used locally; no
+system packages installed or deployment changed. Local focused tests 30/30,
+full regression 241/241, web typecheck/build and git diff --check passed.

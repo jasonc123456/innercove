@@ -911,3 +911,6 @@ html[data-theme="dark"] .bg-\[\#e8f1e6\] {
 @media (prefers-reduced-motion: reduce) {
   .voice-composer-enter { animation: none; }
 }
+
+/* The composer boundary owns focus; its textarea has no second box/ring. */
+.voice-composer textarea:focus-visible { outline: none; }
