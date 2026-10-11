@@ -49,10 +49,17 @@ function RequireSignIn() {
 function SignedOutHelp() {
   return (
     <div className="flex h-dvh flex-col bg-paper font-sans text-ink">
-      <header className="shrink-0 border-b border-line px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
-        <Link to="/" className="text-lg font-semibold tracking-tight text-cove">
-          Inner Cove
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-line px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+        <Link
+          to="/"
+          className="inline-flex h-11 items-center gap-1.5 rounded-2xl border border-line px-3 text-sm font-medium text-cove focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cove"
+        >
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          Back to sign in
         </Link>
+        <span className="text-lg font-semibold tracking-tight text-cove">Inner Cove</span>
       </header>
       <main className="mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col">
         <HelpPage />
