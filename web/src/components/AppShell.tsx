@@ -4,10 +4,11 @@ import { useAppSession } from "../session/AppSession";
 
 const STORAGE_NOTE = "Saved chats are stored on the hub. The diary still stays in this tab.";
 
-function sectionClass(isActive: boolean): string {
+/** Phone tab bar (Taobao-style): icon over a short label; colour marks the current tab. */
+function tabClass(isActive: boolean): string {
   return [
-    "inline-flex h-11 items-center gap-1.5 rounded-2xl px-3 text-base",
-    isActive ? "bg-foam font-semibold text-cove" : "text-ink/80",
+    "flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] leading-none transition-colors",
+    isActive ? "font-semibold text-cove" : "text-ink/60",
   ].join(" ");
 }
 
@@ -74,47 +75,29 @@ const SECTIONS = [
   },
 ] as const;
 
+/** Five tabs fit a phone; Admin is reached from Settings, which the "Me" tab also lights up for. */
+const TABS = SECTIONS.filter((s) => s.to !== "/admin").map((s) => (s.to === "/settings" ? { ...s, label: "Me" } : s));
+
 export function AppShell() {
   const { chatMode } = useAppSession();
-  const home = useLocation().pathname === "/";
+  const path = useLocation().pathname;
+  const home = path === "/";
 
   return (
     <div className="app-root flex h-dvh flex-col bg-paper font-sans text-ink lg:flex-row">
-      {/* Phone and tablet: the stacked header. */}
-      <header className="shrink-0 border-b border-line bg-paper px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 lg:hidden">
-        <div className="mx-auto flex w-full max-w-lg flex-col gap-3">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-lg font-semibold tracking-tight text-cove">
-                InnerCove
-              </p>
-              <p className="text-sm text-ink/70">
-                {chatMode === "temporary" ? "Temporary" : "Save"}
-              </p>
-            </div>
-            <p className="max-w-40 text-right text-xs leading-snug text-ink/80">
-              {STORAGE_NOTE}
-            </p>
-          </div>
-          <nav className="flex flex-wrap gap-2" aria-label="Sections">
-            {SECTIONS.map((s) => (
-              <NavLink key={s.to} to={s.to} end={s.to === "/"} className={({ isActive }) => sectionClass(isActive)}>
-                <NavIcon>{s.icon}</NavIcon>
-                {s.label}
-              </NavLink>
-            ))}
-          </nav>
-          <NavLink
-            to="/help"
-            className={({ isActive }) =>
-              isActive
-                ? "inline-flex h-11 items-center justify-center rounded-2xl bg-cove px-4 text-base font-medium text-white"
-                : "inline-flex h-11 items-center justify-center rounded-2xl border border-cove px-4 text-base font-medium text-cove"
-            }
-          >
-            Get help
-          </NavLink>
-        </div>
+      {/* Phone and tablet: one slim row on top, so the page (and chat) gets the height; help stays in reach. */}
+      <header className="bg-paper flex shrink-0 items-center justify-between gap-3 border-b border-line px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 lg:hidden">
+        <p className="text-lg font-semibold tracking-tight text-cove">InnerCove</p>
+        <NavLink
+          to="/help"
+          className={({ isActive }) =>
+            isActive
+              ? "inline-flex h-9 items-center rounded-full bg-cove px-4 text-sm font-semibold text-white"
+              : "inline-flex h-9 items-center rounded-full border border-cove px-4 text-sm font-semibold text-cove"
+          }
+        >
+          Get help
+        </NavLink>
       </header>
 
       {/* Desktop: a translucent sidebar over the ambient background; help is always in reach. */}
@@ -159,6 +142,24 @@ export function AppShell() {
       >
         <Outlet />
       </main>
+
+      {/* Phone and tablet: the tab bar sits under the page, above the home indicator. */}
+      <nav
+        className="bg-paper flex shrink-0 border-t border-line px-1 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] lg:hidden"
+        aria-label="Sections"
+      >
+        {TABS.map((s) => (
+          <NavLink
+            key={s.to}
+            to={s.to}
+            end={s.to === "/"}
+            className={({ isActive }) => tabClass(isActive || (s.to === "/settings" && path === "/admin"))}
+          >
+            <NavIcon>{s.icon}</NavIcon>
+            {s.label}
+          </NavLink>
+        ))}
+      </nav>
     </div>
   );
 }

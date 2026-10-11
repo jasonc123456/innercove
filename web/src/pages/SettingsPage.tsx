@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Card, PageHeader, Problem, Row, secondaryButton, useHubApi } from "../components/Panel";
 import { ADMIN_LOGINS, useAppSession } from "../session/AppSession";
 
@@ -51,6 +52,12 @@ export function SettingsPage() {
         <Row label="Username / email" value={ADMIN_LOGINS.join(" · ")} />
         <Row label="Sign-in" value="Username or email + passphrase" />
         <button type="button" onClick={signOut} className={`${secondaryButton} mt-4`}>Sign out</button>
+      </Card>
+
+      {/* On phones the tab bar has no Admin tab; the admin reaches it from here (desktop has it in the sidebar). */}
+      <Card title="Hub admin">
+        <p className="text-sm leading-relaxed text-ink/75">Users, hub status and locking the hub.</p>
+        <Link to="/admin" className={`${secondaryButton} mt-3`}>Open hub admin</Link>
       </Card>
 
       <Card title="Security">
