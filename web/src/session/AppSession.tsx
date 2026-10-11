@@ -10,7 +10,8 @@ import {
  * TEMPORARY in-memory UI session.
  * Field names follow packages/core (lock status, diary records, access
  * levels). This module does not call those routes and does not store a
- * passphrase. Nothing here is written to localStorage or sessionStorage.
+ * passphrase. Sign-in is a practice gate: credentials are checked, then
+ * discarded, and are not written to localStorage or sessionStorage.
  */
 
 export type AccessLevel = "private" | "ai_eligible";
@@ -54,6 +55,7 @@ type NewDiaryEntry = {
 type AppSessionValue = {
   hasPassphrase: boolean;
   locked: boolean;
+  signedIn: boolean;
   chatMode: ChatMode;
   useMemories: boolean;
   entries: DiaryEntry[];
@@ -61,6 +63,8 @@ type AppSessionValue = {
   pinnedMemoryIds: string[];
   completeSetup: (passphrase: string, confirm: string) => string | null;
   completeUnlock: (passphrase: string) => string | null;
+  signIn: (email: string, password: string) => string | null;
+  createAccount: (email: string, password: string, confirm: string) => string | null;
   lock: () => void;
   setChatMode: (mode: ChatMode) => void;
   setUseMemories: (enabled: boolean) => void;
@@ -80,6 +84,7 @@ const AppSessionContext = createContext<AppSessionValue | null>(null);
 export function AppSessionProvider({ children }: { children: ReactNode }) {
   const [hasPassphrase, setHasPassphrase] = useState(false);
   const [locked, setLocked] = useState(true);
+  const [signedIn, setSignedIn] = useState(false);
   const [chatMode, setChatModeState] = useState<ChatMode>("temporary");
   const [useMemories, setUseMemoriesState] = useState(false);
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
@@ -90,6 +95,7 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
     return {
       hasPassphrase,
       locked,
+      signedIn,
       chatMode,
       useMemories,
       entries,
@@ -115,6 +121,19 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
       },
       lock() {
         setLocked(true);
+      },
+      signIn(email, password) {
+        if (email.trim().length === 0) return "Enter an email.";
+        if (password.length < 1) return "Enter a password.";
+        setSignedIn(true);
+        return null;
+      },
+      createAccount(email, password, confirm) {
+        if (email.trim().length === 0) return "Enter an email.";
+        if (password.length < 1) return "Enter a password.";
+        if (password !== confirm) return "Those passwords do not match.";
+        setSignedIn(true);
+        return null;
       },
       setChatMode(mode) {
         setChatModeState(mode);
@@ -214,7 +233,7 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
         return null;
       },
     };
-  }, [chatMode, entries, hasPassphrase, locked, memories, pinnedMemoryIds, useMemories]);
+  }, [chatMode, entries, hasPassphrase, locked, memories, pinnedMemoryIds, signedIn, useMemories]);
 
   return (
     <AppSessionContext.Provider value={value}>
