@@ -14,6 +14,27 @@ import { privacyRoutes } from "./api/privacy.js";
 import { databaseRoutes } from "./api/lock.js";
 import type { DatabaseStore } from "./store/db.js";
 
+export const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self'",
+  "img-src 'self' data:",
+  "font-src 'self'",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join("; ");
+
+const SECURITY_HEADERS = {
+  "content-security-policy": CONTENT_SECURITY_POLICY,
+  "x-content-type-options": "nosniff",
+  "referrer-policy": "no-referrer",
+  "cross-origin-opener-policy": "same-origin",
+  "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+} as const;
+
 export interface AppDeps {
   provider: InferenceProvider;
   safety: SafetyLayer;
@@ -37,6 +58,12 @@ export async function buildApp(deps: AppDeps, logger: FastifyServerOptions["logg
     },
   } });
   databaseRoutes(app, deps.database);
+
+  // Phase 5 / §3: everything comes from the hub itself; the browser may not call out,
+  // be framed, or send referrers. SSE replies are hijacked and carry their own headers.
+  app.addHook("onSend", async (_request, reply) => {
+    for (const [name, value] of Object.entries(SECURITY_HEADERS)) reply.header(name, value);
+  });
 
   app.setErrorHandler((error: { statusCode?: number; code?: string }, request, reply) => {
     const status = error.statusCode ?? 500;
