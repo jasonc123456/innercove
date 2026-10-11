@@ -35,8 +35,7 @@ Every system change on the borrowed GX10, one line each, with its exact undo ste
 | 17 | 2026-10-10 | `sudo chown asus:asus ~/innercove/data` (Docker had created the bind-mount folder as root, so the container's `node` user couldn't create the encrypted DB) | None needed; the folder goes with the repo (`rm -rf ~/innercove`, which needs `sudo` only if Docker recreates it as root) |
 | 18 | 2026-10-10 | `sudo ufw allow from 192.168.2.0/24 to any port 8000 proto tcp comment 'innercove: app from LAN (D46)'`; the app container binds 0.0.0.0:8000 via `INNERCOVE_HOST`/`ALLOW_NON_LOOPBACK` in `~/innercove/.env` | `sudo ufw delete allow from 192.168.2.0/24 to any port 8000 proto tcp`; remove the two lines from `.env` and `docker compose up -d` |
 | 19 | 2026-10-10 | Built separate ARM64 database verification image `innercove-db-verify:8e96d52` from checkout `8e96d52`; linux arm64 / Node v22.23.3; spike 18/18 and production database smoke passed (combined exit 0). Existing running Compose service not replaced | `docker image rm innercove-db-verify:8e96d52` |
-
-| 20 | 2026-10-10 | Created separate detached verification worktree `~/innercove-phase2-verify` at `6d8a89c`; teammates' modified checkout preserved | `git worktree remove ~/innercove-phase2-verify` |
+| 20 | 2026-10-10 | Created separate detached verification worktree `~/innercove-phase2-verify` at `6d8a89c` (implementation `9afda54`); teammates' modified checkout preserved | `git worktree remove ~/innercove-phase2-verify` |
 | 21 | 2026-10-10 | Built isolated image `innercove-phase2-verify:6d8a89c` (build exit 0); linux arm64 / Node v22.23.3; SQLCipher spike 18/18 and expanded production smoke passed (combined exit 0). Separate container with no network or live data mounts; running teammate containers preserved; smoke/Fake provider only | `docker image rm innercove-phase2-verify:6d8a89c` |
 
 ## Verification follow-up (2026-10-10; no system change)

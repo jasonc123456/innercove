@@ -869,7 +869,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Next/separate:** hand C the existing contracts and coordinate target verification with A. Phase 3 memory CRUD/revoke/re-confirmation and Phase 5 settings/delete-all/seed remain separate; external SQLCipher/Android interoperability remains unverified. No plaintext fallback or runtime encryption configuration change.
 
 **B (Angela), Phase 2 isolated GX10 verification (2026-10-10, checkout `6d8a89c`):**
-- **Build/runtime:** operator-reported image `innercove-phase2-verify:6d8a89c` built successfully (exit 0); runtime linux arm64, Node v22.23.3.
+- **Build/runtime:** checkout `6d8a89c` contains implementation `9afda54`; operator-reported image `innercove-phase2-verify:6d8a89c` built successfully (exit 0); runtime linux arm64, Node v22.23.3.
 - **Checks:** SQLCipher spike 18/18 and expanded production smoke PASS; combined exit 0. Smoke covers setup/lock/unlock, diary CRUD/FTS, SQL saved chat/reopen including the legacy demo flag, packaged migrations, SIGTERM shutdown and plaintext rejection.
 - **Isolation:** separate detached worktree `~/innercove-phase2-verify` and container with no network or live data mounts. Teammates' modified checkout and running containers were preserved. These checks used the smoke/Fake provider, not live Qwen or browser integration.
 - **B status:** implemented Phase 2 backend now verified both locally and in the isolated GX10 ARM64 image. This supersedes the previous handoff's target-runtime-pending status; its local 111-test results remain local, not a newly claimed GX10 suite run.
