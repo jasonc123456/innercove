@@ -73,4 +73,4 @@ InnerCove is a non-clinical companion. It is not therapy, a diagnosis tool or an
 
 ## Built with
 
-asus-gx10, qwen, lm-studio, llama.cpp, typescript, node.js, fastify, react, vite, tailwindcss, zod, sqlite, sqlcipher, drizzle-orm, whisper.cpp, ffmpeg, docker, server-sent-events, vitest, github-actions, tailscale, openssl, totp, gitleaks, cuda
+asus-gx10, qwen, lm-studio, whisper.cpp, typescript, node.js, fastify, react, tailwindcss, sqlite, sqlcipher, docker
