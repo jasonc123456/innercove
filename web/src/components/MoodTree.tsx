@@ -77,7 +77,7 @@ export function MoodTree({ days, evolving = false }: { days: DailyCheckIn[]; evo
       <title>{["", "Your sapling", "Your growing tree", "Your flourishing tree"][art.stage]}</title>
       <desc>{days.length} days of checking in, regardless of mood. {grouped ? `${grouped} earlier days are grouped; all days remain in your history.` : "Each leaf represents one day."}</desc>
       <path d={`M0 ${art.ground-2}Q${art.width/2} ${art.ground+16} ${art.width} ${art.ground-4}V${art.height}H0Z`} fill="#c7dfc2" />
-      <path d={art.trunk} fill="none" stroke="#6d5239" strokeWidth={art.stage === 1 ? 10 : art.stage === 2 ? 13 : 17} strokeLinecap="round" />
+      <path d={art.trunk} fill="none" stroke="#6d5239" strokeWidth={art.stage === 1 ? 14 : art.stage === 2 ? 22 : 30} strokeLinecap="round" />
       {art.branches.map(b => <path key={b.d} d={b.d} fill="none" stroke="#6d5239" strokeWidth={b.width} strokeLinecap="round" />)}
       <ellipse cx={art.width/2} cy={art.ground+2} rx={art.stage === 3 ? 55 : 33} ry="7" fill="#a6c99e" opacity=".75" />
       {shown.map((day,index) => {
