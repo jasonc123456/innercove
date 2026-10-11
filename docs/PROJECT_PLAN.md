@@ -519,7 +519,7 @@ Estimates are uncertain. P0 is about **18–25 engineer-hours, or 8–10 wall-cl
     - the suite, ID, tier and category.
   - **Name the output folder** `prep/results/<YYYYMMDD-HHMM>-<model>[-<variant>]/`. Then write `replies.md` and fill in copies of the two scoring CSVs. Pre-event, Claude produced first-pass scores and a person reviewed them.
 
-**Phase 1 — Skeleton plus stateless (temporary) chat.** Owners A and C · ~3 h · Prerequisites: Q1 answered. It can start before Phase 0 finishes by using `FakeProvider`.
+**Phase 1 — Skeleton plus stateless (temporary) chat.** Owners A and C · ~3 h · Prerequisites: Q1 answered. It can start before Phase 0 finishes by using `FakeProvider`. **Complete on 2026-10-10 under the confirmed D46 event network amendment; see the latest GX10 Phase log.**
 - **Files:**
   - The repo scaffold, with `AGENTS.md` and a `CLAUDE.md` that points to it.
   - `core/inference/{provider,lmstudio,fake,strip-reasoning}`.
@@ -530,7 +530,7 @@ Estimates are uncertain. P0 is about **18–25 engineer-hours, or 8–10 wall-cl
   - Switching to the fake provider is an environment change only.
   - `<think>`-stripping tests pass, including tags split across chunks.
   - Nothing is written to the DB, and the canary isn't in the app logs.
-  - `docker compose up` works on the GX10, bound to 127.0.0.1.
+  - `docker compose up` works on the GX10, bound to 127.0.0.1 by default; D46 explicitly amends the event deployment to opt-in LAN access restricted by UFW to the approved subnet.
 
 **Phase 2 — Persistence: encrypted database, conversations, diary.** Owner B for the backend, C for the UI · 4–5 h · Prerequisites: Phase 1 and decisions 5, 7 and D26.
 - **Files:**
@@ -837,6 +837,20 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Mock-only:** memories are not `/api/memories`. Setup, unlock, and diary do not call B’s lock or diary routes.
 - **Not verified:** live retrieval, permission filtering, or D33 against the server. Chat still answers 423 until the real unlock runs.
 - **Next:** point setup and unlock at B’s endpoints, then retest chips on `DEV_STORE=demo`.
+
+**B (Angela), additional GX10 verification and Phase 1 closure (2026-10-10):**
+- **Attribution:** operator-reported live results; teammates redeployed during testing. Only the final network check is attributed to checkout `86e63cb`; earlier browser/canary checks are not all attributed to that commit. This supplements the historical `8e96d52` database verification and incomplete assessment above.
+- **UI/progressive SSE PASS:** `qwen/qwen3.8-27b` successfully replied through the deployed UI. Browser `/api/infer` EventStream showed multiple `delta` events arriving at distinct timestamps, followed by `done`.
+- **Temporary-chat no-write PASS:** after a successful canary request, every encrypted database table's row count and content hash matched its baseline. The input canary was absent from current container application logs; no canary value or chat content is published here.
+- **Deployment/network PASS:** running `innercove-app-1`, host networking, `/app/data` mounted; UFW active with incoming default deny and port 8000 allowed only from the D46 LAN subnet. LM Studio port 1234 bound to loopback. The deployed app uses the confirmed D46 LAN exception; this is not evidence of a loopback-only app bind.
+- **Demo limitation:** `DEV_STORE=demo` was active: chat/retrieval uses fictional unencrypted in-memory data. The encrypted database no-write check establishes the temporary request left persisted tables unchanged; it does not prove SQL-backed saved-chat persistence or rule out changes to volatile demo state.
+- **Criterion 1 — Qwen UI streaming:** supported by the live UI reply and timestamp-separated SSE deltas above.
+- **Criterion 2 — fake provider by environment only:** supported by `createProvider`/`INFERENCE_PROVIDER`, `.env.example` and A's earlier fake-provider deployment.
+- **Criterion 3 — split-chunk think stripping:** supported by `strip-reasoning.test.ts` and the previously recorded GX10 99/99 tests at `8e96d52`.
+- **Criterion 4 — no DB writes / app-log canary absent:** supported by the successful temporary request, unchanged counts/hashes in every encrypted table and current container log inspection above, alongside earlier route/log tests.
+- **Criterion 5 — Compose deployment/network:** earlier Compose deployment evidence plus the live container/mount/network checks support the running GX10 deployment. The repo retains a loopback default; D46 explicitly amends D18/D31 for the event to the verified firewall-restricted LAN deployment.
+- **Phase 1 complete under D46:** all five criteria are supported by the combined evidence; no Phase 1 acceptance item remains unverified under that confirmed amendment. Earlier teammate handoffs and incomplete assessments remain historical.
+- **Separate remaining work:** Phase 2 conversation/diary repositories and APIs, SQL-backed persistent chat/history and permission enforcement remain incomplete. External SQLCipher/Android interoperability remains unverified. No runtime encryption configuration changed and no plaintext database fallback enabled.
 
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
