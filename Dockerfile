@@ -6,6 +6,8 @@ RUN npm install --no-audit --no-fund
 COPY web/ ./
 # The help page bundles D's crisis resources (web/src/safety/crisisResources.ts).
 COPY config /app/config
+# The mood tree imports shared check-in logic straight from core's source (tree-growth.ts).
+COPY packages/core/src /app/packages/core/src
 RUN npm run build
 
 FROM node:22-bookworm-slim AS server

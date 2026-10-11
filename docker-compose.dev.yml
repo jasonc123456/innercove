@@ -49,6 +49,8 @@ services:
       - ./data/tls:/app/tls:ro
       # The help page bundles D's crisis resources from config/.
       - ./config:/app/config:ro
+      # The mood tree imports shared check-in logic from packages/core/src (tree-growth.ts).
+      - ./packages/core/src:/app/packages/core/src:ro
       - dev_web_node_modules:/app/web/node_modules
     command: >-
       sh -c "npm install --no-audit --no-fund --no-package-lock
