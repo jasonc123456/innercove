@@ -10,7 +10,7 @@ Use the fictional persona **Jordan** only. Narration is in quotes; ▶ is what's
 
 ## Before recording
 
-- [ ] Hub wiped and Jordan's persona loaded; entries **Office hours tomorrow** (AI may use this) and **Thinking about switching majors** (private) created.
+- [ ] Hub wiped and Jordan's persona loaded (8 entries: 6 shared with the AI such as **Grade posted**, 2 private such as **Dad's new apartment**). Nothing to add by hand.
 - [ ] Desktop browser at `https://192.168.2.151:8000` (use the LAN address, not the Tailscale name). Light or dark theme, but the same for every take.
 - [ ] Phone with the local CA installed, signed in at the same address, microphone allowed, one test recording done.
 - [ ] Chat set to **Save**, **Memories** on, tone **Warm**, a **new chat**.
@@ -37,17 +37,17 @@ This is InnerCove: a private AI companion that runs entirely on this ASUS GX10. 
 
 ## Scene 3: Open up, and see what the AI saw (0:35–1:10)
 
-▶ Chat (Save, Memories on). Type: *"I'm nervous about tomorrow and kind of rethinking everything about school."* Send. Let the reply stream (speed up the wait).
+▶ Chat (Save, Memories on). Type: *"I keep putting off emailing my chem professor about my midterm grade."* Send. Let the reply stream (speed up the wait).
 
 "Jordan writes the way they'd write in a journal. InnerCove answers like a friend who remembers them."
 
-▶ Tap **Had access to …** under the reply, then the *Office hours tomorrow* chip to open **What was sent**.
+▶ Tap **Had access to …** under the reply, then the *Grade posted* chip to open **What was sent**.
 
-"And it shows its work. It used the office-hours entry Jordan chose to share, word for word. Jordan's private entry about switching majors? Never sent. Every diary entry has its own switch."
+"And it shows its work: the entries Jordan chose to share, like 'Grade posted', word for word. Jordan's private entries, like 'Dad's new apartment'? Never sent. Every diary entry has its own switch."
 
 ## Scene 4: Change your mind (1:10–1:30) [cut]
 
-▶ Diary → open **Office hours tomorrow** → untick **AI may use this entry** → back to Chat → send *"Can you help me get ready?"* → point at *"The server left 1 earlier exchange out of this reply."*
+▶ Diary → open **Grade posted** → untick **AI may use this entry** → back to Chat → send *"Can you help me figure out what to ask?"* → point at *"The server left 1 earlier exchange out of this reply."*
 
 "Change your mind at any time. Turn an entry off, and from the next message on InnerCove leaves it out, and tells you it did."
 
