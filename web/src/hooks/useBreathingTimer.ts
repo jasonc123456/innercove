@@ -27,7 +27,12 @@ export function useBreathingTimer(style: BreathingStyle, cycles: number) {
     return stopLoop;
   }, [running, stopLoop, tick]);
 
-  useEffect(() => () => clock.current.dispose(performance.now()), []);
+  // Pause, not dispose: React StrictMode (dev) runs this cleanup on a simulated unmount and then
+  // mounts again with the same clock; a disposed clock ignores start(), so Start did nothing.
+  useEffect(() => {
+    const current = clock.current;
+    return () => current.pause(performance.now());
+  }, []);
 
   useEffect(() => {
     const onVisibility = () => {
