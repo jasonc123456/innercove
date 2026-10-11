@@ -95,7 +95,8 @@ export function DashboardPage() {
               aria-label={`Log mood: ${mood.label}`}
             >
               <span className="text-2xl lg:text-3xl" aria-hidden="true">{mood.emoji}</span>
-              <span className="mt-1 text-xs font-semibold text-ink">{mood.label}</span>
+              {/* The tiles stay pastel in both themes, so their label keeps dark ink. */}
+              <span className="mt-1 text-xs font-semibold text-[#1c2430]">{mood.label}</span>
             </button>
           ))}
         </div>
