@@ -30,7 +30,7 @@ test('isolated app retains real auth/security, encryption, loopback and cleanup'
     assert.equal((await app.inject({ ...audio, headers: { ...audio.headers, cookie } })).statusCode, 400);
     assert.equal((await app.inject({ ...audio, headers: { ...audio.headers, cookie, origin: 'https://untrusted.invalid' } })).statusCode, 403);
     const normal = await buildApp({ database, provider: new FakeProvider(), safety: noSafety, systemPrompt: 'fictional', stats: { lastReply: null } }, false);
-    try { assert.match(String((await normal.inject('/api/health')).headers['permissions-policy']), /microphone=\(\)/); }
+    try { assert.match(String((await normal.inject('/api/health')).headers['permissions-policy']), /microphone=\(self\)/); }
     finally { await normal.close(); }
   } finally { await app.close(); }
   assert.equal(existsSync(directory), false);

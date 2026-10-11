@@ -20,8 +20,8 @@ export async function createVoiceVerificationApp() {
       stats: { lastReply: null }, webDist: path.join(root, 'web/dist') }, false);
     app.addHook('onSend', async (_request, reply) => {
       const policy = String(reply.getHeader('permissions-policy') ?? '');
-      // Fail rather than replace an unexpected future security policy.
-      if (!policy.includes('microphone=()')) throw new Error('Unexpected microphone policy');
+      // The main app now allows the microphone for its own origin; fail on any other policy.
+      if (!policy.includes('microphone=()') && !policy.includes('microphone=(self)')) throw new Error('Unexpected microphone policy');
       reply.header('permissions-policy', policy.replace('microphone=()', 'microphone=(self)'));
     });
     app.addHook('onClose', async () => { rmSync(directory, { recursive: true, force: true }); });

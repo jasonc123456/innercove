@@ -34,7 +34,8 @@ const SECURITY_HEADERS = {
   "x-content-type-options": "nosniff",
   "referrer-policy": "no-referrer",
   "cross-origin-opener-policy": "same-origin",
-  "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+  // Voice input records on this origin only; every other device feature stays off.
+  "permissions-policy": "camera=(), microphone=(self), geolocation=(), payment=(), usb=()",
 } as const;
 
 export interface AppDeps {

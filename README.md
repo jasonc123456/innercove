@@ -73,6 +73,16 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 
 This serves Vite on port 8000 and keeps the API on `127.0.0.1:8001`. It mounts source and uses the same `data/` database as the packaged path. This is a development server, not the judging build.
 
+## Voice input on the local network
+
+InnerCove doesn't require HTTPS for voice; the hub is used over plain `http` on the local network. Browsers, though, only give pages the microphone on HTTPS or `localhost`, so allow the hub's address once on the device you demo from (the browser then asks for microphone permission):
+
+- **Chrome or Edge (desktop, Android Chrome):** open `chrome://flags/#unsafely-treat-insecure-origin-as-secure` (Edge: `edge://flags/#unsafely-treat-insecure-origin-as-secure`), add `http://<hub address>:8000`, set it to Enabled and relaunch.
+- **Firefox:** in `about:config`, set `media.devices.insecure.enabled` and `media.getusermedia.insecure.enabled` to `true`.
+- **Or use localhost:** open `http://localhost:8000` in the hub's own browser, or forward it to a laptop with `ssh -L 8000:127.0.0.1:8000 <hub>` and open `http://localhost:8000` there.
+
+iOS Safari has no such setting; use one of the options above. Audio is transcribed on the hub (`/api/transcribe`, whisper.cpp) and never leaves it.
+
 ## Packaged / production-style run
 
 Native, using `.env`, built backend and bundled UI:

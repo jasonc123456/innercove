@@ -82,7 +82,11 @@ describe('recording-to-draft controller (mocked browser)', () => {
   });
   it('rejects unsupported browser and permission denial without leaking error text', async () => {
     getUserMedia.mockRejectedValue(new Error('PRIVATE DEVICE')); await controller.start(); expect(JSON.stringify(update.mock.calls)).not.toContain('PRIVATE DEVICE');
-    vi.stubGlobal('isSecureContext', false); await controller.start(); expect(fetch).not.toHaveBeenCalled();
+    vi.stubGlobal('isSecureContext', false); vi.stubGlobal('navigator', {}); await controller.start(); expect(fetch).not.toHaveBeenCalled();
+    expect(update).toHaveBeenLastCalledWith(expect.objectContaining({ phase: 'idle', error: expect.stringContaining('http address') }));
+  });
+  it('records on a plain-http LAN address when the browser allows the microphone', async () => {
+    vi.stubGlobal('isSecureContext', false); await controller.start(); expect(getUserMedia).toHaveBeenCalled();
   });
   it('rejects oversized chunks and recording errors without submitting', async () => {
     await controller.start(); Recorder.latest.ondataavailable?.({ data: new Blob([new Uint8Array(4194305)]) }); await flush(); expect(fetch).not.toHaveBeenCalled(); expect(trackStop).toHaveBeenCalled();

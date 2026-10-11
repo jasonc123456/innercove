@@ -58,8 +58,13 @@ export class VoiceRecording {
     const fail = (message: string) => { if (id === this.generation) { this.cancel(); this.publish('idle', 0, message); } };
     this.publish('requesting');
     try {
-      if (!globalThis.isSecureContext || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
-        fail('Recording needs a supported browser on localhost or HTTPS.'); return;
+      // No HTTPS requirement of our own: the hub is used on the local network over plain http.
+      // Browsers still hide the microphone there unless the hub's address is allowed (VOICE_INPUT.md).
+      if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+        fail(globalThis.isSecureContext
+          ? 'This browser can\'t record audio.'
+          : 'This browser blocks the microphone on this http address. Allow the hub\'s address in the browser (see Voice in the README), or open InnerCove on the hub itself.');
+        return;
       }
       const mimeType = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg']
         .find(type => MediaRecorder.isTypeSupported(type));

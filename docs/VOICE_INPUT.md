@@ -43,7 +43,7 @@ Inspect the fictional `.txt` results locally for recognizable words; report metr
 
 ## Browser handoff
 
-Hour 2 should probe `MediaRecorder.isTypeSupported()` rather than assume one format ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/isTypeSupported_static)). Candidate types: `audio/webm;codecs=opus`, `audio/ogg;codecs=opus`, `audio/mp4` (AAC), plus WAV for fixtures. FFmpeg decoding is required; a MIME label is not evidence of duration/validity. Browser/device capture remains untested. `getUserMedia` requires a secure context: localhost or HTTPS; the approved plain-HTTP LAN demo is not sufficient. A's current Permissions-Policy disables microphone access and requires coordination for Hour 2. Keep tap-start/tap-stop, 60-second auto-stop, transcript editing and explicit Send in C's future work.
+Hour 2 should probe `MediaRecorder.isTypeSupported()` rather than assume one format ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/isTypeSupported_static)). Candidate types: `audio/webm;codecs=opus`, `audio/ogg;codecs=opus`, `audio/mp4` (AAC), plus WAV for fixtures. FFmpeg decoding is required; a MIME label is not evidence of duration/validity. Browser/device capture remains untested. `getUserMedia` requires a secure context in browsers; for the plain-HTTP LAN demo, allow the hub's address in the browser (README "Voice input on the local network", D57). The app's Permissions-Policy is `microphone=(self)` (D57). Keep tap-start/tap-stop, 60-second auto-stop, transcript editing and explicit Send in C's future work.
 
 ## API and configuration
 
