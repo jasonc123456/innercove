@@ -5,6 +5,7 @@ import {
   type AccessLevel,
   type PracticeMemory,
 } from "../session/AppSession";
+import { useTimeZone } from "../timeZone";
 
 /** Signing in (D47) already unlocked the hub, so the page opens straight onto its data. */
 export function MemoryPage() {
@@ -14,6 +15,7 @@ export function MemoryPage() {
 function MemoryWorkspace() {
   // D49: InnerCove writes memories itself from saved chats; the user corrects, excludes or deletes them.
   const { memories, hubProblem, updateMemory, deleteMemory, setMemoryAccess } = useAppSession();
+  const { formatDate } = useTimeZone();
   const [params] = useSearchParams();
   const focusId = params.get("id");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -82,7 +84,7 @@ function MemoryWorkspace() {
                 <p className="text-xs text-ink/60">
                   {memory.origin === "ai_proposal" ? "Noted by InnerCove" : "Added by you"}
                   {" · "}
-                  {memory.createdAt.slice(0, 10)}
+                  {formatDate(memory.createdAt)}
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
                   <label className="mr-auto inline-flex min-h-11 cursor-pointer items-center gap-2 text-sm text-ink">

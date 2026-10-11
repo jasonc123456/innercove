@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, PageHeader, Problem, Row, secondaryButton, useHubApi } from "../components/Panel";
 import { TwoFactorCard } from "../components/TwoFactorCard";
 import { ADMIN_LOGINS, useAppSession } from "../session/AppSession";
 import { useTheme } from "../theme";
+import { allTimeZones, deviceTimeZone, useTimeZone } from "../timeZone";
 
 type Settings = {
   useMemoriesDefault: boolean;
@@ -71,6 +72,8 @@ export function SettingsPage() {
         <p className="mt-2 text-sm leading-relaxed text-ink/60">Saved on this browser. Signing in or out does not change it.</p>
       </Card>
 
+      <TimeZoneCard />
+
       <TwoFactorCard />
 
       <Card title="Defaults">
@@ -126,5 +129,33 @@ export function SettingsPage() {
         {deleted ? <p className="mt-2 text-sm text-ink/75" role="status">{deleted}</p> : null}
       </Card>
     </div>
+  );
+}
+
+/** Dates and times across the app (diary, memories) follow this zone. Saved on this browser, like the theme. */
+function TimeZoneCard() {
+  const { choice, setChoice, formatDateTime } = useTimeZone();
+  const zones = useMemo(() => allTimeZones(), []);
+  return (
+    <Card title="Time zone">
+      <label className="flex min-h-11 flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm text-ink">
+        Show dates and times in
+        <select
+          className="h-10 max-w-full rounded-xl border border-line bg-white px-3 text-sm"
+          value={choice}
+          onChange={(e) => setChoice(e.target.value)}
+        >
+          <option value="auto">Automatic ({deviceTimeZone()})</option>
+          {zones.map((zone) => (
+            <option key={zone} value={zone}>
+              {zone.replace(/_/g, " ")}
+            </option>
+          ))}
+        </select>
+      </label>
+      <p className="mt-2 text-sm leading-relaxed text-ink/60">
+        Now: {formatDateTime(new Date().toISOString())}. Saved on this browser.
+      </p>
+    </Card>
   );
 }

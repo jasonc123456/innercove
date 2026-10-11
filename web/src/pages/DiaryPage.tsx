@@ -9,6 +9,7 @@ import {
   type AccessLevel,
   type DiaryEntry,
 } from "../session/AppSession";
+import { useTimeZone } from "../timeZone";
 
 /** Signing in (D47) already unlocked the hub, so the page opens straight onto its data. */
 export function DiaryPage() {
@@ -17,6 +18,7 @@ export function DiaryPage() {
 
 function DiaryWorkspace() {
   const { entries, hubProblem, addEntry, updateEntry, deleteEntry } = useAppSession();
+  const { formatDateTime } = useTimeZone();
   const [params] = useSearchParams();
   const focusId = params.get("id");
   const [query, setQuery] = useState("");
@@ -111,6 +113,13 @@ function DiaryWorkspace() {
                 <span className="text-base font-medium text-ink">
                   {entry.title ?? "Untitled"}
                 </span>
+                <time dateTime={entry.createdAt} className="text-xs text-ink/60">
+                  {formatDateTime(entry.createdAt)}
+                  {/* Edited later than a minute after writing: show that too. */}
+                  {Date.parse(entry.updatedAt) - Date.parse(entry.createdAt) > 60_000
+                    ? ` · edited ${formatDateTime(entry.updatedAt)}`
+                    : ""}
+                </time>
                 <span className="text-sm text-ink/70">
                   {entry.accessLevel === "private"
                     ? "Private"

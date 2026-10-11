@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTimeZone } from "../timeZone";
 
 type Mood = {
   label: string;
@@ -29,16 +30,18 @@ export function DashboardPage() {
   const [logs, setLogs] = useState<Mood[]>([]);
   const [selected, setSelected] = useState<Mood | null>(null);
   const quote = useMemo(() => quotes[new Date().getDate() % quotes.length]!, []);
+  // The greeting and date follow the time zone chosen in Settings.
+  const { zone } = useTimeZone();
   const greeting = useMemo(() => {
-    const hour = new Date().getHours();
+    const hour = Number(new Intl.DateTimeFormat("en-US", { timeZone: zone, hour: "numeric", hourCycle: "h23" }).format(new Date()));
     if (hour < 5) return "Still up? Go gently tonight.";
     if (hour < 12) return "Good morning.";
     if (hour < 18) return "Good afternoon.";
     return "Good evening.";
-  }, []);
+  }, [zone]);
   const today = useMemo(
-    () => new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }),
-    [],
+    () => new Date().toLocaleDateString(undefined, { timeZone: zone, weekday: "long", month: "long", day: "numeric" }),
+    [zone],
   );
 
   function logMood(mood: Mood) {
