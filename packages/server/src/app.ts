@@ -49,6 +49,8 @@ export interface AppDeps {
   /** Explicit test adapter; production uses the request-bound SQL store. */
   store?: ChatStore;
   webDist?: string;
+  /** D49: InnerCove writes memories from saved chats. On in main.ts; tests opt in, since it adds a model call per turn. */
+  rememberNotes?: boolean;
   /** Test adapter for route tests that aren't about sign-in; production always uses the real SessionStore (D47). */
   sessionGuard?: SessionGuard;
 }

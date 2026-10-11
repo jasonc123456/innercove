@@ -10,7 +10,8 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import type { AppDeps } from "../app.js";
 import { filterHistory } from "../chat/history.js";
 import { NotFoundError, type ChatStore } from "../chat/ports.js";
-import { eligibleIds, loadEligiblePool, selectContext } from "../chat/retrieval.js";
+import { eligibleIds, loadEligiblePool, selectContext, usedContext } from "../chat/retrieval.js";
+import { writeNotes } from "../chat/remember.js";
 import { runTurn, type TurnHooks } from "../chat/turn.js";
 import { suggestExercise } from "../chat/exercise-suggestion.js";
 import { sendError, validationDetails } from "./errors.js";
@@ -34,7 +35,8 @@ export function chatRoutes(app: FastifyInstance, deps: AppDeps) {
         throw error;
       }
     }
-    return stream(request, reply, deps, message, savedChatHooks(store, conversationId, prior, message, useMemories, pinnedMemoryIds, dismissedExerciseIds));
+    const hooks = savedChatHooks(store, conversationId, prior, message, useMemories, pinnedMemoryIds, dismissedExerciseIds, deps);
+    return stream(request, reply, deps, message, hooks);
   });
 
   /** Temporary chats (D35): history comes from the browser; never writes rows or content logs. */
@@ -72,9 +74,11 @@ function savedChatHooks(
   useMemories: boolean,
   pinnedMemoryIds: readonly string[],
   dismissedExerciseIds: readonly ("breathing478" | "comfortable-breathing")[],
+  deps: Pick<AppDeps, "provider" | "safety" | "rememberNotes">,
 ): TurnHooks {
   const userId = store.userId;
   let conversationId = existingId;
+  let userMessageId: string | null = null;
   return {
     start: async (tier) => {
       conversationId ??= (await store.persistence.saveConversation({ userId, title: null })).id;
@@ -86,6 +90,7 @@ function savedChatHooks(
         safetyTier: tier,
         modelId: null,
       });
+      userMessageId = user.id;
       return { conversationId, userMessageId: user.id };
     },
     prepare: async () => {
@@ -102,7 +107,9 @@ function savedChatHooks(
         historyExcluded: excludedCount,
       };
     },
-    finish: async ({ text, modelId, tier, context }) => {
+    finish: async ({ text, modelId, tier, context: sent }) => {
+      // Everything eligible is sent (D49); record only what this exchange drew on, so D33 stays targeted.
+      const context = usedContext(sent, text);
       if (store.persistence.appendMessageWithContext) {
         const saved = await store.persistence.appendMessageWithContext({
           userId, conversationId: conversationId!, role: "assistant", content: text, safetyTier: tier, modelId,
@@ -127,6 +134,17 @@ function savedChatHooks(
         );
       }
       return saved.id;
+    },
+    remember: async (signal) => {
+      if (!deps.rememberNotes || !store.notes || !userMessageId) return [];
+      const notes = await writeNotes({
+        provider: deps.provider,
+        safety: deps.safety,
+        message,
+        existing: await store.notes.list(userId),
+        signal,
+      });
+      return notes.length ? store.notes.save(userId, userMessageId, notes) : [];
     },
     suggestExercise: (tier) => suggestExercise({
       message,

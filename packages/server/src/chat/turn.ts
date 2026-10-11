@@ -29,6 +29,8 @@ export interface TurnHooks {
   prepare?(): Promise<PreparedTurn>;
   /** After the reply is complete and screened. Returns the saved assistant message id, if any. */
   finish?(reply: { text: string; modelId: string; tier: SafetyTier; context: ContextItem[] }): Promise<string | null>;
+  /** D49: after a complete, unscreened tier-0 reply in a saved chat, note lasting facts from the user's message. */
+  remember?(signal: AbortSignal): Promise<{ id: string; content: string }[]>;
   /** A server-owned optional wellness suggestion; never used for crisis tiers. */
   suggestExercise?(tier: SafetyTier): SuggestedExercise | null;
 }
@@ -151,6 +153,11 @@ export async function runTurn(input: TurnInput): Promise<ReplyStats | null> {
   const assistantMessageId = shown
     ? ((await hooks.finish?.({ text: shown, modelId: provider.modelId, tier, context: prepared.context })) ?? null)
     : null;
+  if (tier === 0 && replacement === null && assistantMessageId && hooks.remember) {
+    const items = await hooks.remember(signal).catch(() => []);
+    if (signal.aborted) return null;
+    if (items.length) send("remembered", { items });
+  }
   send("done", { assistantMessageId, modelId: provider.modelId, ...stats });
   return stats;
 }

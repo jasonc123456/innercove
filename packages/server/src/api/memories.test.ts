@@ -205,7 +205,7 @@ describe("Phase 3 SQL memory API, provenance and prompt permissions", () => {
     expect(JSON.stringify(provider.prompts.at(-1))).not.toMatch(/FIRSTQUESTION|FIRSTREPLYCANARY|DERIVEDTEXTCANARY/);
   });
 
-  it("reuses relevance ranking, bounded context and pins with exact source IDs/sent text", async () => {
+  it("sends every eligible memory with pins first, bounded diary, exact source IDs/sent text (D49)", async () => {
     const { memory, diary, chat, provider, app } = await fixture();
     const eligible: string[] = [];
     for (let i = 0; i < 7; i++) eligible.push((await memory({ origin: "user", content: `chem fixture ${i}`, accessLevel: "ai_eligible", sources: manual })).json().id);
@@ -217,9 +217,9 @@ describe("Phase 3 SQL memory API, provenance and prompt permissions", () => {
     for (let i = 0; i < 4; i++) await diary({ origin: "manual", content: `chem diary ${i}`, accessLevel: "ai_eligible" });
     const turn = events((await chat("chem", null, true, [pinned.id, hidden.id, proposed.id])).body);
     const sources = turn.find(e => e.name === "context")!.data.sources as { id: string; type: string }[];
-    expect(sources.filter(s => s.type === "memory")).toHaveLength(6); // 5 relevant + one explicit pin
-    expect(sources.filter(s => s.type === "diary_entry")).toHaveLength(3);
-    expect(sources.map(s => s.id)).toContain(pinned.id);
+    expect(sources.filter(s => s.type === "memory")).toHaveLength(8); // D49: all 7 eligible + the pin, never private/proposed
+    expect(sources.filter(s => s.type === "diary_entry")).toHaveLength(4); // every eligible entry, under the cap of 6
+    expect(sources[0]!.id).toBe(pinned.id);
     expect(sources.filter(s => s.type === "memory" && s.id !== pinned.id).every(s => eligible.includes(s.id))).toBe(true);
     const prompt = JSON.stringify(provider.prompts.at(-1));
     expect(prompt).not.toMatch(/PRIVATEMEMORYCANARY|PROPOSEDMEMORYCANARY|DELETEDDIARYCANARY/);

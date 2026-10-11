@@ -4,7 +4,8 @@ import {
   type ConversationPersistencePort, type DiaryMemoryReadPort, type MessageContextReadPort,
   type RevocationReportingPort, type UserId,
 } from "@innercove/core";
-import { NotFoundError, type ChatStore } from "../chat/ports.js";
+import { NotFoundError, type ChatStore, type NotesPort } from "../chat/ports.js";
+import { MemoryRepository } from "./repos/memories.js";
 import type { DatabaseLease } from "./db.js";
 import { diaryEntries, memories, messages, messageContext, provenance, tombstones } from "./schema.js";
 import { ConversationRepository } from "./repos/conversations.js";
@@ -75,6 +76,31 @@ export class SqlChatStore implements ChatStore {
         eq(memories.accessLevel, "ai_eligible"), eq(memories.status, "approved"), cursor ? gt(memories.id, cursor) : undefined))
         .orderBy(asc(memories.id)).all().filter(r => policy.eligible("memory", r.id)).slice(0, limit)
         .map(r => ({ ...MemoryRecordSchema.parse(r), provenance: this.links("memory", r.id) as Awaited<ReturnType<DiaryMemoryReadPort["listMemoryCandidates"]>>[number]["provenance"] }));
+    },
+  };
+  notes: NotesPort = {
+    list: async (userId) => {
+      this.assertUser(userId);
+      const repo = new MemoryRepository(this.lease);
+      const notes = [];
+      for (let cursor: string | undefined; ; ) {
+        const page = repo.list(userId, { limit: 100, ...(cursor ? { cursor: cursor as never } : {}) });
+        notes.push(...page.memories.map((m) => ({ content: m.content, accessLevel: m.accessLevel })));
+        if (!page.nextCursor) break;
+        cursor = page.nextCursor;
+      }
+      return notes;
+    },
+    // An AI proposal (D38) approved in the same transaction (D49): the user excludes or deletes it afterwards.
+    save: async (userId, sourceMessageId, contents) => {
+      this.assertUser(userId);
+      const repo = new MemoryRepository(this.lease);
+      return this.lease.db.transaction(() => contents.map((content) => {
+        const proposed = repo.create(userId, { origin: "ai_proposal", content, accessLevel: "ai_eligible",
+          sources: [{ sourceType: "message", sourceId: sourceMessageId as never }] });
+        const saved = repo.review(userId, proposed.id, { status: "approved" });
+        return { id: saved.id, content: saved.content };
+      }))();
     },
   };
   revocations: RevocationReportingPort = {

@@ -65,6 +65,8 @@ export interface ChatEvents {
   suggestedExercise: SuggestedExercise;
   delta: { text: string };
   replaced: { text: string; reason: "screen" };
+  /** Saved chats only (D49): notes InnerCove just wrote from the user's message, already in use; the UI offers exclude/delete. */
+  remembered: { items: { id: string; content: string }[] };
   done: { assistantMessageId: string | null; modelId: string; firstWordMs: number | null; tokPerS: number | null };
   error: { code: string; message: string };
 }

@@ -89,6 +89,25 @@ export class InMemoryChatStore implements ChatStore {
     return id;
   }
 
+  setMemoryAccess(id: string, accessLevel: "private" | "ai_eligible") {
+    const row = this.memories.get(id);
+    if (row) row.accessLevel = accessLevel;
+  }
+
+  /** D49 notes: AI memories, approved on save and linked to the user message they came from. */
+  notes = {
+    list: async (_userId: string) =>
+      [...this.memories.values()].filter((m) => !m.deleted).map((m) => ({ content: m.content, accessLevel: m.accessLevel })),
+    save: async (_userId: string, sourceMessageId: string, contents: readonly string[]) =>
+      contents.map((content) => {
+        const id = this.addMemory({ content, origin: "ai_proposal" });
+        this.memories.get(id)!.provenance = [
+          { userId: this.userId, derivedType: "memory", derivedId: id, sourceType: "message", sourceId: sourceMessageId as never },
+        ];
+        return { id, content };
+      }),
+  };
+
   setDiaryAccess(id: string, accessLevel: "private" | "ai_eligible") {
     const row = this.diary.get(id);
     if (row) row.accessLevel = accessLevel;

@@ -92,21 +92,42 @@ describe("Phase 3: permission-controlled retrieval", () => {
     expect(after.all).not.toContain("Called Maya");
   });
 
-  it("injects only relevant memories (top 5), plus pinned ones (D27)", async () => {
+  it("sends every eligible memory, pinned and matching ones first, up to 40 (D49)", async () => {
     const { store, chat } = await setup();
-    store.addMemory({ content: MAYA });
     const lake = store.addMemory({ content: LAKE });
-    for (let i = 0; i < 6; i++) store.addMemory({ content: `Plays guitar in a band, song ${i}.` });
-    const relevant = await chat("Maya and I argued again");
-    expect(relevant.all).toContain("Maya");
-    expect(relevant.all).not.toContain("lake");
-    expect(relevant.all).not.toContain("guitar");
+    const maya = store.addMemory({ content: MAYA });
+    for (let i = 0; i < 45; i++) store.addMemory({ content: `Plays guitar in a band, song ${i}.` });
+    const memoryIds = (turn: Awaited<ReturnType<typeof chat>>) =>
+      turn.events.find((e) => e.name === "context")!.data.sources
+        .filter((s: { type: string }) => s.type === "memory").map((s: { id: string }) => s.id);
 
-    const guitar = await chat("guitar practice with the band tonight");
-    expect((guitar.all.match(/Plays guitar/g) ?? []).length).toBe(5);
+    const relevant = await chat("Maya and I argued again");
+    expect(memoryIds(relevant)).toHaveLength(40);
+    expect(memoryIds(relevant)[0]).toBe(maya);
+    expect(relevant.all).toContain(LAKE);
 
     const pinned = await chat("Maya and I argued again", { pinned: [lake] });
-    expect(pinned.all).toContain(LAKE);
+    expect(memoryIds(pinned).slice(0, 2)).toEqual([lake, maya]);
+  });
+
+  it("excluding a memory an exchange didn't draw on keeps that exchange (D33 stays targeted)", async () => {
+    const { store, chat } = await setup();
+    const lake = store.addMemory({ content: LAKE });
+    const maya = store.addMemory({ content: MAYA });
+    const first = await chat("Maya and I argued again");
+    const conversationId = first.events[0]!.data.conversationId as string;
+    expect(first.all).toContain(LAKE);
+
+    store.setMemoryAccess(lake, "private");
+    const second = await chat("Anything else?", { conversationId });
+    expect(second.all).not.toContain(LAKE);
+    expect(second.all).toContain("Maya and I argued again");
+    expect(second.events.find((e) => e.name === "historyExcluded")).toBeUndefined();
+
+    store.setMemoryAccess(maya, "private");
+    const third = await chat("Anything else?", { conversationId });
+    expect(third.all).not.toContain("Maya and I argued again");
+    expect(third.events.find((e) => e.name === "historyExcluded")?.data).toEqual({ count: 1 });
   });
 
   it("a faulty port that leaks a private memory still fails closed", async () => {

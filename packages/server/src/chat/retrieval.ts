@@ -13,6 +13,8 @@ export interface ContextItem {
   /** ISO date for diary entries. */
   date?: string;
   text: string;
+  /** Matched the user's message by keyword. Used with the reply to decide what this exchange drew on (D33). */
+  relevant: boolean;
 }
 
 export interface RetrievalLimits {
@@ -24,7 +26,8 @@ export interface RetrievalLimits {
   maxCandidates: number;
 }
 
-export const DEFAULT_LIMITS: RetrievalLimits = { memories: 5, diaryEntries: 3, diaryChars: 1200, maxCandidates: 1000 };
+/** D49: every memory the AI may use goes in (it decides what helps); diary entries are capped for prefill time. */
+export const DEFAULT_LIMITS: RetrievalLimits = { memories: 40, diaryEntries: 6, diaryChars: 800, maxCandidates: 1000 };
 
 export interface EligiblePool {
   memories: MemoryCandidateWithProvenance[];
@@ -67,8 +70,9 @@ export function eligibleIds(pool: EligiblePool): Set<string> {
 }
 
 /**
- * D27: only memories relevant to the message (top N), plus any the user pinned
- * for this chat, plus the top diary entries. Irrelevant items are never injected.
+ * D49 (supersedes D27's top-N rule): every eligible memory, pinned first, then the
+ * ones matching the message, then the most recent; the model decides which help.
+ * Diary entries the user shared: matching ones first, then the most recent.
  */
 export function selectContext(
   pool: EligiblePool,
@@ -94,38 +98,47 @@ export function selectContext(
     for (const t of query) if (present.has(t)) s += Math.log(1 + docs.length / (df.get(t) ?? 1));
     return s;
   };
-  const ranked = <T extends { record: { updatedAt: string } }>(items: (T & { terms: string[] })[]) =>
+  const ordered = <T extends { record: { id: string; updatedAt: string } }>(items: (T & { terms: string[] })[]) =>
     items
-      .map((item) => ({ item, s: score(item.terms) }))
-      .filter((x) => x.s > 0)
-      .sort((a, b) => b.s - a.s || b.item.record.updatedAt.localeCompare(a.item.record.updatedAt))
-      .map((x) => x.item);
+      .map((item) => ({ item, s: score(item.terms), pin: pinned.has(item.record.id) ? 1 : 0 }))
+      .sort((a, b) => b.pin - a.pin || b.s - a.s || b.item.record.updatedAt.localeCompare(a.item.record.updatedAt));
 
-  const memoryDocs = docs.filter((d) => d.kind === "memory");
-  const diaryDocs = docs.filter((d) => d.kind === "diary_entry");
-  const pinnedMemories = pool.memories.filter((m) => pinned.has(m.id));
-  const relevantMemories = ranked(memoryDocs)
-    .filter((d) => !pinned.has(d.record.id))
-    .slice(0, limits.memories)
-    .map((d) => d.record as MemoryCandidateWithProvenance);
-  const relevantDiary = ranked(diaryDocs)
-    .slice(0, limits.diaryEntries)
-    .map((d) => d.record as DiaryEntryCandidate);
+  const memories = ordered(docs.filter((d) => d.kind === "memory")).slice(0, limits.memories);
+  const diary = ordered(docs.filter((d) => d.kind === "diary_entry")).slice(0, limits.diaryEntries);
 
   return [
-    ...[...pinnedMemories, ...relevantMemories].map(
-      (m): ContextItem => ({ type: "memory", id: m.id, title: shorten(m.content, 60), text: m.content }),
-    ),
-    ...relevantDiary.map(
-      (d): ContextItem => ({
+    ...memories.map(({ item, s }): ContextItem => {
+      const m = item.record as MemoryCandidateWithProvenance;
+      return { type: "memory", id: m.id, title: shorten(m.content, 60), text: m.content, relevant: s > 0 };
+    }),
+    ...diary.map(({ item, s }): ContextItem => {
+      const d = item.record as DiaryEntryCandidate;
+      return {
         type: "diary_entry",
         id: d.id,
         title: d.title ?? d.createdAt.slice(0, 10),
         date: d.createdAt.slice(0, 10),
         text: shorten(d.content, limits.diaryChars),
-      }),
-    ),
+        relevant: s > 0,
+      };
+    }),
   ];
+}
+
+/**
+ * The items an exchange drew on, for `message_context` and so D33: ones matching the
+ * message, plus ones the reply echoes. Everything is sent (D49), but recording all of
+ * it would make excluding one memory hide the whole conversation from the model.
+ */
+export function usedContext(context: readonly ContextItem[], reply: string): ContextItem[] {
+  const replyTerms = new Set(terms(reply));
+  return context.filter((item) => {
+    if (item.relevant) return true;
+    const itemTerms = new Set(terms(item.text));
+    let shared = 0;
+    for (const t of itemTerms) if (replyTerms.has(t)) shared++;
+    return shared >= Math.min(2, itemTerms.size);
+  });
 }
 
 const STOPWORDS = new Set(

@@ -32,6 +32,7 @@ const database = new DatabaseStore(fromRoot(env.DB_PATH ?? "data/innercove.db"))
 const app = await buildApp({
   database,
   provider: createProvider(env),
+  rememberNotes: true,
   safety: rulesSafety(loadSafetyConfigs()),
   systemPrompt: readFileSync(promptPath, "utf8").trim(),
   stats: { lastReply: null },
