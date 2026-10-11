@@ -167,7 +167,8 @@ export async function runTurn(input: TurnInput): Promise<ReplyStats | null> {
   const assistantMessageId = shown
     ? ((await hooks.finish?.({ text: shown, modelId: provider.modelId, tier, context: prepared.context })) ?? null)
     : null;
-  if (tier === 0 && replacement === null && assistantMessageId && hooks.remember) {
+  // D51: tier-1 turns may note what helps or what was hard; tier 2 never reaches the model or the note writer.
+  if (tier <= 1 && replacement === null && assistantMessageId && hooks.remember) {
     const items = await hooks.remember(signal).catch(() => []);
     if (signal.aborted) return null;
     if (items.length) send("remembered", { items });

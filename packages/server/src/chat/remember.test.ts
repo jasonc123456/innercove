@@ -64,12 +64,23 @@ describe("note writer (D49)", () => {
 
   it("drops clinical notes, crisis notes and anything the user already excluded", async () => {
     const notes = await writeNotes({
-      provider: provider('["Has depression", "Takes sertraline", "Thinks about suicide", "Has a biology exam on Friday", "Plays guitar"]'),
+      provider: provider('["Has depression", "Takes sertraline", "Thinks about suicide", "Has a biology exam on Friday", "Plays guitar", "Wants to build study skills"]'),
       safety: rulesSafety(loadSafetyConfigs()),
       message: "fixture",
       existing: [{ content: "Plays guitar in a band", accessLevel: "private" }],
     });
-    expect(notes).toEqual(["Has a biology exam on Friday"]);
+    expect(notes).toEqual(["Has a biology exam on Friday", "Wants to build study skills"]);
+  });
+
+  it("keeps a gentle support note but never how, with what, or when (D51)", async () => {
+    const write = (note: string) => writeNotes({
+      provider: provider(JSON.stringify([note])), safety: rulesSafety(loadSafetyConfigs()), message: "fixture", existing: [],
+    });
+    expect(await write("Has hurt themself before when exam stress built up")).toEqual(["Has hurt themself before when exam stress built up"]);
+    expect(await write("Worries about hurting themself again during exams")).toEqual(["Worries about hurting themself again during exams"]);
+    for (const note of ["Has cut themself before", "Hurt themself with pills last year", "Plans to hurt themself tomorrow", "Wants to kill themself", "Has self-harmed 3 times"]) {
+      expect(await write(note)).toEqual([]);
+    }
   });
 
   it("never shows the model a memory the user excluded", async () => {
@@ -99,6 +110,14 @@ describe("note writer (D49)", () => {
     // The same fact again adds nothing.
     const again = await send("/api/chat", "Biology exam Friday, still nervous");
     expect(again.some((e) => e.name === "remembered")).toBe(false);
+  });
+
+  it("a tier-1 turn (crisis card shown) can add a support note (D51)", async () => {
+    const store = new InMemoryChatStore();
+    const { send } = await setup(provider('["Has hurt themself before when stressed"]'), { store, safety: true });
+    const events = await send("/api/chat", "I'm worried I might hurt my self again when exams get overwhelming");
+    expect(events.find((e) => e.name === "meta")!.data.tier).toBe(1);
+    expect(events.find((e) => e.name === "remembered")!.data.items).toMatchObject([{ content: "Has hurt themself before when stressed" }]);
   });
 
   it("temporary chats, crisis turns and the option being off write nothing", async () => {

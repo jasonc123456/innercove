@@ -11,16 +11,23 @@ export interface ExistingNote {
 export const MAX_NEW_NOTES = 2;
 const MAX_NOTE_CHARS = 160;
 const TIMEOUT_MS = 15_000;
-/** Backs the prompt's rule deterministically: no health, medication or crisis notes, whatever the model says. */
+/** Backs the prompt's rule deterministically: no diagnoses or medication, whatever the model says. */
 const CLINICAL =
-  /diagnos|disorder|depress|anxiety|panic attack|bipolar|ptsd|trauma|adhd|autis|ocd|schizo|psychos|anorexi|bulimi|insomnia|therap|psychiatr|medicat|prescri|\bmeds?\b|pills?\b|dose|overdose|suicid|self-harm|self harm|cutting|kill|die\b|dying|hospital|antidepress|ssri|benzo|stimulant|sertraline|zoloft|fluoxetine|prozac|escitalopram|lexapro|citalopram|celexa|paroxetine|paxil|venlafaxine|effexor|duloxetine|cymbalta|bupropion|wellbutrin|mirtazapine|trazodone|lithium|lamotrigine|lamictal|quetiapine|seroquel|aripiprazole|abilify|olanzapine|risperidone|xanax|alprazolam|klonopin|clonazepam|ativan|lorazepam|valium|diazepam|adderall|ritalin|vyvanse|methylphenidate|zolpidem|ambien/i;
+  /diagnos|disorder|depress|anxiety|panic attack|bipolar|ptsd|trauma|adhd|autis|ocd|schizo|psychos|anorexi|bulimi|insomnia|therap|psychiatr|medicat|prescri|\bmeds?\b|\bpills?\b|\bdoses?\b|overdos|hospital|antidepress|ssri|benzo|stimulant|sertraline|zoloft|fluoxetine|prozac|escitalopram|lexapro|citalopram|celexa|paroxetine|paxil|venlafaxine|effexor|duloxetine|cymbalta|bupropion|wellbutrin|mirtazapine|trazodone|lithium|lamotrigine|lamictal|quetiapine|seroquel|aripiprazole|abilify|olanzapine|risperidone|xanax|alprazolam|klonopin|clonazepam|ativan|lorazepam|valium|diazepam|adderall|ritalin|vyvanse|methylphenidate|zolpidem|ambien/i;
+/** A support note (D51) says, gently, that the user has hurt themself before or worries they might. */
+const SUPPORT = /hurt|harm|themsel|suicid|\bkill|\bdie\b|dying|\bend(ing)? (it|things|their life)/i;
+/** What a support note must never hold: blunt words, how or with what, injuries, plans, timing or amounts. */
+const METHOD =
+  /suicid|\bkill|\bdie\b|dying|\bdead\b|\bpills?\b|\bdoses?\b|overdos|poison|\bcut(s|ting)?\b|blade|razor|knife|\bguns?\b|\bropes?\b|\bhang|\bjump|\bbridge|wrist|blood|bleed|\bburn|\bplan|tonight|tomorrow|\d/i;
 
 export const NOTE_WRITER_PROMPT = [
-  "You keep InnerCove's private notes about the user, so later conversations can be more personal.",
+  "You keep InnerCove's private notes about the user, so later conversations can be more personal and, when things are hard, gentler.",
   `Read the user's latest message and write at most ${MAX_NEW_NOTES} short notes about lasting facts worth remembering:`,
   "plans and deadlines, important people and how they relate to the user, routines, preferences, goals, what helps them.",
+  "If they share that they have hurt themselves before, or worry they might when things get overwhelming, you may write one support note in kind, plain words,",
+  "e.g. \"Has hurt themself before when exam stress built up\" or \"Worries about hurting themself again during exams\".",
   "Write each note in the third person without a name, under 120 characters, e.g. \"Has a biology exam on Friday\".",
-  "Never note: diagnoses or guesses about mental or physical health, medication, self-harm or crisis details,",
+  "Never note: diagnoses or guesses about mental or physical health, medication, how someone hurt themselves or could, injuries, plans or timing,",
   "passing moods, details about other people beyond their name and relation, or anything already in the existing notes.",
   "If nothing qualifies, return []. Reply with only a JSON array of strings.",
 ].join(" ");
@@ -28,7 +35,7 @@ export const NOTE_WRITER_PROMPT = [
 /**
  * D49: InnerCove writes its own memories from what the user says in a saved chat.
  * Only the user's message is read (never the reply, which may draw on diary entries),
- * every note passes the safety pre-screen and output screen, and near-duplicates of
+ * tier-1 turns may add a support note (D51), every note passes the safety pre-screen and output screen, and near-duplicates of
  * any existing memory, including ones the user excluded, are dropped. Never throws.
  */
 export async function writeNotes(input: {
@@ -67,8 +74,8 @@ export async function writeNotes(input: {
   const kept: string[] = [];
   for (const candidate of parseNotes(raw)) {
     if (kept.length >= MAX_NEW_NOTES) break;
-    if (CLINICAL.test(candidate)) continue;
-    if (input.safety.assess(candidate).tier !== 0 || !input.safety.screen(candidate).allowed) continue;
+    if (CLINICAL.test(candidate) || (SUPPORT.test(candidate) && METHOD.test(candidate))) continue;
+    if (input.safety.assess(candidate).tier === 2 || !input.safety.screen(candidate).allowed) continue;
     if ([...input.existing.map((n) => n.content), ...kept].some((other) => similar(candidate, other))) continue;
     kept.push(candidate);
   }
