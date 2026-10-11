@@ -154,9 +154,19 @@ content. Existing safety and lease/drain tests remain in the full suite.
 
 Local checks and precise counts are in the Phase log. The compiled HTTP smoke
 now also covers memory CRUD/review/provenance, durable revocation/re-confirmation
-and D33 history. Phase 2's recorded GX10 result predates these Phase 3 additions;
-this new code still requires isolated ARM64 verification and real UI/Qwen
-integration. The latest A handoff records Phase 2 SQL persistence live on GX10 and a
+and D33 history. Operator-reported GX10 verification on 2026-10-10 at
+checkout `62989a7` built `innercove-phase3-verify:62989a7` successfully (exit 0).
+Runtime linux arm64 / Node v22.23.3 passed the SQLCipher spike 18/18 and the
+compiled production smoke (combined exit 0), including setup/lock/unlock,
+diary CRUD/FTS, SQL saved chat/reopen with the legacy demo flag, memory
+CRUD/review/provenance, durable revocation/re-confirmation, D33 history,
+packaged migrations, SIGTERM and plaintext rejection. A separate detached
+worktree and container with `--network none` and no live data mounts left the
+live deployment unchanged. This closes isolated ARM64 smoke verification,
+not real Qwen/UI integration or a full GX10 test-suite run. Undo commands are
+recorded in `docs/SETUP_LOG.md` and have not been executed.
+
+The latest A handoff records Phase 2 SQL persistence live on GX10 and a
 17-check real-model API demo covering context, D33, temporary chat and safety;
 that supersedes the older Phase 2 backend-deployment-pending note, without
 verifying these new Phase 3 memory APIs. C’s newer static lock-screen help and
