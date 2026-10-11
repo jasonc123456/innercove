@@ -92,31 +92,52 @@ export function DashboardPage() {
   );
 }
 
+// Branches appear as the tree grows; every leaf sits ON a visible branch.
+const BRANCHES = [
+  { d: "M129 135c-19-14-33-26-43-45", width: 7, from: 0 },
+  { d: "M130 118c17-13 31-28 38-46", width: 7, from: 0 },
+  { d: "M128 92c-15-10-25-23-28-39", width: 6, from: 3 },
+  { d: "M130 93c13-11 22-24 25-39", width: 6, from: 3 },
+  { d: "M128 91c-1-8 0-15 1-21", width: 7, from: 6 }, // trunk grows taller for the top pair
+  { d: "M129 71c-9-9-14-20-15-32", width: 5, from: 6 },
+  { d: "M129 71c9-9 14-20 15-33", width: 5, from: 6 },
+] as const;
+
+// [x, y, angle]: the leaf's base sits on the branch (a tip or a midpoint) and points outward.
+// Leaf n only uses a branch that is already visible when there are n + 1 leaves.
+const SPOTS = [
+  [86, 90, -134], [168, 72, -50], [100, 53, -126], [155, 54, -57], [104, 114, 165],
+  [114, 39, -115], [144, 38, -66], [153, 97, 12], [146, 75, -18], [129, 70, -90],
+] as const;
+
 function MoodTree({ leaves }: { leaves: Mood[] }) {
-  const positions = [
-    [104, 82], [156, 73], [74, 126], [184, 123], [121, 52], [55, 83], [205, 84], [101, 145], [158, 145], [129, 28],
-  ] as const;
-  const shown = leaves.slice(-positions.length);
-  const branchTwo = leaves.length >= 3;
-  const branchThree = leaves.length >= 6;
+  const shown = leaves.slice(-SPOTS.length);
+  const grown = leaves.length;
 
   return (
-    <div className="mt-5 overflow-hidden rounded-3xl bg-[#e8f1e6] px-2 py-3" aria-label={`Growing mood tree with ${leaves.length} leaves`}>
-      <svg viewBox="0 0 260 210" className="mx-auto block h-48 max-w-full" role="img">
+    <div className="mt-5 overflow-hidden rounded-3xl bg-[#e8f1e6] px-2 py-3 lg:mt-0 lg:flex lg:h-full lg:items-end lg:py-6" aria-label={`Growing mood tree with ${leaves.length} leaves`}>
+      <svg viewBox="0 0 260 210" className="mx-auto block h-48 max-w-full lg:h-72" role="img">
         <title>Your mood sapling</title>
         <path d="M0 186c40-12 72-8 112 2 49 13 101 9 148-5v27H0z" fill="#c7dfc2" />
         <path d="M130 188C129 154 131 122 128 91" fill="none" stroke="#6d5239" strokeWidth="10" strokeLinecap="round" />
-        <path d="M129 135c-19-14-33-26-43-45" fill="none" stroke="#6d5239" strokeWidth="7" strokeLinecap="round" />
-        <path d="M130 118c17-13 31-28 38-46" fill="none" stroke="#6d5239" strokeWidth="7" strokeLinecap="round" />
-        {branchTwo ? <path d="M128 92c-15-10-25-23-28-39" fill="none" stroke="#6d5239" strokeWidth="6" strokeLinecap="round" /> : null}
-        {branchTwo ? <path d="M130 93c13-11 22-24 25-39" fill="none" stroke="#6d5239" strokeWidth="6" strokeLinecap="round" /> : null}
-        {branchThree ? <path d="M128 71c-9-9-14-20-15-32M130 70c9-9 14-20 15-33" fill="none" stroke="#6d5239" strokeWidth="5" strokeLinecap="round" /> : null}
+        {BRANCHES.filter((b) => grown >= b.from).map((b) => (
+          <path key={b.d} d={b.d} fill="none" stroke="#6d5239" strokeWidth={b.width} strokeLinecap="round" />
+        ))}
         <ellipse cx="130" cy="190" rx="33" ry="7" fill="#a6c99e" opacity=".75" />
         {shown.map((mood, index) => {
-          const [cx, cy] = positions[index]!;
-          return <ellipse key={`${mood.label}-${index}`} className="tree-leaf" cx={cx} cy={cy} rx="15" ry="9" fill={mood.color} transform={`rotate(${index % 2 === 0 ? -25 : 25} ${cx} ${cy})`} />;
+          const [x, y, angle] = SPOTS[index]!;
+          return (
+            // The outer group places and turns the leaf; the inner one grows it from its base,
+            // so the CSS animation never overrides the placement.
+            <g key={`${mood.label}-${index}`} transform={`translate(${x} ${y}) rotate(${angle})`}>
+              <g className="tree-leaf">
+                <path d="M0 0C5-6.5 14-8.5 23 0C14 8.5 5 6.5 0 0Z" fill={mood.color} />
+                <path d="M2 0H18" stroke="#fff" strokeOpacity=".35" strokeWidth="1" strokeLinecap="round" />
+              </g>
+            </g>
+          );
         })}
-        {leaves.length === 0 ? <circle cx="130" cy="82" r="13" fill="#91bf81" opacity=".9" /> : null}
+        {leaves.length === 0 ? <circle cx="128" cy="86" r="11" fill="#91bf81" opacity=".9" /> : null}
       </svg>
     </div>
   );
