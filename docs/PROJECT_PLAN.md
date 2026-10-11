@@ -885,6 +885,13 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Not run:** D's safety golden tests and the server safety suite.
 - **Next:** post the approved note through B's diary route once it exists, and do not bypass a 423.
 
+**C UI polish (2026-10-10). Phases 1–4 stay as previously recorded:**
+- **Visual:** Shared press feedback, a visible keyboard focus ring, and reduced-motion support for buttons and rounded links. Headings use tighter tracking. Message text wraps. Get help shows as selected on its page. The header note is darker for contrast.
+- **Files:** `web/src/index.css`, `web/src/components/AppShell.tsx`, `web/src/components/MessageList.tsx`, `web/src/components/MessageInput.tsx`.
+- **Checks:** `npm run build` in `web/` passed. Browser at 390px and 1280px: no horizontal overflow, Tab shows a 2px cove outline, a scripted reply still appears, Get help from the passphrase screen still opens the note form, and the Temporary warning text is unchanged. Reduced motion is in the stylesheet and matches when requested.
+- **Unchanged:** safety wording, crisis resources, consent text, privacy notices, and mock labels. No new libraries.
+- **Remaining:** setup, unlock, and diary are still not the live lock and diary routes. A support note is still saved only when `/api/diary` accepts it.
+
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
 1. Write diary entries A and B. Allow AI access to A only.

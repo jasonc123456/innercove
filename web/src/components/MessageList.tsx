@@ -55,8 +55,8 @@ export function MessageList({
             aria-live={isStreaming ? "polite" : undefined}
             className={
               isUser
-                ? "ml-8 rounded-2xl bg-cove px-4 py-3 text-base leading-relaxed text-white"
-                : "mr-8 rounded-2xl bg-foam px-4 py-3 text-base leading-relaxed text-ink"
+                ? "ml-8 rounded-2xl bg-cove px-4 py-3 text-base leading-relaxed break-words text-white"
+                : "mr-8 rounded-2xl bg-foam px-4 py-3 text-base leading-relaxed break-words text-ink"
             }
           >
             <span className="sr-only">
