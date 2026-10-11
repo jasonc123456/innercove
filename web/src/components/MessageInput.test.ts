@@ -81,11 +81,11 @@ it('keeps both action buttons disabled while submitting', () => {
   }
 });
 
-it('uses one compact grid row with a one-line, borderless textarea and bounded growth', () => {
+it('stacks the draft over the actions on phones and uses one compact row from sm up, with a borderless textarea and bounded growth', () => {
   const html = render();
   expect(html).toContain('rows="1"');
-  expect(html).toContain('grid-cols-[minmax(0,1fr)_auto] items-end');
-  expect(html).toContain('min-h-16');
+  expect(html).toContain('flex min-w-0 flex-col');
+  expect(html).toContain('sm:grid sm:min-h-16 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end');
   expect(html).not.toContain('min-h-44');
   expect(html).not.toContain('min-h-[72px]');
   const textarea = html.split('<textarea')[1].split('</textarea>')[0];
