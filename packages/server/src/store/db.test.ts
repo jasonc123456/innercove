@@ -49,6 +49,7 @@ describe("encrypted database foundation", () => {
       { hash: expect.stringMatching(/^[a-f0-9]{64}$/), created_at: 1791676800000 },
       // 0001_two_factor (A, D47): TOTP secret and hashed recovery codes.
       { hash: expect.stringMatching(/^[a-f0-9]{64}$/), created_at: 1791763200000 },
+      { hash: expect.stringMatching(/^[a-f0-9]{64}$/), created_at: 1791763200001 },
     ]);
     const tables = ["users", "conversations", "messages", "diary_entries", "memories", "devices", "settings", "provenance", "message_context", "tombstones", "diary_fts", "memory_fts"];
     for (const table of tables) expect(db.prepare(`PRAGMA table_info(${table})`).all()).toContainEqual(expect.objectContaining({ name: "user_id" }));
@@ -151,13 +152,13 @@ describe("encrypted database foundation", () => {
     const dir = mkdtempSync(path.join(tmpdir(), "innercove-migration-"));
     const { mkdirSync } = await import("node:fs");
     mkdirSync(path.join(dir, "meta"));
-    writeFileSync(path.join(dir, "meta/_journal.json"), JSON.stringify({ entries: [{ when: 1791763200001, tag: "bad", breakpoints: true }] }));
+    writeFileSync(path.join(dir, "meta/_journal.json"), JSON.stringify({ entries: [{ when: 1791763200002, tag: "bad", breakpoints: true }] }));
     writeFileSync(path.join(dir, "bad.sql"), "CREATE TABLE rollback_fixture(x);\n--> statement-breakpoint\nINSERT INTO missing_table VALUES(1);");
     const { migrate } = await import("drizzle-orm/better-sqlite3/migrator");
     try {
       expect(() => migrate(current.orm, { migrationsFolder: dir })).toThrow();
       expect(db.prepare("SELECT name FROM sqlite_master WHERE name='rollback_fixture'").get()).toBeUndefined();
-      expect(db.prepare("SELECT count(*) n FROM __drizzle_migrations").get()).toEqual({ n: 2 });
+      expect(db.prepare("SELECT count(*) n FROM __drizzle_migrations").get()).toEqual({ n: 3 });
     } finally { rmSync(dir, { recursive: true, force: true }); }
   });
 

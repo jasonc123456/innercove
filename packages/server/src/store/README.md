@@ -324,3 +324,17 @@ security/deployment coordination, C the future recorder/editable draft UI.
 The voice prototype does not change encrypted store, chat or safety behavior.
 
 Hour 2 recorder handoff is in [VOICE_INPUT.md](../../../../docs/VOICE_INPUT.md): GX10 ARM64 CLI measurements are recorded; mocked recorder/client tests pass, A’s real D47 session guard/cookie callback is now connected. Approved secure-origin microphone policy, packaged runtime and actual browser/API acceptance remain pending with A/C; unauthenticated requests remain rejected.
+
+## Daily check-in/tree handoff — 2026-10-11
+
+Explicit user-authorized daily persistence and tree evolution are documented in
+[CHECK_INS.md](../../../../docs/CHECK_INS.md). Migration 0002 uses an encrypted
+unique `(user_id,day)` daily snapshot, append-only mood events with scoped retry
+IDs, and persisted evolution acknowledgement. All routes use real D47 sessions
+and ordinary database leases. Delete-all removes moods, daily snapshots and
+acknowledgements before the existing VACUUM; fictional seeding rejects existing
+check-in content. Check-ins have no AI read/provenance path and are never added
+to temporary/saved chat prompts. Local full tests 265/265 and real authenticated
+compiled-server/Chromium checks pass; GX10 migration/UI and real phone checks
+remain pending. Prior Phase 2/3/5 verification is historical, not proof of this
+new schema/UI on GX10. No live data/deployment changed.

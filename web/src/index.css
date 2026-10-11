@@ -914,3 +914,8 @@ html[data-theme="dark"] .bg-\[\#e8f1e6\] {
 
 /* The composer boundary owns focus; its textarea has no second box/ring. */
 .voice-composer textarea:focus-visible { outline: none; }
+
+/* A single quiet evolution; no looping or flashing. */
+@keyframes tree-evolve { from { opacity: .65; transform: scale(.94); } to { opacity: 1; transform: scale(1); } }
+.tree-evolving { transform-origin: center bottom; animation: tree-evolve 600ms ease-out both; }
+@media (prefers-reduced-motion: reduce) { .tree-evolving { animation: none; } }

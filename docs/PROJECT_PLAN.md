@@ -490,7 +490,7 @@ If the client aborts, the server stops generating. In a saved chat the user's me
 5. ~~One curated exercise~~ **Done early (D, 2026-10-10):** guided breathing (4-7-8 and a no-hold 4-in/6-out option) under the Wellness Toolkit; grounding is still planned.
 6. ~~Memory proposals after a conversation (approve or reject).~~ **Replaced by D49 (A, 2026-10-11):** InnerCove writes memories automatically from saved chats; no approval step, the user excludes or deletes.
 7. Export/import, first plain JSON, then encrypted. **Export started (D53, A):** diary and memories by date range as Markdown or JSON; import and encryption not built.
-8. Check-ins with a Recharts trend. (The Home page's daily mood check-in exists but is session-only; nothing is stored yet. The diary editor's feeling picker is saved with each entry since D52.)
+8. Check-ins with a Recharts trend. **User-authorized daily persistence/tree growth implemented locally (2026-10-11):** one encrypted leaf per calendar day, recoloring, three stages and persisted evolution acknowledgement. Recharts trends remain unimplemented; GX10 verification pending. See `CHECK_INS.md`. The diary feeling picker remains separate (D52).
 9. Embedding retrieval.
 10. An escalate-only LLM risk classifier. Together with the embeddings in item 9, it turns the privacy panel into a **"models resident on this GX10"** view, which serves the hardware-acceleration criterion.
 11. **Model switcher** in settings: list LM Studio's models and switch between them live (⚠️ loading the 27B takes time). It shows off the adapter and the GX10's capacity.
@@ -499,7 +499,7 @@ If the client aborts, the server stops generating. In a saved chat the user's me
 **Added during the event (beyond the original plan, 2026-10-10).** Built by teammates on their own initiative or at the team's request; none of it replaces a P0 item, and the 3-minute pitch spine (§10) is unchanged. Details are in the Phase log.
 | Feature | Owner | State | Notes |
 |---|---|---|---|
-| **Home dashboard:** daily thought, color-coded mood check-in, a sapling that grows a leaf per check-in | D (Meowie); tree fix + desktop layout A | ✅ in the app | Session-only: nothing is stored or sent. Persisting check-ins is P1 #8 |
+| **Home dashboard:** daily thought, color-coded daily check-in, three growing tree stages | D (Meowie); layout A; daily persistence/growth B (user-authorized C UI edit) | ✅ locally verified; ⏳ GX10 | One encrypted leaf per unique local day; updates recolor without growth, history preserved, stages at 14/30 days and acknowledged evolution. Never shared with AI. Trends still P1 #8; see `CHECK_INS.md` |
 | **Wellness Toolkit + guided breathing** (`/exercises`, `/exercises/breathing`): 4-7-8 and no-hold 4/6, 1–4 cycles, pause/resume, reduced motion | D | ✅ | Chat can offer it through an allowlisted `suggestedExercise` SSE event (never for crisis tiers, never a model-chosen route). Grounding, guided journaling and thought reflection are shown as planned |
 | **Trauma-informed companion guidance** in the system prompt + 4 review cases (`tests/trauma-informed-cases.json`) | D | ✅ prompt; ⏳ eval | Run the cases with the next GX10 prompt-quality eval |
 | **Hardened safety checks** (medication requests, more blocked output categories, fail-closed config) | D | ✅ | Wellness prototype, not a clinical tool |
@@ -1201,6 +1201,13 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 **HTTPS (A, 2026-10-11 06:30, D58):** local CA + certificate (`scripts/make-dev-cert.sh`), Vite serves `https://…:8000` in dev mode; checked with curl against the CA (page and `/api` proxy). **Before rehearsal:** install the CA on each demo phone/laptop (README "HTTPS on the local network"), use the `https://` address, test one voice recording. **After the event:** remove the CA from every device (SETUP_LOG).
 
 **Voice transcription (A, 2026-10-11 07:00, D59):** `/api/transcribe` answered 503 on the live hub (no STT paths configured; the host whisper build needs glibc 2.38, the container has 2.36). The dev image now builds whisper.cpp v1.8.2 and installs ffmpeg; the model is in gitignored `data/stt/`. Checked: `whisper-cli` in the image and the app's `configuredTranscriber()` in the live container transcribe B's fictional clip exactly (6.1 s audio). Containers recreated (one sign-out).
+
+**2026-10-11 — daily leaves and tree growth (explicit user-authorized backend/C dashboard edit):**
+- Root cause: Home appended every tap to an undated session-only array; there was no daily API/persistence. The renderer sliced to ten fixed positions. No live GX10 data inspected or changed; old undated session state cannot be safely backdated.
+- Encrypted migration 0002 adds unique user/day snapshots, preserved mood-change events/retry IDs, and per-user evolution acknowledgement. Server clock + Settings/device IANA zone defines each immutable day; repeats recolor. Delete-all clears all new content; fictional seed rejects nonempty check-ins.
+- Three SVG stages use centralized thresholds 14/30 unique days, with 13/29/64 leaf positions and older days grouped visually; complete daily history stays available. Accessible sprout celebration, gentle animation, reduced motion and persisted Continue; historical users adopt their current stage without a backlog.
+- Local tests: 265/265; contract validation 52/52; safety 33/33; server/web typecheck and builds; diff check. Local Chromium + compiled native API with real D47 sign-in verified recolor/reload, two tabs (including delayed-write notification), both thresholds, Continue/re-sign-in and existing 100-day history. SVG/evolution inspected at desktop and 375/390/430px; not real iPhone/GX10 evidence.
+- Remaining: A/C isolated GX10 migration/session/browser checks; mobile Safari/device and deployed reduced-motion/clock-boundary checks. Trends/export/import of check-in history remain unimplemented. Live deployment unchanged. Detailed contracts/privacy/limitations: `CHECK_INS.md`.
 
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**

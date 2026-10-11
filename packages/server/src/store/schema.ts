@@ -98,3 +98,15 @@ export const tombstones = sqliteTable("tombstones", {
 }, (t) => [index("tombstones_user_entity").on(t.userId, t.entityType, t.entityId),
   check("tombstone_type", sql`${t.entityType} IN ('conversation','message','diary_entry','memory')`),
   check("tombstone_reason", sql`${t.reason} IN ('user_deleted','access_revoked','expired')`)]);
+
+export const checkInEvents = sqliteTable("check_in_events", {
+  sequence: integer("sequence").primaryKey({ autoIncrement: true }), userId: owner(), eventId: text("event_id").notNull(),
+  day: text("day").notNull(), mood: text("mood").notNull(), timeZone: text("time_zone").notNull(), recordedAt: text("recorded_at").notNull(),
+}, t => [unique().on(t.userId, t.eventId), index("check_in_events_user_day").on(t.userId, t.day, t.sequence)]);
+export const dailyCheckIns = sqliteTable("daily_check_ins", {
+  userId: owner(), day: text("day").notNull(), mood: text("mood").notNull(), timeZone: text("time_zone").notNull(),
+  ...timestamps(), lastSequence: integer("last_sequence").notNull(),
+}, t => [primaryKey({ columns: [t.userId, t.day] })]);
+export const treeProgress = sqliteTable("tree_progress", {
+  userId: owner().primaryKey(), acknowledgedStage: integer("acknowledged_stage").notNull(),
+});
