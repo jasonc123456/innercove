@@ -919,3 +919,14 @@ html[data-theme="dark"] .bg-\[\#e8f1e6\] {
 @keyframes tree-evolve { from { opacity: .65; transform: scale(.94); } to { opacity: 1; transform: scale(1); } }
 .tree-evolving { transform-origin: center bottom; animation: tree-evolve 600ms ease-out both; }
 @media (prefers-reduced-motion: reduce) { .tree-evolving { animation: none; } }
+
+/* Later trees occupy more space, instead of shrinking a larger viewBox. */
+.mood-tree-art { width: 100%; }
+.mood-tree-stage-1 { height: 224px; }
+.mood-tree-stage-2 { height: 300px; }
+.mood-tree-stage-3 { height: 370px; }
+@media (min-width: 1024px) {
+  .mood-tree-stage-1 { height: 280px; }
+  .mood-tree-stage-2 { height: 370px; }
+  .mood-tree-stage-3 { height: 460px; }
+}

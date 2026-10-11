@@ -20,3 +20,16 @@ it('groups older visual leaves while retaining the full daily count and stage',(
  const html=renderToStaticMarkup(createElement(MoodTree,{days:days(100)}));
  expect(html.match(/class="tree-leaf"/g)).toHaveLength(64);expect(html).toContain('100 unique daily leaves');expect(html).toContain('36 earlier days');
 });
+
+it('grows taller and wider with more branching and a spreading canopy',()=>{
+ const small=treeArt(13),middle=treeArt(29),large=treeArt(64);
+ expect(middle.height).toBeGreaterThan(small.height);expect(large.height).toBeGreaterThan(middle.height);
+ expect(middle.width).toBeGreaterThan(small.width);expect(large.width).toBeGreaterThan(middle.width);
+ expect(middle.branches.length).toBeGreaterThan(small.branches.length);expect(large.branches.length).toBeGreaterThan(middle.branches.length);
+ for(const art of [middle,large]) {
+  expect(Math.min(...art.spots.map(p=>p[0]))).toBeLessThan(art.width*.15);
+  expect(Math.max(...art.spots.map(p=>p[0]))).toBeGreaterThan(art.width*.85);
+  expect(Math.min(...art.spots.map(p=>p[1]))).toBeLessThan(art.height*.15);
+  for(const [x,y]of art.spots){expect(x).toBeGreaterThan(24);expect(x).toBeLessThan(art.width-24);expect(y).toBeGreaterThan(24);expect(y).toBeLessThan(art.ground);}
+ }
+});

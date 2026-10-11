@@ -17,33 +17,63 @@ const SAPLING_SPOTS = [[86,90,-134],[168,72,-50],[100,53,-126],[155,54,-57],[104
 export function treeArt(count: number) {
   const stage = treeStage(count);
   if (stage === 1) return { stage, width: 260, height: 210, ground: 188, trunk: "M130 188C129 154 131 122 128 91", branches: SAPLING_BRANCHES.filter(b => count >= b.from), spots: SAPLING_SPOTS };
-  const width = stage === 2 ? 320 : 400;
-  const height = stage === 2 ? 260 : 320;
-  const ground = height - 30, center = width / 2;
-  const tiers = stage === 2 ? [[194,75],[157,105],[120,95],[83,65],[55,35]] : [[244,90],[219,115],[194,130],[169,130],[144,115],[119,100],[94,80],[69,55]];
-  const parameters = stage === 2 ? [.4,.75,1] : [.25,.5,.75,1];
+  const width = stage === 2 ? 360 : 440;
+  const height = stage === 2 ? 340 : 440;
+  const ground = height - 24;
+  // A spreading deciduous silhouette: primary limbs rise out of the trunk,
+  // with forks attached to those limbs rather than horizontal tiers.
+  // Coordinates are fractions of the canvas, shared across growing stages.
+  const limbs = [
+    [.50,.78,.31,.73,.12,.43], [.50,.72,.68,.65,.87,.40],
+    [.49,.61,.34,.47,.25,.20], [.50,.55,.66,.40,.73,.17],
+    [.49,.43,.43,.29,.47,.10], [.50,.45,.55,.29,.58,.08],
+    [.30,.65,.18,.62,.08,.58], [.24,.57,.24,.44,.14,.30],
+    [.69,.58,.81,.58,.92,.53], [.76,.51,.77,.37,.88,.25],
+    [.36,.39,.24,.36,.19,.27], [.63,.34,.70,.27,.82,.23],
+    [.47,.23,.37,.19,.34,.12], [.55,.25,.65,.20,.66,.10],
+    [.40,.71,.35,.57,.36,.48], [.60,.67,.62,.53,.59,.44],
+  ];
+  if (stage === 3) limbs.push(
+    [.19,.53,.10,.46,.07,.35], [.82,.47,.91,.42,.94,.33],
+    [.29,.29,.28,.19,.21,.14], [.68,.25,.76,.18,.78,.10],
+    [.15,.58,.10,.65,.07,.66], [.85,.54,.91,.62,.94,.63],
+  );
   const branches: { d: string; width: number }[] = [];
-  const spots: number[][] = [];
-  for (const [y, spread] of tiers) for (const side of [-1, 1]) {
-    const tipX = center + side * spread, tipY = y - 25;
-    const bendX = center + side * spread * .6, bendY = y - 4;
-    branches.push({ d: `M${center} ${y}Q${bendX} ${bendY} ${tipX} ${tipY}`, width: stage === 2 ? 6 : 7 });
-    for (const t of parameters) {
-      const x = (1-t)**2*center + 2*(1-t)*t*bendX + t*t*tipX;
-      const py = (1-t)**2*y + 2*(1-t)*t*bendY + t*t*tipY;
-      const angle = Math.atan2(2*(1-t)*(bendY-y)+2*t*(tipY-bendY), 2*(1-t)*(bendX-center)+2*t*(tipX-bendX))*180/Math.PI;
-      spots.push([x,py,angle]);
+  const attachments: number[][][] = [];
+  const parameters = stage === 2 ? [1,.64] : [1,.72,.42];
+  for (const [index, limb] of limbs.entries()) {
+    // Snap each fork to its nearest primary limb so joints remain connected.
+    if (index >= 6) {
+      let nearest = [limb[0],limb[1]], distance = Infinity;
+      for (const primary of limbs.slice(0,6)) for (let step=0;step<=100;step++) {
+        const t=step/100;
+        const x=(1-t)**2*primary[0]+2*(1-t)*t*primary[2]+t*t*primary[4];
+        const y=(1-t)**2*primary[1]+2*(1-t)*t*primary[3]+t*t*primary[5];
+        const candidate=(x-limb[0])**2+(y-limb[1])**2;
+        if(candidate<distance){distance=candidate;nearest=[x,y];}
+      }
+      limb[0]=nearest[0];limb[1]=nearest[1];
     }
+    const [x,y,bx,by,tx,ty] = limb.map((n,i) => n * (i % 2 ? height : width));
+    branches.push({ d: `M${x} ${y}Q${bx} ${by} ${tx} ${ty}`, width: index < 6 ? (stage === 2 ? 8 : 11) : (stage === 2 ? 4 : 5) });
+    attachments.push(parameters.map(t => [
+      (1-t)**2*x + 2*(1-t)*t*bx + t*t*tx,
+      (1-t)**2*y + 2*(1-t)*t*by + t*t*ty,
+      Math.atan2((1-t)*(by-y)+t*(ty-by),(1-t)*(bx-x)+t*(tx-bx))*180/Math.PI,
+    ]));
   }
-  // Fill tips across the whole canopy before nearer-trunk positions.
-  const canopy = parameters.flatMap((_t, order) => spots.filter((_spot, index) => index % parameters.length === parameters.length - 1 - order));
-  return { stage, width, height, ground, trunk: `M${center} ${ground}Q${center-4} ${height/2} ${center} 40`, branches, spots: stage === 2 ? canopy.slice(0,29) : canopy };
+  // First fill the outer canopy, then work inward along the same branches.
+  const spots = parameters.flatMap((_t,i) => attachments.map(points => points[i]));
+  return { stage, width, height, ground,
+    trunk: `M${width*.5} ${ground}Q${width*.48} ${height*.68} ${width*.5} ${height*.43}`,
+    branches, spots: spots.slice(0,stage === 2 ? 29 : 64) };
+
 }
 export function MoodTree({ days, evolving = false }: { days: DailyCheckIn[]; evolving?: boolean }) {
   const art = treeArt(days.length);
   const shown = days.slice(-art.spots.length), grouped = days.length - shown.length;
   return <div className="mt-5 rounded-3xl bg-[#e8f1e6] px-2 py-3 lg:mt-0" aria-label={`Growing mood tree with ${days.length} unique daily leaves, stage ${art.stage}`}>
-    <svg key={art.stage} viewBox={`0 0 ${art.width} ${art.height}`} className={`mx-auto block h-56 max-w-full lg:h-80 ${evolving ? "tree-evolving" : ""}`} role="img">
+    <svg key={art.stage} viewBox={`0 0 ${art.width} ${art.height}`} className={`mx-auto block max-w-full mood-tree-art mood-tree-stage-${art.stage} ${evolving ? "tree-evolving" : ""}`} role="img">
       <title>{["", "Your sapling", "Your growing tree", "Your flourishing tree"][art.stage]}</title>
       <desc>{days.length} days of checking in, regardless of mood. {grouped ? `${grouped} earlier days are grouped; all days remain in your history.` : "Each leaf represents one day."}</desc>
       <path d={`M0 ${art.ground-2}Q${art.width/2} ${art.ground+16} ${art.width} ${art.ground-4}V${art.height}H0Z`} fill="#c7dfc2" />

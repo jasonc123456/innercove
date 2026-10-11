@@ -1223,6 +1223,12 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 8. Run delete-all, then confirm through the unlocked database that the canary is gone from rows, search and the next prompt.
 9. `ss -ltnp` shows port 1234 bound to 127.0.0.1 only. Port 8000 is on loopback by default; with the LAN demo on (D46) it listens on 0.0.0.0 and ufw limits it to the subnet. Phones use HTTPS on that same port (D58); LM Studio never listens on the LAN.
 
+**2026-10-11 — tree silhouette refinement:** wider/taller SVG stages with rising
+limbs and connected forks, visibly increasing rendered height. Daily persistence,
+thresholds and celebrations preserved. Final focused tests 9/9, regression 266/266 and web TypeScript/build
+passed. Chromium desktop/mobile viewport review; no GX10 or real iPhone check.
+See [CHECK_INS.md](CHECK_INS.md).
+
 ## Sources
 - [Qwen/Qwen3.8-27B model card](https://huggingface.co/Qwen/Qwen3.8-27B) · [lmstudio-community GGUF](https://huggingface.co/lmstudio-community/Qwen3.8-27B-GGUF) · [nvidia NVFP4](https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4)
 - [LM Studio on DGX Spark](https://lmstudio.ai/blog/dgx-spark) · [NVIDIA LM Studio playbook](https://build.nvidia.com/spark/lm-studio) · [LM Studio authentication](https://lmstudio.ai/docs/developer/core/authentication)

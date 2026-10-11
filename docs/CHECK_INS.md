@@ -108,3 +108,15 @@ running app, and reduced-motion review. No GX10 changes were performed here.
 Check-in trend charts, import/export and mood-history editing are not implemented.
 The append-only mood history is retained privately; the current UI shows each
 day's latest mood, not every same-day event.
+
+## Tree silhouette refinement — 2026-10-11
+
+Replaced horizontal tiers with upward-curving primary limbs and connected smaller
+forks. Stages grow wider and taller; stage-dependent rendered heights now make
+growth visible instead of scaling every stage into the same box. Daily counting,
+14/30 thresholds, leaf colors, history and acknowledgement are unchanged.
+Final focused SVG tests 9/9, full regression 266/266 and web TypeScript/build
+passed. Isolated servers stopped; fictional database cleanup confirmed.
+Chromium desktop and 375/390/430px viewport screenshots reviewed; real session
+checks retained recoloring, growth acknowledgement and reduced motion. Final
+settled mobile geometry checked separately. No real-device or GX10 verification.
