@@ -1,6 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
+  DiaryFeelingPicker,
+  type DiaryFeelingId,
+} from "../components/DiaryFeelingPicker";
+import {
   useAppSession,
   type AccessLevel,
   type DiaryEntry,
@@ -138,6 +142,7 @@ function EntryForm({
 }) {
   const [title, setTitle] = useState(entry?.title ?? "");
   const [content, setContent] = useState(entry?.content ?? "");
+  const [feeling, setFeeling] = useState<DiaryFeelingId | null>(null);
   const [accessLevel, setAccessLevel] = useState<AccessLevel>(
     entry?.accessLevel ?? "private",
   );
@@ -180,6 +185,7 @@ function EntryForm({
           className="h-11 rounded-2xl border border-line bg-white px-4 text-base text-ink outline-none focus:border-cove"
         />
       </label>
+      <DiaryFeelingPicker value={feeling} onChange={setFeeling} />
       <label className="flex flex-col gap-2 text-sm text-ink/80">
         Entry
         <textarea
