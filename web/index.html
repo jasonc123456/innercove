@@ -7,6 +7,20 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <title>InnerCove</title>
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("innercove-theme");
+          var theme =
+            stored === "light" || stored === "dark"
+              ? stored
+              : window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+          document.documentElement.dataset.theme = theme;
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

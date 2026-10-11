@@ -175,7 +175,7 @@ export function ChatPage() {
       <div
         className="flex min-h-0 flex-1 flex-col bg-cover bg-center"
         style={{
-          backgroundImage: `linear-gradient(rgb(243 239 230 / 0.78), rgb(243 239 230 / 0.88) 42%, rgb(243 239 230 / 0.7)), url(${chatTreeBackground})`,
+          backgroundImage: `linear-gradient(color-mix(in srgb, var(--color-paper) 78%, transparent), color-mix(in srgb, var(--color-paper) 88%, transparent) 42%, color-mix(in srgb, var(--color-paper) 70%, transparent)), url(${chatTreeBackground})`,
         }}
       >
         <MessageList
