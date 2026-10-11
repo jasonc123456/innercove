@@ -1029,6 +1029,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 
 **Web build cleanup (2026-10-10):**
 - Restored the declared QR-code packages in the local web install and removed two unused page-only icon helpers that stopped TypeScript's strict production build. No user-facing behavior changed.
+- The tmpfs-specific transcription cleanup test now skips only on hosts without Linux `/dev/shm` (such as macOS); it still runs on the GX10, where the RAM-only scratch requirement applies.
 
 **Casual greeting behavior (2026-10-10):**
 - Short, content-free greetings such as “hi,” “hello,” and “how are you?” now receive a warm, casual response before normal model generation. The narrow rule runs only after safety assessment, does not apply to messages containing additional context, and never bypasses a crisis tier.

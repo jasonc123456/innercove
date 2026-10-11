@@ -1,4 +1,4 @@
-import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import http from "node:http";
@@ -117,7 +117,7 @@ describe("RAM-only local process adapter", () => {
     const controller = new AbortController(); const running = runLocal(process.execPath, ["-e", "setInterval(()=>{},1000)"], controller.signal, 10);
     const assertion = expect(running).rejects.toMatchObject({ code: "MODEL_UNAVAILABLE" }); controller.abort(); await assertion;
   });
-  it("cleans unique scratch after success, decode failure and cancellation; rejects disk scratch", async () => {
+  it.skipIf(!existsSync("/dev/shm"))("cleans unique scratch after success, decode failure and cancellation; rejects disk scratch", async () => {
     const dir = mkdtempSync(path.join(tmpdir(), "innercove-stt-binaries-"));
     cleanup.push(async () => { rmSync(dir, { recursive: true, force: true }); });
     const model = path.join(dir, "model"); writeFileSync(model, "fictional model");
