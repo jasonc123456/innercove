@@ -1117,6 +1117,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Not started:** P1 #1 Summary to share, P1 #3 phone pairing.
 - **Before returning the GX10 (A):** from a plain SSH session, `unset HISTFILE`, then `bash ~/resetBeforeReturn.sh --dry-run` and for real, then reboot. It now also covers Codex, the stable VS Code server, the voice test checkouts and packages, `/tmp` leftovers and AI-tool lines in shell history (`SETUP_LOG.md`, "Undo all at once"). Then revoke the server-side logins it lists.
 - **Sign-in page (A, at Jason's request):** phones and tablets (<1024px) now show two small saplings at the bottom corners in the desktop trees' style instead of the four corner sprigs; desktop unchanged (`109abf2`).
+- **Phone/tablet scrolling (A):** `<main>` was capped at 512px below 1024px, so each page's scrollbar sat beside the centred column and took its width. `<main>` now spans the window; page-level rows carry `page-x` (`index.css`), which keeps content in the same centred column. **C:** give new page-level rows (scroll areas, toolbars) `page-x` too. Desktop unchanged (`5d5c383`).
 
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
