@@ -5,13 +5,13 @@
       "id": "immediate-self-harm",
       "tier": 2,
       "category": "explicit_self_harm",
-      "patterns": ["\\b(?:kill myself|end(?:ing)? my life|commit suicide|suicide tonight|going to die by suicide|i have a plan[^.?!]{0,80}(?:tonight|today)|goodbye letters?|giving away my things|better off without me|don't see the point of waking|ya no quiero vivir)\\b"]
+      "patterns": ["\\b(?:kill my ?self|end(?:ing)? my life|commit suicide|suicide tonight|going to die by suicide|i have a plan[^.?!]{0,80}(?:tonight|today)|goodbye letters?|giving away my things|better off without me|don't see the point of waking|ya no quiero vivir)\\b"]
     },
     {
       "id": "method-seeking",
       "tier": 2,
       "category": "method_seeking",
-      "patterns": ["\\b(?:how (?:do|can) i|what(?:'s| is) the (?:best|easiest|most painless) way to|ways? to|instructions? (?:for|on)|how many)[^.?!]{0,100}\\b(?:kill myself|die|suicide|overdose|self[- ]?harm|sleeping pills?)\\b"]
+      "patterns": ["\\b(?:how (?:do|can) i|what(?:'s| is) the (?:best|easiest|most painless) way to|ways? to|instructions? (?:for|on)|how many)[^.?!]{0,100}\\b(?:kill my ?self|die|suicide|overdose|self[- ]?harm|sleeping pills?)\\b"]
     },
     {
       "id": "overdose-or-ingestion",
@@ -35,7 +35,7 @@
       "id": "repeated-self-harm",
       "tier": 2,
       "category": "self_harm_ideation",
-      "patterns": ["\\bcut myself again\\b"]
+      "patterns": ["\\bcut my ?self again\\b"]
     },
     {
       "id": "passive-death-wish",
@@ -67,8 +67,8 @@
       "id": "self-harm-ideation",
       "tier": 1,
       "category": "self_harm_ideation",
-      "patterns": ["\\b(?:hurt(?:ing)? myself|harm(?:ing)? myself|self[- ]?harm|cut(?:ting)? myself|cut myself again|don't want to be here|can(?:not|'t) go on|punching the wall[^.?!]{0,80}bleed)\\b"],
-      "excludePatterns": ["\\b(?:not|never) (?:going to |planning to |actually )?(?:hurt myself|harm myself|self[- ]?harm|cut myself)\\b", "\\bi(?:'m| am) not suicidal[^.?!]{0,80}just so tired\\b", "\\bused to self[- ]?harm[^.?!]{0,80}(?:clean|proud)\\b"]
+      "patterns": ["\\b(?:hurt(?:ing)? my ?self|harm(?:ing)? my ?self|self[- ]?harm|cut(?:ting)? my ?self|cut my ?self again|don't want to be here|can(?:not|'t) go on|punching the wall[^.?!]{0,80}bleed)\\b"],
+      "excludePatterns": ["\\b(?:not|never) (?:going to |planning to |actually )?(?:hurt my ?self|harm my ?self|self[- ]?harm|cut my ?self)\\b", "\\bi(?:'m| am) not suicidal[^.?!]{0,80}just so tired\\b", "\\bused to self[- ]?harm[^.?!]{0,80}(?:clean|proud)\\b"]
     },
     {
       "id": "possible-abuse",
