@@ -30,7 +30,7 @@ Compared with the original plan, retrieval and prompt assembly move from D to A,
 | 8–12 | **Phase 3 core:** the retrieval policy (relevant memories only, top 3–5, plus "Use this memory in this chat", D27), prompt assembly, and **history exclusion on revocation (D33)**, all with `FakeProvider` tests on the assembled prompt. |
 | 12–14 | **Phase 6:** integration, the offline test, the `ss -ltnp` check. |
 | 12–14 | **Phase 5a, sign-in (D47):** the session guard (`401` on every protected route, no loopback exemption), `POST/GET/DELETE /api/session`, cookie and `Origin` checks, failure backoff; `demo-check.mjs` signs in first. |
-| P1 | **Two-factor (D47):** TOTP verify (±1 step, no replay), enrollment and recovery-code routes, the hub-shell reset. Then **stretch #3, phone pairing (D31):** the local CA and hub certificate, the HTTPS listener on the LAN for the InnerCove port only, QR token → per-device cookie. Install the CA on the demo phone and test it on the travel router. Later items only if time allows. |
+| P1 | **Two-factor (D47):** TOTP verify (±1 step, no replay), enrollment and recovery-code routes, the hub-shell reset. Phones reach the hub over HTTPS from a local CA (✅ D58); QR pairing dropped (D60). Later items only if time allows. |
 | Backup for | D's safety work. |
 
 ### B: data and APIs
@@ -54,7 +54,7 @@ Compared with the original plan, retrieval and prompt assembly move from D to A,
 | 8–12 | The memory page, the "had access to" chips and **the panel that shows exactly what was sent**, the "Use this memory in this chat" button, and the revocation notice in the chat (D33). The crisis card, the Help button and the support note form, using D's config; from Temporary mode it says "This note will be saved to your diary." |
 | 12–14 | The settings page, the privacy panel (acceleration, model, memory, last reply's speed, and an honest "Diary encryption: OFF" if the fallback is on) and the CSP headers. |
 | 12–14 | **Phase 5a, sign-in (D47):** turn `LoginPage` into the passphrase sign-in (setup on first run, then sign in; no email), handle `401` anywhere by returning to sign-in, sign-out button; later the code step and two-factor setup in Settings (QR rendered locally, recovery codes shown once). |
-| P1 | The UI for stretch #1 (item selection with the consent wording, the editable summary, export) and then stretch #2 (the pairing QR screen). |
+| P1 | The UI for stretch #1 (item selection with the consent wording, the editable summary, export). |
 | Backup for | D's demo script. |
 
 ### D: safety, test data, demo content (reduced load)
@@ -85,7 +85,7 @@ Recorded so ownership stays clear; see "Added during the event" in `PROJECT_PLAN
 | ~10 | D hands off |
 | ~14 | **P0 gate:** the demo script passes with the network unplugged |
 | 14–17 | Stretch #1: Summary to share (B and C) |
-| 17–20 | Stretch #2: phone pairing (A and C), only if #1 is done by ~17 |
+| 17–20 | Phones over HTTPS (✅ D58); QR pairing dropped (D60) |
 | ~20 | Feature freeze |
 | 18 | Presenter chosen (D41) |
 | 20–24 | **Presenter:** the pitch and two rehearsals on the GX10 (plan §10). **C:** the backup screen recording. **B:** the README. **A:** the wipe before returning the GX10. |

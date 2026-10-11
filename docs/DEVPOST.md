@@ -65,11 +65,11 @@ InnerCove is a non-clinical companion. It is not therapy, a diagnosis tool or an
 
 ## What's next for InnerCove
 
+- **Host it on your own PC.** A consumer app with a Windows installer and a Mac app that runs a smaller 4–9B model and sets everything up in a guided wizard, no technical background needed. Manual deployment (Docker, LM Studio or your own model server) stays available for experienced users.
+- **Passkeys** as another way to sign in, alongside the passphrase and two-factor.
 - A consent-based "Summary to share" for a counselor, built from items the user picks.
-- Phone pairing with a QR code instead of a shared passphrase.
 - More than one user per hub, each with their own encrypted space.
 - Crisis resources for more countries, and more languages.
-- A packaged desktop app for people without a GX10.
 
 ## Built with
 

@@ -6,8 +6,8 @@ Legend: ✅ verified (sources at end) · ⚠️ assumption/unverified · 🧪 me
 ## Context
 InnerCove is a privacy-first local AI wellness companion. It combines chat, a diary, permission-controlled memory and an app-level safety layer, and it runs on an ASUS GX10 for a 24-hour hackathon. The product is built around a **hub**: one computer (a home PC, a GX10, or later an organization's server) holds the diary and runs the main model. Browsers, and later an Android companion app, connect to it (§3a). This document sets the architecture, the MVP scope and the phased plan before any code is written.
 
-**Status:** the event has started and code is in progress in the repo ([github.com/jasonc123456/innercove](https://github.com/jasonc123456/innercove); these docs live in its `docs/` folder, D40). **Every decision is confirmed, including the chat model: Qwen3.8-27B (D12).** The quantization is Q6_K (D43), loaded at 262K context (D45). **Phase 0 is done on the GX10** (prompt v3: companion 89.8%, safety 95.8%, 0 critical fails; D to review the scores). The app is reachable on the team LAN (D46) and, overnight, over the team's Tailscale network (D48); **sign-in with the hub passphrase is mandatory and two-factor is optional (D47)**. **Memories are written by InnerCove itself and the model decides which to use (D49).** See `DECISIONS.md`, D01–D59. An external review (2026-10-10) added D31–D34 and tightened the safety, revocation and deletion tests. Pre-event tests of Qwen3.8-27B on the team's own server are recorded in `DECISIONS.md` (prompt v2: companion 89.8%, safety 96.1%, no critical fails). Under D08, all code was written after the official start. **What's still open** is listed in the Phase log under "Status check (A, 2026-10-11 03:30)".
-**Last updated 2026-10-11 (07:00):** voice transcription works on the live hub (D59). Before that, 06:45: phone composer: draft full width, tone/mic/send on a row below. Before that, 06:30: HTTPS on the dev site with a local CA for phones and voice (D58). Before that, 06:15: judges' demo script, `docs/JUDGE_DEMO_SCRIPT.md` (privacy and local hosting; 3 min with 2-min cuts, setup checklist, Q&A, claims to avoid). Before that, 06:00: voice over plain http on the LAN (D57). Before that, 05:45: chat tone presets (D56). Before that, 05:15: survey done; the GX10 stays in dev mode for judging; presenter and slides in progress. Before that, 05:00: final pre-demo check across all roles (Phase log). Before that, 04:45: "Remember me" on sign-in with a shared-device warning (D55). Before that, 04:20: the memory note writer now notes results and relationship changes (Phase log). Before that, 04:00: no fake replies (D54): the fake model is test-only and an offline model shows an offline notice in the chat. Before that, 03:45: the fake provider's reply now says it is a test reply. Before that, 03:30: status check of what's left before judging. Before that, 03:20: diary and memories can be exported by date range, leaving out chosen items, as Markdown or JSON (D53). Before that, 03:15: diary feelings are saved and sent to the AI with shared entries; the crisis card's support note is prefilled and saves with one tap (D52). Before that, 03:00: prompt v4.2 with carried risk across turns (D50) and support notes after a self-harm disclosure (D51); eval results in `docs/prep/results/20261011-*`. Before that, 02:30: AI-written memories (D49) are in: InnerCove notes lasting facts from saved chats, shows them under the reply, and users exclude or delete them; there is no manual "Add memory". Before that, 01:15: the diary editor has an optional feeling picker (20 choices, one at a time, local React state only; it is not sent or stored, and the UI says it is not saved). The Home Daily check-in tree is unchanged. Before that, **2026-10-11 (01:00):** status check against the code: CI's web build was red for 7 pushes (fixed in `0a8e171`); open P0 gaps are the saved-chat list/reopen and save-as-excerpt UI (C) and the diary search hyphen bug (B); stale lines below corrected. Before that, 2026-10-10 (night): two-factor sign-in is in (P1 #2); the Diary and Memories pages use the hub; features added beyond the plan are now listed in "Added during the event" (§5); Phase 5a sign-in is in: the API itself now requires a session (D47); phone layout has a bottom tab bar. Before that: B's Phase 2, 3 and 5 backends are in (encrypted DB, conversations, diary, memories, settings, delete-all, persona seed); saved chats now persist from the UI; desktop UI and mood-tree fix; dev mode with hot reload on the GX10; CI on every push; `scripts/demo-check.mjs` passes on the GX10. Before that: Phase 0 checks and the 40 tests done on the GX10; model loaded at 262K (D45); Q6_K chosen (D43); repo layout settled as two workspaces (D44); GX10 set up (`SETUP_LOG.md`). Earlier the same day: added the hub-and-companion model, desktop packaging, model strategy, remote access, connecting your own model server, SQLCipher encryption from day one, crisis comfort and support notes (D29, D30), the pre-event model tests, the eval runner spec (§5 Phase 0), the "Start here" section, the API contracts (§3c), the demo persona and the pitch plan (§10).
+**Status:** the event has started and code is in progress in the repo ([github.com/jasonc123456/innercove](https://github.com/jasonc123456/innercove); these docs live in its `docs/` folder, D40). **Every decision is confirmed, including the chat model: Qwen3.8-27B (D12).** The quantization is Q6_K (D43), loaded at 262K context (D45). **Phase 0 is done on the GX10** (prompt v3: companion 89.8%, safety 95.8%, 0 critical fails; D to review the scores). The app is reachable on the team LAN (D46) and, overnight, over the team's Tailscale network (D48); **sign-in with the hub passphrase is mandatory and two-factor is optional (D47)**. **Memories are written by InnerCove itself and the model decides which to use (D49).** See `DECISIONS.md`, D01–D60. An external review (2026-10-10) added D31–D34 and tightened the safety, revocation and deletion tests. Pre-event tests of Qwen3.8-27B on the team's own server are recorded in `DECISIONS.md` (prompt v2: companion 89.8%, safety 96.1%, no critical fails). Under D08, all code was written after the official start. **What's still open** is listed in the Phase log under "Status check (A, 2026-10-11 03:30)".
+**Last updated 2026-10-11 (07:20):** QR-code pairing dropped; roadmap is consumer self-hosting (Windows .exe and macOS app, 4–9B models, setup wizard; manual deployment kept); passkeys planned (D60). Before that, 07:00: voice transcription works on the live hub (D59). Before that, 06:45: phone composer: draft full width, tone/mic/send on a row below. Before that, 06:30: HTTPS on the dev site with a local CA for phones and voice (D58). Before that, 06:15: judges' demo script, `docs/JUDGE_DEMO_SCRIPT.md` (privacy and local hosting; 3 min with 2-min cuts, setup checklist, Q&A, claims to avoid). Before that, 06:00: voice over plain http on the LAN (D57). Before that, 05:45: chat tone presets (D56). Before that, 05:15: survey done; the GX10 stays in dev mode for judging; presenter and slides in progress. Before that, 05:00: final pre-demo check across all roles (Phase log). Before that, 04:45: "Remember me" on sign-in with a shared-device warning (D55). Before that, 04:20: the memory note writer now notes results and relationship changes (Phase log). Before that, 04:00: no fake replies (D54): the fake model is test-only and an offline model shows an offline notice in the chat. Before that, 03:45: the fake provider's reply now says it is a test reply. Before that, 03:30: status check of what's left before judging. Before that, 03:20: diary and memories can be exported by date range, leaving out chosen items, as Markdown or JSON (D53). Before that, 03:15: diary feelings are saved and sent to the AI with shared entries; the crisis card's support note is prefilled and saves with one tap (D52). Before that, 03:00: prompt v4.2 with carried risk across turns (D50) and support notes after a self-harm disclosure (D51); eval results in `docs/prep/results/20261011-*`. Before that, 02:30: AI-written memories (D49) are in: InnerCove notes lasting facts from saved chats, shows them under the reply, and users exclude or delete them; there is no manual "Add memory". Before that, 01:15: the diary editor has an optional feeling picker (20 choices, one at a time, local React state only; it is not sent or stored, and the UI says it is not saved). The Home Daily check-in tree is unchanged. Before that, **2026-10-11 (01:00):** status check against the code: CI's web build was red for 7 pushes (fixed in `0a8e171`); open P0 gaps are the saved-chat list/reopen and save-as-excerpt UI (C) and the diary search hyphen bug (B); stale lines below corrected. Before that, 2026-10-10 (night): two-factor sign-in is in (P1 #2); the Diary and Memories pages use the hub; features added beyond the plan are now listed in "Added during the event" (§5); Phase 5a sign-in is in: the API itself now requires a session (D47); phone layout has a bottom tab bar. Before that: B's Phase 2, 3 and 5 backends are in (encrypted DB, conversations, diary, memories, settings, delete-all, persona seed); saved chats now persist from the UI; desktop UI and mood-tree fix; dev mode with hot reload on the GX10; CI on every push; `scripts/demo-check.mjs` passes on the GX10. Before that: Phase 0 checks and the 40 tests done on the GX10; model loaded at 262K (D45); Q6_K chosen (D43); repo layout settled as two workspaces (D44); GX10 set up (`SETUP_LOG.md`). Earlier the same day: added the hub-and-companion model, desktop packaging, model strategy, remote access, connecting your own model server, SQLCipher encryption from day one, crisis comfort and support notes (D29, D30), the pre-event model tests, the eval runner spec (§5 Phase 0), the "Start here" section, the API contracts (§3c), the demo persona and the pitch plan (§10).
 
 Environment note: the planning workstation is x86_64. Phase 0 must run on the GX10.
 
@@ -20,7 +20,7 @@ Environment note: the planning workstation is x86_64. Phase 0 must run on the GX
 
 ## Start here (event day)
 For anyone, human or a Claude Code/Codex session, picking this up on the GX10.
-1. **Read in this order:** this section, `TEAM_PLAN.md` (who does what), `DECISIONS.md` (D01–D59 and the pre-event results), §3b, §5 Phase 0, §8.
+1. **Read in this order:** this section, `TEAM_PLAN.md` (who does what), `DECISIONS.md` (D01–D60 and the pre-event results), §3b, §5 Phase 0, §8.
 2. **What's in `docs/`** (paths below are relative to it):
    - `PROJECT_PLAN.md`, `DECISIONS.md` and `TEAM_PLAN.md`.
    - `prep/system-prompt.txt`: system prompt v3 (D29 comfort and de-escalation plus the D28 fixes; scored in Phase 0). The app's prompt is `config/prompts/system-prompt.txt`, which D changed after that run (not yet re-scored). `prep/system-prompt-v2.txt` is the version the pre-event results used.
@@ -72,7 +72,7 @@ For anyone, human or a Claude Code/Codex session, picking this up on the GX10.
 - Product surfaces: a web app and an Android-first sideloaded APK.
 - **Hub and companion (2026-10-10):** one hub (a home PC, a GX10 or an org server) holds the diary and runs the main model. The phone is a companion that connects to the hub and has an offline mode for when it can't. There is no standalone two-way sync.
 - **Model roles (2026-10-10):** the main conversation runs on a large model on the hub. 1–9B models only handle helper jobs, the phone's offline mode and the laptop tier. Phase 0's comparison picks the final model.
-- **Setup must work for non-technical users (2026-10-10):** one desktop app per OS with a GUI, automatic model setup and QR pairing (§3a, roadmap).
+- **Setup must work for non-technical users (2026-10-10, updated 2026-10-11, D60):** a consumer app people host on their own PC: a Windows installer (.exe) and a macOS app, each with a setup wizard that does everything (hardware check, a smaller 4–9B model downloaded and configured, data folder, sign-in). Manual deployment (Docker Compose, LM Studio or your own model server) stays available for experienced users. No QR-code pairing (§3a, roadmap).
 
 ### Proposed — my verdict
 | Item | Verdict | Notes |
@@ -103,7 +103,7 @@ The team accepted every recommendation below **except #15: the diary is encrypte
 | 9 | Reasoning | Off for chat (`reasoning_effort: "none"`; see D13 findings). The adapter **always** strips `<think>` and drops `reasoning_content`. Optionally on for handoff summaries | On everywhere | Latency vs. quality | Phase 0/1 |
 | 10 | Safety detection | Deterministic tiered rules are the primary signal. An optional LLM classifier can only *escalate* | LLM-only | Predictable and testable vs. nuance | Phase 4 |
 | 11 | Export | Versioned JSON export, then passphrase encryption (scrypt + AES-256-GCM). Both P1 | Defer | Portability story vs. ~2 h | No |
-| 12 | Demo access | P0: loopback, with laptops over an SSH tunnel. P1: **QR pairing**, so a phone browser on our travel router opens the hub over HTTPS from a local CA (D31) | LAN access with a passphrase | The multi-device moment vs. ~2 h of work | No (P1) |
+| 12 | Demo access | P0: loopback, with laptops over an SSH tunnel. Phones and laptops on the LAN or Tailscale over **HTTPS from a local CA** (D58), signing in with the passphrase and optional two-factor. No QR pairing (D60) | LAN access with a passphrase | The multi-device moment | Done (D46, D58) |
 | 13 | Mobile framework | Capacitor companion app (reuses the web UI), with a llama.cpp or LiteRT plugin for offline mode, after a spike | React Native + `llama.rn` (UI is rewritten) | UI reuse vs. on-device LLM maturity | No (after the hackathon) |
 | 14 | Remote access away from home | v1: home Wi-Fi only. v2: an end-to-end encrypted relay by default, with **port forwarding as an opt-in advanced option**. Both use the same pinned TLS and per-device keys (§3a) | Port forwarding as the default | Works for everyone (behind CGNAT, no router setup) vs. no relay for us to run | No (roadmap) |
 | 15 | Encryption at rest | **Chosen: SQLCipher from day one** (§3, "Encryption at rest") | Disk encryption only during the hackathon | Stronger privacy story vs. ~1–1.5 h on the critical path | Yes, Phase 2 |
@@ -158,7 +158,7 @@ The team accepted every recommendation below **except #15: the diary is encrypte
 **Security boundaries and privacy weak spots**
 - **LM Studio:** loopback only with token auth on. Never enable "Serve on Local Network".
 - **App:** bind 127.0.0.1. ⚠️ Docker's `ports: "8000:8000"` binds 0.0.0.0 **and bypasses ufw**. Use host networking with a loopback bind, or `127.0.0.1:8000:8000`.
-- **Phone pairing exception (P1, D31):** when switched on, only the InnerCove port also listens on the LAN, over HTTPS with a certificate from a local CA and per-device cookies. LM Studio never listens on the LAN. The CA's private key stays on the GX10 and is wiped with `./data`; remove the CA from the demo phone after the event.
+- **Phones on the LAN (D46, D58):** only the InnerCove port listens on the LAN, over HTTPS with a certificate from a local CA; phones sign in like any browser (passphrase, optional two-factor). LM Studio never listens on the LAN. The CA's private key stays in `~/.config/innercove/tls-ca` on the GX10 and is wiped by the reset script; remove the CA from every demo device after the event.
 - **Browser:** strict CSP. Temporary chats never go into localStorage or sessionStorage.
 - **Logs:** no request or response bodies, and error handlers never echo payloads. Run a canary-string grep over app logs, `docker logs` and the LM Studio log directories.
 - **Disk:** `secure_delete`, FTS delete triggers, a WAL checkpoint, and `VACUUM` on delete-all.
@@ -239,27 +239,28 @@ The team accepted every recommendation below **except #15: the diary is encrypte
 - Deletions on the hub reach the phone's cache as content-free tombstones on the next connection, and an entry deleted from the outbox before upload is simply dropped.
 - Revoking a device makes the app wipe its cache and outbox the next time it connects.
 
-**Pairing:**
-- The hub shows a QR code containing its address, its TLS certificate fingerprint and a one-time token. Because the phone pins that fingerprint, no domain or certificate authority is needed.
-- The hub then issues a per-device key, which can be revoked from the hub.
-- Pairing only works on the local network.
-- **Certificate pinning needs the native app.** A QR code that opens an ordinary browser can't make it pin a self-signed certificate. The hackathon's browser pairing uses a local CA installed on our own demo phone instead (D31).
+**Connecting a phone (no QR pairing, D60):**
+- The phone opens the hub's HTTPS address on the local network and signs in like any browser: the passphrase, plus two-factor if it's on, and later a passkey.
+- The hub's certificate comes from its local CA (D58), installed once on the phone. The consumer app should make that step as simple as possible.
+- Signed-in devices are listed on the hub and can be signed out from there.
 
 **Remote access away from home**
 | Path | Verdict | Requirements and caveats |
 |---|---|---|
 | Home Wi-Fi only | **v1** | The simplest, but there's no access away from home. |
 | An E2E-encrypted relay we run | **v2 default** | The relay forwards the pinned TLS connection without decrypting it. It sees only metadata: IPs, timing and sizes. Works behind CGNAT. We run and pay for it. |
-| Port forwarding | **v2 opt-in advanced option** | A direct path with no third party. **Requirements:** TLS (pinned in the native apps); **browsers sign in with the passphrase plus two-factor (D47)**, native apps use per-device keys; no pairing on the internet-facing port; expose only the InnerCove port, never the model server; rate limiting; auto-updates; a security review before shipping. Try automatic mapping (UPnP/NAT-PMP) first, with manual steps as a fallback. **Caveats:** it fails behind CGNAT (common with 5G and satellite home internet and some ISPs). Home IPs change, so it needs dynamic DNS or the relay as a meeting point. Router setup is hard for non-technical users. Internet scanners will find the hub, so any server bug exposes diaries. |
+| Port forwarding | **v2 opt-in advanced option** | A direct path with no third party. **Requirements:** TLS (pinned in the native apps); **browsers sign in with the passphrase plus two-factor (D47)**, native apps use per-device keys; expose only the InnerCove port, never the model server; rate limiting; auto-updates; a security review before shipping. Try automatic mapping (UPnP/NAT-PMP) first, with manual steps as a fallback. **Caveats:** it fails behind CGNAT (common with 5G and satellite home internet and some ISPs). Home IPs change, so it needs dynamic DNS or the relay as a meeting point. Router setup is hard for non-technical users. Internet scanners will find the hub, so any server bug exposes diaries. |
 | Cloudflare Tunnel | **Only with app-layer encryption** | By default Cloudflare **decrypts at its edge**. There are two TLS legs (phone → Cloudflare, then Cloudflare → `cloudflared` → hub), so Cloudflare can read the content. It's usable only if InnerCove encrypts request and response bodies with the paired device keys, so Cloudflare relays ciphertext. It still sees paths, timing and sizes. It also needs a Cloudflare account and a domain, which is hard for non-technical users. |
 | Tailscale | For technical users | WireGuard end-to-end, but it needs a third-party account and a second app. |
 | ngrok-style tunnels | **Avoid** | They terminate TLS, like Cloudflare, and offer no upside. |
 
 **Desktop app (roadmap): one codebase, packaged per OS, not two servers.**
-- **Packaging:** the same TypeScript server and React UI, wrapped in **Electron** and built with electron-builder into a Windows installer (x64) and Linux packages (AppImage/.deb, x64 and ARM64; GX10-class machines are ARM64). macOS (Apple Silicon) comes later; its unified memory makes it a strong hub.
+- **Consumer-grade self-hosting (D60):** people host InnerCove on their own PC with a **smaller 4–9B model**, set up entirely from the app, with no command line and no technical background needed.
+- **Packaging:** the same TypeScript server and React UI, wrapped in **Electron** and built with electron-builder into a **Windows installer (.exe, x64)** and a **macOS app (.dmg, Apple Silicon; its unified memory makes it a strong hub)**. Linux packages (AppImage/.deb, x64 and ARM64 for GX10-class machines) follow for technical users.
+- **Manual deployment stays** for experienced users: Docker Compose, LM Studio, or connecting your own model server.
+- **Sign-in:** the passphrase, with two-factor (TOTP, D47) as today; **passkeys (WebAuthn) are planned** as a further way to sign in.
 - **The GUI is the existing React UI** in the app window, plus a **hub dashboard**:
   - status (model loaded, memory use)
-  - the pairing QR code
   - paired devices, with revoke
   - model download and selection
   - remote-access settings
@@ -272,7 +273,7 @@ The team accepted every recommendation below **except #15: the diary is encrypte
   - App-data paths, start at login and keep-awake.
   - The Windows firewall prompt.
   - **Code signing.** An unsigned Windows installer triggers SmartScreen warnings that scare non-technical users. Budget for a signing certificate.
-- **First-run flow:** install → hardware detection picks a model tier (GX10, large GPU or a 128 GB Ryzen AI Max machine: ~27B; 16–32 GB laptop: 4–9B; weaker: phone-style scripted mode) → the model downloads with a progress bar → scan the QR code.
+- **First-run flow (setup wizard):** install → hardware detection picks a model tier (typical consumer PC or Mac with 16–32 GB: a 4–9B model; GX10, large GPU or a 128 GB Ryzen AI Max machine: ~27B; weaker: phone-style scripted mode) → the model downloads with a progress bar and is configured automatically → choose the data folder and region → set the passphrase (two-factor optional; passkeys later) → done. Small models get the same safety layer, reviewed crisis replies and output screen; each model tier is evaluated before it ships.
 - Docker Compose and LM Studio remain the path for development, the hackathon and technical self-hosters.
 - **Do this now:** keep the server OS-agnostic. No Linux-only shell calls; data paths and config come from one config module; the hub dashboard is ordinary web pages that Electron can wrap.
 
@@ -293,7 +294,7 @@ Principles:
 | Storage | The data folder (diary database) and the models folder are separate settings, because models are large and may live on another drive. Open folder, "Move…", disk usage, backup schedule and backup location. |
 | Privacy | Default chat mode (Save or Temporary); the default for "Use memories"; the default AI access for new diary entries; auto-delete conversations after N days; export; delete everything. A **"What leaves this computer"** page: only model downloads and update checks. |
 | Memory | Review, edit and delete memories. See which diary entries the AI may use. |
-| Devices & access | The pairing QR code; paired devices, with revoke; remote access (off by default; relay or port forwarding under Advanced). |
+| Devices & access | Signed-in devices, with sign-out; two-factor and passkeys; the hub's HTTPS address and certificate for phones; remote access (off by default; relay or port forwarding under Advanced). |
 | Safety & support | Region for crisis resources (988 is US-only); an optional trusted contact. The help button is always visible. |
 | App | Start at login, keep the hub awake, updates, language, theme. |
 
@@ -328,7 +329,7 @@ Guardrails:
       - "**If this is a cloud AI service**, the provider may keep conversations, check them automatically, and have staff review conversations its systems flag. Sensitive topics such as self-harm are more likely to be flagged, and the provider may act on them under its own policies. Check its privacy and data-retention policy before continuing."
     - InnerCove can't tell whether a public server really belongs to the user, so it doesn't guess; it discloses and asks.
   - **Never the default and never an automatic fallback.** If the server is unreachable, show an error and offer the local model. Remote → local fallback is allowed; local → remote never happens.
-  - **Secrets and certificates:** the API key lives in the OS keychain (Electron `safeStorage`), never in plain config. A home server's self-signed certificate can be trusted by pinning its fingerprint, the same way phone pairing works.
+  - **Secrets and certificates:** the API key lives in the OS keychain (Electron `safeStorage`), never in plain config. A home server's self-signed certificate can be trusted by pinning its fingerprint.
   - **Embeddings stay local by default.** Indexing would send *every* diary entry the AI may use to the server, not just what one chat retrieves, so it needs a separate warning.
   - **Safety and permissions still run on the hub**, whichever model answers. The adapter strips reasoning in every format servers use: `<think>` tags, `reasoning_content` and `reasoning`.
   - **Phone-only mode can use the same setting.** That covers the original "connect to my self- or org-hosted model" requirement for people without a hub.
@@ -425,7 +426,7 @@ No model size makes this a validated mental health tool. The app-level safety la
 | `POST /api/transcribe` | Raw audio Blob (≤4 MiB, ≤60 s) → `{ text, durationMs }`; never stored or logged; needs a session (added during the event, `docs/VOICE_INPUT.md`) | B |
 | `POST /api/delete-all` | `{ confirm: "DELETE" }` → `{ deleted: { conversations, diaryEntries, memories } }`; content only (D39) | B |
 | `GET /api/privacy-status` | → `{ locked, encryption: "sqlcipher" \| "off", dataPath, model: { id, endpointClass: "loopback" \| "lan" \| "public" }, acceleration: "cuda" \| "vulkan" \| "cpu" \| "unknown", memoryUsedGb \| null, lastReply: { firstWordMs, tokPerS } \| null }` | B (encryption, path), A (the rest) |
-| P1: `POST /api/summaries`, pairing routes | Defined when the stretch feature starts | B, A |
+| P1: `POST /api/summaries` | Defined when the stretch feature starts | B, A |
 
 **Chat requests**
 - `POST /api/chat`: `{ conversationId: Id | null, message: string (1–4000), useMemories: boolean, pinnedMemoryIds: Id[] (max 5) }`. A `null` ID creates a saved conversation. The server loads the history from the database and applies D33.
@@ -481,10 +482,10 @@ If the client aborts, the server stops generating. In a saved chat the user's me
 8. A verified offline demo run.
 9. **Sign-in (D47):** the hub passphrase, sessions in an `HttpOnly` cookie, `401` on every protected route, backoff on failures. This replaces both the unlock step and the front-end-only login.
 
-**P1: one stretch feature at a time, in this order.** Finish and integrate each before starting the next. Start item 2 only if item 1 is done by about hour 17. Two-factor (item 2) comes before phone pairing because pairing builds on sign-in.
+**P1: one stretch feature at a time, in this order.** Finish and integrate each before starting the next. Start item 2 only if item 1 is done by about hour 17. 
 1. **Summary to share** (formerly the professional handoff summary): select items, which counts as the one-time consent "Use these N items to write this summary" (D34); generate a factual JSON-schema summary in which every point links to its source; edit it; export as Markdown or print to PDF. Saved support notes are pre-selected (D30), and the user still approves the export.
 2. ✅ **Done (A, 2026-10-10 night).** **Two-factor sign-in (D47):** TOTP enrollment in Settings (locally rendered QR code, confirm with a code, 10 recovery codes), the code step at sign-in, replay protection, and a hub-shell reset. **Required before anyone port-forwards the hub.**
-3. **Phone pairing (D31):** a phone browser on our travel router opens the hub over HTTPS from a local CA installed on our demo phone. The QR code carries the URL and a one-time token, which becomes a per-device cookie (`devices` table). Bring our own travel router, because venue Wi-Fi often blocks traffic between devices.
+3. **Phones over HTTPS (✅ done, D58):** phones on the LAN or Tailscale open the hub over HTTPS from a local CA and sign in normally. QR-code pairing is dropped (D60). Bring our own travel router if venue Wi-Fi blocks traffic between devices.
 4. AI diary draft from a conversation: structured output, then edit, then save.
 5. ~~One curated exercise~~ **Done early (D, 2026-10-10):** guided breathing (4-7-8 and a no-hold 4-in/6-out option) under the Wellness Toolkit; grounding is still planned.
 6. ~~Memory proposals after a conversation (approve or reject).~~ **Replaced by D49 (A, 2026-10-11):** InnerCove writes memories automatically from saved chats; no approval step, the user excludes or deletes.
@@ -626,7 +627,7 @@ Estimates are uncertain. P0 is about **18–25 engineer-hours, or 8–10 wall-cl
   - A backup screen recording exists.
   - The README has the run steps.
 
-**P1 phases (1.5–3 h each, one at a time, in priority order):** 7 Summary to share · 8 two-factor sign-in (D47; ✅ done) · 9 phone pairing (D31) · 10 diary draft · 11 exercise (breathing done early) · 12 memory proposals · 13 export/import · 14 check-ins · 15 embeddings · 16 model switcher. Realistically only 7 and 8 fit; Phase 5a's sign-in itself is P0. Feature freeze is around hour 20.
+**P1 phases (1.5–3 h each, one at a time, in priority order):** 7 Summary to share · 8 two-factor sign-in (D47; ✅ done) · 10 diary draft · 11 exercise (breathing done early) · 12 memory proposals · 13 export/import · 14 check-ins · 15 embeddings · 16 model switcher. Realistically only 7 and 8 fit; Phase 5a's sign-in itself is P0. Feature freeze is around hour 20.
 
 ---
 
@@ -655,7 +656,7 @@ Every default below was accepted (Q5 was resolved earlier). The answers are reco
 1. **Backend language.** Will you switch to TypeScript end-to-end so the future Android on-device mode reuses one core for safety, permissions and retrieval? [Yes: TS with Fastify, Drizzle and better-sqlite3. Stay on FastAPI only if most of the team is clearly stronger in Python.]
 2. **Pre-existing code.** Does the full track statement or the general hack.dev rules allow scaffolding or code written before the start? The screenshot doesn't say, and hack.dev doesn't resolve for me. [Assume no project code before the start. Planning docs are fine. Bring the model GGUFs (Qwen3.8-27B Q4_K_M and Q6_K, plus the fallback) on a USB SSD, because the GX10 is only handed over at the event.]
 3. **Temporary mode vs. saved memories.** [Save off; Use memories off by default, toggleable per session.]
-4. **Demo topology.** [GX10 display or a laptop over an SSH tunnel for P0. A phone joins only in P1, via QR pairing over HTTPS from a local CA (D31).]
+4. **Demo topology.** [GX10 display or a laptop over an SSH tunnel for P0. Phones join over HTTPS from the local CA (D58) and sign in.]
 5. ~~Mobile "self/org-hosted models"~~ **Resolved 2026-10-10:** hub and companion (§3a).
 6. **Target user and locale for the demo.** [US university students, 18+. Resources: 988, Crisis Text Line, campus counseling. A fictional persona.]
 
@@ -692,7 +693,7 @@ Every default below was accepted (Q5 was resolved earlier). The answers are reco
   - ✅ The 30 safety test phrases (Phase 4), in `prep/safety-tests.json`.
   - ✅ Pre-event runs of Qwen3.8-27B with prompts v1 and v2, in `prep/results/` (see `DECISIONS.md`).
   - ✅ The fictional demo persona and that persona's diary entries, in `prep/demo-persona.json` (D reviews).
-- **Bring a travel router** for the QR pairing demo.
+- **Bring a travel router** for the phone demo, in case venue Wi-Fi blocks traffic between devices.
 - ✅ **Owners agreed:** A Jason, B Angela, C Mia, D Meowie (`TEAM_PLAN.md`). Everyone reads this plan, and every Claude Code/Codex setup is ready.
 
 ---
@@ -837,7 +838,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
   - **Fixed after C's settings page:** the help page bundles `config/crisis-resources.us.json` from outside `web/`, which broke the Docker web build and dev-mode Vite. The Dockerfile's web stage now copies `config/`, and dev mode mounts it read-only. Chat "not responding" was the DB locked after a dev-mode restart (unlock again; C's unlock screen will remove the curl step).
   - **Fixed: the UI couldn't send over the LAN.** `crypto.randomUUID()` exists only on secure origins (HTTPS or localhost), so over `http://192.168.2.151:8000` (D46) Send threw before any request. The chat page now uses the existing `uuidv7()` helper (`getRandomValues`). Verified in headless Firefox on the GX10: message sent, `/api/infer` 200, Qwen's reply rendered. **Everyone:** avoid `crypto.randomUUID`, `navigator.clipboard` and other secure-context-only APIs in `web/` until phone pairing brings HTTPS (D31).
   - **Phase 6 gate script:** `scripts/demo-check.mjs` runs demo steps 1–3, 5, 6 and 9 through the API and cleans up. **First run on the GX10 (real model, B's SQLCipher store): all 17 checks pass**: chips show A only, "what was sent" is A's exact text, B never sent; hiding A drops it and the earlier exchange (`historyExcluded: 1`); temporary chat saves nothing; the crisis phrase gets tier 2 and `reviewed-reply`; 1234 and 8001 loopback only. Step 8 (delete-all canary) waits for B's delete-all route; step 7 (save an excerpt) and the UI side are C's.
-- **Next (A):** ~~Phase 5a sign-in~~ done (see "Phase 5a sign-in" below); two-factor (P1 #2), then phone pairing. The offline run is descoped for the event (gap table row 8).
+- **Next (A):** ~~Phase 5a sign-in~~ done (see "Phase 5a sign-in" below); two-factor (P1 #2), then HTTPS for phones (done later, D58). The offline run is descoped for the event (gap table row 8).
 
 **D (Meowie), Phase 4 safety handoff (2026-10-10):**
 - **Done:** deterministic tiers, output screening, reviewed tier-2 replies, US crisis resources, prompt v3, fictional demo content and the demo runbook.
@@ -1021,7 +1022,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Server:** `api/session.ts` adds the session guard before the lock gate and any lease: `401` on every protected route (no loopback or env bypass), `POST /api/session` (username or email + hub passphrase; unlocks a locked hub), `GET/DELETE /api/session`, `DELETE /api/sessions`. HttpOnly, SameSite=Strict, 12 h cookie; hashed in memory; "Lock the hub" and restarts sign everyone out. `Origin` must match `Host` on state-changing requests. Shared 30 s backoff after 5 failures. B's transcribe route now gets the real session callback via `dataRoutes`. `lock.ts` allowlists the session routes while locked (one line in B's file).
 - **Web:** sign-in, reload and sign-out use the session routes; any `401`/`423` returns to sign-in. The dev Vite proxy keeps `Host` (`changeOrigin: false`), or the Origin check would refuse it.
 - **Checks:** `npm test` 178/178 (6 new sign-in tests on the real store); typecheck and web build pass. On the GX10: `demo-check.mjs` (now signs in with `HUB_PASSPHRASE` from the environment) all checks pass, including "no cookie → 401"; LAN `curl` without the cookie gets `401`; Firefox over the LAN: wrong passphrase refused, sign-in, reload keeps the session, chat replies, sign-out then `401`.
-- **Next:** two-factor (P1 #2); then HTTPS for phone pairing (D31).
+- **Next:** two-factor (P1 #2); then HTTPS for phones (done later, D58).
 
 **Initial hub setup UI (2026-10-10):**
 - The sign-in screen now checks `/api/lock-status`. For a new hub it presents a local passphrase setup form, calls `/api/setup`, and then signs in as the initial admin; an already configured hub keeps the ordinary sign-in form.
@@ -1128,7 +1129,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Voice:** works only in B's isolated runner; the main app's `Permissions-Policy` blocks the mic and the LAN/Tailscale demo is HTTP. **A** decides: enable on a secure origin or leave it out of the demo.
 - **D:** review the Phase 0 scores; rerun the 40 tests plus `tests/trauma-informed-cases.json` on the current prompt (the S03/S15/S17 fixes are unscored).
 - **Before judging:** switch the GX10 from dev mode to the demo build (`docker compose up -d --build --remove-orphans`); presenter chosen and two rehearsals (D41); backup recording (C); ASUS survey (D). `DEMO_SCRIPT.md` step 5 reworded: the offline moment is descoped.
-- **Not started:** P1 #1 Summary to share, P1 #3 phone pairing.
+- **Not started:** P1 #1 Summary to share.
 - **Before returning the GX10 (A):** from a plain SSH session, `unset HISTFILE`, then `bash ~/resetBeforeReturn.sh --dry-run` and for real, then reboot. It now also covers Codex, the stable VS Code server, the voice test checkouts and packages, `/tmp` leftovers and AI-tool lines in shell history (`SETUP_LOG.md`, "Undo all at once"). Then revoke the server-side logins it lists.
 - **Sign-in page (A, at Jason's request):** phones and tablets (<1024px) now show two small saplings at the bottom corners in the desktop trees' style instead of the four corner sprigs; desktop unchanged (`109abf2`).
 - **Phone/tablet scrolling (A):** `<main>` was capped at 512px below 1024px, so each page's scrollbar sat beside the centred column and took its width. `<main>` now spans the window; page-level rows carry `page-x` (`index.css`), which keeps content in the same centred column. **C:** give new page-level rows (scroll areas, toolbars) `page-x` too. Desktop unchanged (`5d5c383`).
@@ -1164,7 +1165,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Demo script vs app:** step 8 "save an excerpt" has no UI (P0 #5): build it or cut the step. Saved chats can't be listed or reopened (P0 gap, not in the script). In a fresh browser the chat starts Temporary with Memories off: switch to Save and Memories on before step 2. After the crisis phrase (step 7) start a new chat: risk carries 3 turns (D50) and the card would show again. v4.2 replies run 80–200 words (~8–14 s at ~16 tok/s); rehearse with that.
 - **Decide:** voice stays out of the demo (mic blocked on the HTTP origin) unless served over HTTPS.
 - **Should do:** a short judge-facing intro at the top of `README.md` (what it is, local AI on the GX10, safety stance, non-clinical); currently it starts with setup.
-- **Not started (P1):** Summary to share, phone pairing, stored check-ins. Low: no first-run setup screen; `/api/diary?q=` 400s on hyphens (the Diary page filters in the browser, so the UI is unaffected).
+- **Not started (P1):** Summary to share, stored check-ins. Low: no first-run setup screen; `/api/diary?q=` 400s on hyphens (the Diary page filters in the browser, so the UI is unaffected).
 - **After the event:** `resetBeforeReturn.sh` from a plain SSH session, then revoke the logins it lists.
 
 **Fake reply labelled (A, 2026-10-11 03:45, `8074c4e`):** a teammate's local hub answered "hi how are you" with the fake provider's canned line ("That sounds like a lot to carry this week…"), which read like a bad model reply. The fake reply now says it is a test reply from the fake model and how to switch to `INFERENCE_PROVIDER=lmstudio`. The GX10 site was already on LM Studio and is unaffected; tests 218/218.
@@ -1213,7 +1214,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 6. Send a crisis phrase. The reviewed reply and the 988 card appear, even with the model stopped.
 7. Save an excerpt to the diary.
 8. Run delete-all, then confirm through the unlocked database that the canary is gone from rows, search and the next prompt.
-9. `ss -ltnp` shows port 1234 bound to 127.0.0.1 only. Port 8000 is on loopback by default; with the LAN demo on (D46) it listens on 0.0.0.0 and ufw limits it to the subnet. When phone pairing is on, only the InnerCove HTTPS port listens on the LAN.
+9. `ss -ltnp` shows port 1234 bound to 127.0.0.1 only. Port 8000 is on loopback by default; with the LAN demo on (D46) it listens on 0.0.0.0 and ufw limits it to the subnet. Phones use HTTPS on that same port (D58); LM Studio never listens on the LAN.
 
 ## Sources
 - [Qwen/Qwen3.8-27B model card](https://huggingface.co/Qwen/Qwen3.8-27B) · [lmstudio-community GGUF](https://huggingface.co/lmstudio-community/Qwen3.8-27B-GGUF) · [nvidia NVFP4](https://huggingface.co/nvidia/Qwen3.8-27B-NVFP4)
