@@ -94,9 +94,10 @@ describe("Phase 3: permission-controlled retrieval", () => {
 
   it("sends every eligible memory, pinned and matching ones first, up to 40 (D49)", async () => {
     const { store, chat } = await setup();
+    const old = new Date(Date.now() - 60_000).toISOString();
+    for (let i = 0; i < 45; i++) store.addMemory({ content: `Plays guitar in a band, song ${i}.`, updatedAt: old });
     const lake = store.addMemory({ content: LAKE });
-    const maya = store.addMemory({ content: MAYA });
-    for (let i = 0; i < 45; i++) store.addMemory({ content: `Plays guitar in a band, song ${i}.` });
+    const maya = store.addMemory({ content: MAYA, updatedAt: old });
     const memoryIds = (turn: Awaited<ReturnType<typeof chat>>) =>
       turn.events.find((e) => e.name === "context")!.data.sources
         .filter((s: { type: string }) => s.type === "memory").map((s: { id: string }) => s.id);
@@ -104,7 +105,7 @@ describe("Phase 3: permission-controlled retrieval", () => {
     const relevant = await chat("Maya and I argued again");
     expect(memoryIds(relevant)).toHaveLength(40);
     expect(memoryIds(relevant)[0]).toBe(maya);
-    expect(relevant.all).toContain(LAKE);
+    expect(relevant.all).toContain(LAKE); // unrelated but the most recent: sent, the model decides
 
     const pinned = await chat("Maya and I argued again", { pinned: [lake] });
     expect(memoryIds(pinned).slice(0, 2)).toEqual([lake, maya]);
