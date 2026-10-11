@@ -40,7 +40,7 @@ export function AppShell() {
                 {chatMode === "temporary" ? "Temporary" : "Save"}
               </p>
             </div>
-            <p className="max-w-40 text-right text-xs leading-snug text-ink/70">
+            <p className="max-w-40 text-right text-xs leading-snug text-ink/80">
               Save and the diary stay in this tab. They are not stored.
             </p>
           </div>
@@ -74,7 +74,11 @@ export function AppShell() {
           </nav>
           <NavLink
             to="/help"
-            className="inline-flex h-11 items-center justify-center rounded-2xl border border-cove px-4 text-base font-medium text-cove"
+            className={({ isActive }) =>
+              isActive
+                ? "inline-flex h-11 items-center justify-center rounded-2xl bg-cove px-4 text-base font-medium text-white"
+                : "inline-flex h-11 items-center justify-center rounded-2xl border border-cove px-4 text-base font-medium text-cove"
+            }
           >
             Get help
           </NavLink>

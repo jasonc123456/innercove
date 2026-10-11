@@ -4,6 +4,7 @@ import { buildApp } from "./app.js";
 import { fromRoot } from "./paths.js";
 import { loadSafetyConfigs, rulesSafety } from "./chat/rules-safety.js";
 import { DatabaseStore } from "./store/db.js";
+import { systemInfo } from "./system.js";
 
 const env = process.env;
 const host = env.HOST ?? "127.0.0.1";
@@ -34,6 +35,7 @@ const app = await buildApp({
   safety: rulesSafety(loadSafetyConfigs()),
   systemPrompt: readFileSync(promptPath, "utf8").trim(),
   stats: { lastReply: null },
+  system: systemInfo(env),
   webDist: fromRoot(env.WEB_DIST ?? "web/dist"),
 });
 

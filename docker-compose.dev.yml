@@ -1,0 +1,53 @@
+# Dev mode on the GX10: changes appear right after `git pull`, no rebuild.
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+# Back to the demo build:
+#   docker compose up -d --build --remove-orphans
+# - web: Vite serves the UI from source with hot reload on port 8000 (the same URL;
+#   LAN only if .env opts in, D46).
+# - app: the API under `tsx watch` on 127.0.0.1:8001 (loopback only); Vite proxies /api.
+#   A server-code change restarts it, which locks the database again (D26).
+# Same ./data database and passphrase as the demo build.
+services:
+  app:
+    image: innercove-dev
+    build:
+      target: dev
+    environment:
+      HOST: 127.0.0.1
+      PORT: "8001"
+      ALLOW_NON_LOOPBACK: "0"
+    volumes:
+      - ./:/app
+      - dev_node_modules:/app/node_modules
+      - dev_core_node_modules:/app/packages/core/node_modules
+      - dev_server_node_modules:/app/packages/server/node_modules
+    command: >-
+      sh -c "npm install --no-audit --no-fund --no-save
+      && npm run build --workspace=@innercove/core
+      && (npx tsc -p packages/core/tsconfig.json --watch --preserveWatchOutput > /dev/null &)
+      && exec npm run dev --workspace=@innercove/server"
+
+  web:
+    # Same image as app (built once there).
+    image: innercove-dev
+    pull_policy: never
+    depends_on: [app]
+    network_mode: host
+    working_dir: /app/web
+    environment:
+      INNERCOVE_API: http://127.0.0.1:8001
+    volumes:
+      - ./web:/app/web
+      # The help page bundles D's crisis resources from config/.
+      - ./config:/app/config:ro
+      - dev_web_node_modules:/app/web/node_modules
+    command: >-
+      sh -c "npm install --no-audit --no-fund --no-package-lock
+      && exec npx vite --host ${INNERCOVE_HOST:-127.0.0.1} --port 8000 --strictPort"
+    restart: unless-stopped
+
+volumes:
+  dev_node_modules:
+  dev_core_node_modules:
+  dev_server_node_modules:
+  dev_web_node_modules:

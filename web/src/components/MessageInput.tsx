@@ -43,7 +43,7 @@ export function MessageInput({ disabled, onSend }: MessageInputProps) {
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Write a message"
-          className="min-h-11 flex-1 resize-none rounded-2xl border border-line bg-white px-4 py-3 text-base leading-6 text-ink outline-none placeholder:text-ink/40 focus:border-cove disabled:opacity-60"
+          className="min-h-11 flex-1 resize-none rounded-2xl border border-line bg-white px-4 py-3 text-base leading-6 text-ink outline-none placeholder:text-ink/55 focus:border-cove disabled:opacity-60"
         />
         <button
           type="submit"
