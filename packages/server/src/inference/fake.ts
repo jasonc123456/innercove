@@ -13,7 +13,9 @@ export interface FakeProviderOptions {
   reachable?: boolean;
 }
 
-const DEFAULT_REPLY = "That sounds like a lot to carry this week. What part of it is weighing on you most?";
+/** Says what it is, so a hub started with the fake provider isn't mistaken for the real model. */
+const DEFAULT_REPLY =
+  "(Test reply: this hub is running the fake model, not Qwen, so every answer is this same line. Restart it with INFERENCE_PROVIDER=lmstudio for real replies.)";
 
 /** Deterministic provider for development and tests. Records every prompt it receives. */
 export class FakeProvider implements InferenceProvider {
