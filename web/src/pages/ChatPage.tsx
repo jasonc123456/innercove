@@ -11,8 +11,10 @@ export function ChatPage() {
     chatMode,
     useMemories,
     pinnedMemoryIds,
+    memories,
     setChatMode,
     setUseMemories,
+    refreshHubData,
     chatMessages: messages,
     setChatMessages: setMessages,
     chatConversation,
@@ -103,6 +105,10 @@ export function ChatPage() {
               ),
             );
           },
+          onRemembered: (items) => {
+            setMessages((current) => current.map((message) => message.id === assistantId ? { ...message, remembered: items } : message));
+            void refreshHubData();
+          },
           onSuggestedExercise: (suggestion) => setMessages((current) => current.map((message) => message.id === assistantId ? { ...message, suggestedExercise: suggestion } : message)),
         },
         controller.signal,
@@ -166,7 +172,7 @@ export function ChatPage() {
               onClick={() => setPickerOpen((open) => !open)}
               className="inline-flex min-h-6 items-center text-left font-medium text-cove underline decoration-cove/40 underline-offset-2"
             >
-              Memories: picked automatically · {pinnedMemoryIds.length} pinned
+              Memories: {memories.filter((m) => m.accessLevel === "ai_eligible").length} InnerCove can use
             </button>
           ) : null}
           {pickerOpen && useMemories ? <MemoryPicker onClose={() => setPickerOpen(false)} /> : null}

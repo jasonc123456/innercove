@@ -12,39 +12,28 @@ export function MemoryPage() {
 }
 
 function MemoryWorkspace() {
-  const { memories, pinnedMemoryIds, hubProblem, addMemory, updateMemory, deleteMemory, pinMemory } =
-    useAppSession();
+  // D49: InnerCove writes memories itself from saved chats; the user corrects, excludes or deletes them.
+  const { memories, hubProblem, updateMemory, deleteMemory, setMemoryAccess } = useAppSession();
   const [params] = useSearchParams();
   const focusId = params.get("id");
-  const [editingId, setEditingId] = useState<string | "new" | null>(null);
-  const [pinNote, setPinNote] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [accessNote, setAccessNote] = useState<string | null>(null);
 
-  const editing =
-    editingId === "new"
-      ? null
-      : memories.find((memory) => memory.id === editingId) ?? null;
+  const editing = memories.find((memory) => memory.id === editingId) ?? null;
 
-  if (editingId === "new" || editing) {
+  if (editing) {
     return (
       <MemoryForm
         memory={editing}
         onCancel={() => setEditingId(null)}
         onSubmit={(input) => {
-          if (editing) {
-            updateMemory(editing.id, input);
-          } else {
-            addMemory(input);
-          }
+          updateMemory(editing.id, input);
           setEditingId(null);
         }}
-        onDelete={
-          editing
-            ? () => {
-                deleteMemory(editing.id);
-                setEditingId(null);
-              }
-            : undefined
-        }
+        onDelete={() => {
+          deleteMemory(editing.id);
+          setEditingId(null);
+        }}
       />
     );
   }
@@ -58,33 +47,26 @@ function MemoryWorkspace() {
           </h1>
         </div>
         <p className="text-sm text-ink/70">
-          Stored encrypted on your hub. With &ldquo;Use memories&rdquo; on, the AI may use the relevant ones marked &ldquo;AI may use this&rdquo;.
+          What InnerCove has noted about you from saved chats, stored encrypted on your hub. With
+          &ldquo;Memories&rdquo; on in a chat, InnerCove can use the ones marked &ldquo;AI may use this&rdquo;.
+          Switch one off to exclude it, or delete it.
         </p>
         {hubProblem ? (
           <p className="rounded-2xl bg-white/80 px-4 py-3 text-sm text-ink" role="alert">{hubProblem}</p>
         ) : null}
-        <p className="text-sm text-ink/70">
-          {pinnedMemoryIds.length} of 5 selected for this chat.
-        </p>
-        {pinNote ? (
+        {accessNote ? (
           <p className="text-sm text-ink/80" role="status">
-            {pinNote}
+            {accessNote}
           </p>
         ) : null}
-        <button
-          type="button"
-          onClick={() => setEditingId("new")}
-          className="inline-flex h-11 items-center justify-center rounded-2xl bg-cove px-4 text-base font-medium text-white"
-        >
-          New memory
-        </button>
       </div>
       {memories.length === 0 ? (
-        <p className="page-x px-4 py-6 text-base text-ink/75">No memories yet.</p>
+        <p className="page-x px-4 py-6 text-base text-ink/75">
+          Nothing yet. As you talk in a saved chat, InnerCove notes things worth remembering here.
+        </p>
       ) : (
         <ul className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto page-x px-4 py-4">
           {memories.map((memory) => {
-            const pinned = pinnedMemoryIds.includes(memory.id);
             const focused = memory.id === focusId;
             return (
               <li
@@ -97,32 +79,30 @@ function MemoryWorkspace() {
                 }
               >
                 <p className="text-base leading-relaxed text-ink">{memory.content}</p>
-                <p className="text-sm text-ink/70">
-                  {memory.accessLevel === "private" ? "Private" : "AI may use this"}
+                <p className="text-xs text-ink/60">
+                  {memory.origin === "ai_proposal" ? "Noted by InnerCove" : "Added by you"}
                   {" · "}
-                  Approved
+                  {memory.createdAt.slice(0, 10)}
                 </p>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="mr-auto inline-flex min-h-11 cursor-pointer items-center gap-2 text-sm text-ink">
+                    <input
+                      type="checkbox"
+                      className="size-5"
+                      checked={memory.accessLevel === "ai_eligible"}
+                      onChange={async (event) =>
+                        setAccessNote(await setMemoryAccess(memory.id, event.target.checked ? "ai_eligible" : "private"))
+                      }
+                    />
+                    AI may use this
+                  </label>
                   <button
                     type="button"
                     onClick={() => setEditingId(memory.id)}
-                    className="inline-flex h-11 items-center justify-center rounded-2xl border border-line bg-paper px-4 text-base text-ink"
+                    className="inline-flex h-11 items-center justify-center rounded-2xl border border-line bg-paper px-4 text-sm text-ink"
                   >
-                    Edit
+                    Edit or delete
                   </button>
-                  <button
-                    type="button"
-                    disabled={memory.accessLevel !== "ai_eligible"}
-                    onClick={() => setPinNote(pinMemory(memory.id))}
-                    className="inline-flex h-11 items-center justify-center rounded-2xl bg-cove px-4 text-base font-medium text-white disabled:bg-line disabled:text-ink/60"
-                  >
-                    {pinned ? "Remove from this chat" : "Use this memory in this chat"}
-                  </button>
-                  {memory.accessLevel !== "ai_eligible" ? (
-                    <p className="text-sm text-ink/70">
-                      Turn on AI access before using this in a chat.
-                    </p>
-                  ) : null}
                 </div>
               </li>
             );
@@ -139,14 +119,14 @@ function MemoryForm({
   onSubmit,
   onDelete,
 }: {
-  memory: PracticeMemory | null;
+  memory: PracticeMemory;
   onCancel: () => void;
   onSubmit: (input: { content: string; accessLevel: AccessLevel }) => void;
-  onDelete?: () => void;
+  onDelete: () => void;
 }) {
-  const [content, setContent] = useState(memory?.content ?? "");
+  const [content, setContent] = useState(memory.content);
   const [accessLevel, setAccessLevel] = useState<AccessLevel>(
-    memory?.accessLevel ?? "private",
+    memory.accessLevel,
   );
   const [error, setError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -167,7 +147,7 @@ function MemoryForm({
     >
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-lg font-semibold leading-tight tracking-tight text-cove">
-          {memory ? "Edit memory" : "New memory"}
+          Edit memory
         </h1>
         <button
           type="button"
@@ -178,7 +158,7 @@ function MemoryForm({
         </button>
       </div>
       <p className="text-sm text-ink/70">
-        Saved on your hub. Memories you write are approved straight away.
+        Correct what InnerCove noted, exclude it from the AI, or delete it.
       </p>
       <label className="flex flex-col gap-2 text-sm text-ink/80">
         Memory
@@ -209,9 +189,9 @@ function MemoryForm({
         type="submit"
         className="inline-flex h-11 items-center justify-center rounded-2xl bg-cove px-4 text-base font-medium text-white"
       >
-        {memory ? "Update memory" : "Add memory"}
+        Update memory
       </button>
-      {onDelete && !confirmingDelete ? (
+      {!confirmingDelete ? (
         <button
           type="button"
           onClick={() => setConfirmingDelete(true)}
@@ -220,7 +200,7 @@ function MemoryForm({
           Delete
         </button>
       ) : null}
-      {onDelete && confirmingDelete ? (
+      {confirmingDelete ? (
         <div className="flex flex-col gap-2">
           <p className="text-base text-ink">Delete this memory?</p>
           <div className="flex gap-2">

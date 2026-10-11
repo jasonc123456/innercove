@@ -47,6 +47,8 @@ export interface StreamHandlers {
   /** Present only when the server dropped earlier exchanges (D33). */
   onHistoryExcluded?: (count: number) => void;
   onSuggestedExercise?: (suggestion: SuggestedExercise) => void;
+  /** Saved chats (D49): what InnerCove just remembered from the user's message. */
+  onRemembered?: (items: { id: string; content: string }[]) => void;
 }
 
 export class ReplyError extends Error {
@@ -142,6 +144,9 @@ function dispatch(block: string, handlers: StreamHandlers) {
       break;
     case "replaced":
       handlers.onReplace?.(payload.text);
+      break;
+    case "remembered":
+      handlers.onRemembered?.(payload.items);
       break;
     case "done":
       handlers.onDone?.(payload);

@@ -91,6 +91,10 @@ type AppSessionValue = {
   addMemory: (input: { content: string; accessLevel: AccessLevel }) => Promise<void>;
   updateMemory: (id: string, input: { content: string; accessLevel: AccessLevel }) => Promise<void>;
   deleteMemory: (id: string) => Promise<void>;
+  /** D49: exclude a memory from (or return it to) the AI. Returns a message if the hub refused. */
+  setMemoryAccess: (id: string, accessLevel: AccessLevel) => Promise<string | null>;
+  /** Reloads diary entries and memories, e.g. after InnerCove remembered something in a chat. */
+  refreshHubData: () => Promise<void>;
   pinMemory: (id: string) => string | null;
 };
 
@@ -344,6 +348,23 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
         setPinnedMemoryIds((current) => current.filter((pinned) => pinned !== id));
         return change(() => hub(`/api/memories/${encodeURIComponent(id)}`, { method: "DELETE" }));
       },
+      async setMemoryAccess(id, accessLevel) {
+        if (accessLevel === "private") setPinnedMemoryIds((current) => current.filter((pinned) => pinned !== id));
+        try {
+          const res = await fetch(`/api/memories/${encodeURIComponent(id)}`, {
+            method: "PATCH",
+            headers: JSON_HEADERS,
+            body: JSON.stringify({ accessLevel }),
+          });
+          await reloadHubData();
+          if (res.status === 409) return "This memory came from a chat that was deleted or hidden, so it can't be turned back on.";
+          if (!res.ok) return "That change didn't reach the hub. Try again.";
+          return null;
+        } catch {
+          return "That change didn't reach the hub. Try again.";
+        }
+      },
+      refreshHubData: reloadHubData,
       pinMemory(id) {
         const memory = memories.find((item) => item.id === id);
         if (!memory || memory.accessLevel !== "ai_eligible") {

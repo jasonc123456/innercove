@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type { ReplyContext } from "../chat/streamReply";
 import { CrisisCard } from "./CrisisCard";
@@ -13,7 +13,12 @@ export type ChatMessage = {
   historyExcluded?: number;
   tier?: 0 | 1 | 2;
   suggestedExercise?: ExerciseSuggestion;
+  /** Saved chats (D49): memories InnerCove wrote from the user's message in this exchange. */
+  remembered?: { id: string; content: string }[];
 };
+
+/** Chips shown before "+N more": every memory is sent now (D49), so a reply can have many. */
+const CHIP_LIMIT = 4;
 
 type MessageListProps = {
   messages: ChatMessage[];
@@ -33,6 +38,7 @@ export function MessageList({
   onDismissExercise,
 }: MessageListProps) {
   const { chatMode } = useAppSession();
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const endRef = useRef<HTMLLIElement>(null);
 
   useEffect(() => {
@@ -94,7 +100,7 @@ export function MessageList({
               <div className="mt-3 flex flex-col gap-2">
                 <p className="text-sm text-ink/70">Had access to</p>
                 <div className="flex flex-wrap gap-2">
-                  {message.context.sources.map((source) => (
+                  {(expanded.has(message.id) ? message.context.sources : message.context.sources.slice(0, CHIP_LIMIT)).map((source) => (
                     <button
                       key={source.id}
                       type="button"
@@ -109,6 +115,15 @@ export function MessageList({
                       {source.title ? ` · ${source.title}` : ""}
                     </button>
                   ))}
+                  {!expanded.has(message.id) && message.context.sources.length > CHIP_LIMIT ? (
+                    <button
+                      type="button"
+                      onClick={() => setExpanded((current) => new Set(current).add(message.id))}
+                      className="inline-flex min-h-11 items-center rounded-2xl px-3 text-sm text-cove underline decoration-cove/40 underline-offset-2"
+                    >
+                      +{message.context.sources.length - CHIP_LIMIT} more
+                    </button>
+                  ) : null}
                 </div>
                 {openSource?.messageId === message.id ? (
                   <SentPanel
@@ -118,6 +133,9 @@ export function MessageList({
                   />
                 ) : null}
               </div>
+            ) : null}
+            {!isUser && message.remembered && message.remembered.length > 0 ? (
+              <Remembered items={message.remembered} />
             ) : null}
           </li>
         );
@@ -167,6 +185,47 @@ function SentPanel({
       >
         {source.type === "memory" ? "Open this memory" : "Open diary"}
       </Link>
+    </div>
+  );
+}
+
+/** D49: what InnerCove noted from the user's message, with exclude and delete right here. */
+function Remembered({ items }: { items: { id: string; content: string }[] }) {
+  const { memories, setMemoryAccess, deleteMemory } = useAppSession();
+  const [note, setNote] = useState<string | null>(null);
+  return (
+    <div className="mt-3 flex flex-col gap-2 rounded-2xl border border-line bg-paper/80 px-3 py-2.5">
+      <p className="text-sm text-ink/70">Remembered from what you said</p>
+      {items.map((item) => {
+        const memory = memories.find((m) => m.id === item.id);
+        const state = !memory ? "deleted" : memory.accessLevel === "private" ? "excluded" : "used";
+        return (
+          <div key={item.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+            <p className={state === "used" ? "text-sm text-ink" : "text-sm text-ink/50 line-through"}>{item.content}</p>
+            {state === "deleted" ? (
+              <span className="text-xs text-ink/60">Deleted</span>
+            ) : (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={async () => setNote(await setMemoryAccess(item.id, state === "used" ? "private" : "ai_eligible"))}
+                  className="inline-flex min-h-9 items-center rounded-full px-2.5 text-xs font-medium text-cove"
+                >
+                  {state === "used" ? "Don't use" : "Use again"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void deleteMemory(item.id)}
+                  className="inline-flex min-h-9 items-center rounded-full px-2.5 text-xs font-medium text-ink/70"
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+      {note ? <p className="text-xs text-ink/70" role="status">{note}</p> : null}
     </div>
   );
 }
