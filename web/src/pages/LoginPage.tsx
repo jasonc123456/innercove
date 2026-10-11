@@ -42,7 +42,7 @@ export function LoginPage() {
           <h1 className="text-3xl font-semibold tracking-tight text-cove">Inner Cove</h1>
         </div>
         <p className="mt-4 text-base leading-relaxed text-ink/80">
-          Sign in or create an account to continue. This does not unlock the diary.
+          Sign in or create an account to explore more features.
         </p>
 
         <div className="mt-6 grid grid-cols-2 gap-2 rounded-2xl bg-foam p-1" role="tablist" aria-label="Account">
