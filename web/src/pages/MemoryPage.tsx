@@ -5,6 +5,7 @@ import {
   type AccessLevel,
   type PracticeMemory,
 } from "../session/AppSession";
+import { ExportPanel } from "../components/ExportPanel";
 import { useTimeZone } from "../timeZone";
 
 /** Signing in (D47) already unlocked the hub, so the page opens straight onto its data. */
@@ -20,8 +21,13 @@ function MemoryWorkspace() {
   const focusId = params.get("id");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [accessNote, setAccessNote] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const editing = memories.find((memory) => memory.id === editingId) ?? null;
+
+  if (exporting) {
+    return <ExportPanel kind="memories" onClose={() => setExporting(false)} />;
+  }
 
   if (editing) {
     return (
@@ -47,6 +53,13 @@ function MemoryWorkspace() {
           <h1 className="text-lg font-semibold leading-tight tracking-tight text-cove">
             Memories
           </h1>
+          <button
+            type="button"
+            onClick={() => setExporting(true)}
+            className="inline-flex h-9 items-center justify-center rounded-full border border-line px-4 text-sm text-ink"
+          >
+            Export
+          </button>
         </div>
         <p className="text-sm text-ink/70">
           What InnerCove has noted about you from saved chats, stored encrypted on your hub. With

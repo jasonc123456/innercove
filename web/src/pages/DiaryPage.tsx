@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
+import { ExportPanel } from "../components/ExportPanel";
 import {
   DiaryFeelingPicker,
   feelingFromTags,
@@ -25,6 +26,7 @@ function DiaryWorkspace() {
   const focusId = params.get("id");
   const [query, setQuery] = useState("");
   const [editingId, setEditingId] = useState<string | "new" | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const normalized = query.trim().toLowerCase();
   const visible = entries.filter((entry) => {
@@ -39,6 +41,10 @@ function DiaryWorkspace() {
     editingId === "new"
       ? null
       : entries.find((entry) => entry.id === editingId) ?? null;
+
+  if (exporting) {
+    return <ExportPanel kind="diary" onClose={() => setExporting(false)} />;
+  }
 
   if (editingId === "new" || editing) {
     return (
@@ -72,6 +78,13 @@ function DiaryWorkspace() {
           <h1 className="text-lg font-semibold leading-tight tracking-tight text-cove">
             Diary
           </h1>
+          <button
+            type="button"
+            onClick={() => setExporting(true)}
+            className="inline-flex h-9 items-center justify-center rounded-full border border-line px-4 text-sm text-ink"
+          >
+            Export
+          </button>
         </div>
         <p className="text-sm text-ink/70">
           Stored encrypted on your hub. Only entries marked &ldquo;AI may use this&rdquo; can be used in a chat.
