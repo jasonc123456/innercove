@@ -65,8 +65,9 @@ type AppSessionValue = {
   completeUnlock: (passphrase: string) => string | null;
   /** The demo hub's only account is its admin (D47: one user, the hub owner). */
   role: "admin";
-  /** Checks the hub passphrase on the server (POST /api/unlock re-verifies even when unlocked). */
-  signIn: (passphrase: string) => Promise<string | null>;
+  /** Username or email of the hub's admin, plus the hub passphrase, checked on the server
+   * (POST /api/unlock re-verifies even when unlocked). */
+  signIn: (login: string, passphrase: string) => Promise<string | null>;
   signOut: () => void;
   createAccount: (email: string, password: string, confirm: string) => string | null;
   lock: () => void;
@@ -80,6 +81,10 @@ type AppSessionValue = {
   deleteMemory: (id: string) => void;
   pinMemory: (id: string) => string | null;
 };
+
+/** The hub's single account (D47). Identifiers aren't secrets; the passphrase is. Server-side check comes with Phase 5a sessions. */
+export const ADMIN_LOGINS = ["admin", "admin@innercove.local"] as const;
+const SIGN_IN_FAILED = "That username or passphrase didn't work.";
 
 const DEMO_USER_ID = "01900000-0000-7000-8000-000000000001";
 
@@ -127,8 +132,11 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
       lock() {
         setLocked(true);
       },
-      async signIn(passphrase) {
+      async signIn(login, passphrase) {
+        if (login.trim().length === 0) return "Enter your username or email.";
         if (passphrase.length < 1) return "Enter the hub passphrase.";
+        // Same message for either mistake, so the page doesn't say which one was wrong.
+        if (!(ADMIN_LOGINS as readonly string[]).includes(login.trim().toLowerCase())) return SIGN_IN_FAILED;
         let res: Response;
         try {
           res = await fetch("/api/unlock", {
@@ -147,7 +155,7 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
         const body = await res.json().catch(() => null);
         if (body?.error?.code === "CONFLICT") return "This hub hasn't been set up yet.";
         const wait = res.headers.get("retry-after");
-        return wait ? `Too many attempts. Try again in ${wait} seconds.` : "That passphrase didn't work.";
+        return wait ? `Too many attempts. Try again in ${wait} seconds.` : SIGN_IN_FAILED;
       },
       signOut() {
         setSignedIn(false);

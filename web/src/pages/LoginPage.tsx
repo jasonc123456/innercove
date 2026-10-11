@@ -6,6 +6,7 @@ export function LoginPage() {
   // One hub, one user (D47): no self-registration. Extra accounts would come from an
   // admin panel after sign-in (roadmap, multi-user).
   const { signIn } = useAppSession();
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -13,7 +14,7 @@ export function LoginPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
-    const nextError = await signIn(password);
+    const nextError = await signIn(login, password);
     setBusy(false);
     setPassword("");
     setError(nextError);
@@ -27,11 +28,25 @@ export function LoginPage() {
           <h1 className="text-3xl font-semibold tracking-tight text-cove">Inner Cove</h1>
         </div>
         <p className="mt-4 text-base leading-relaxed text-ink/80">
-          Sign in to your hub with its passphrase. This hub has one account: its owner, the admin.
+          Sign in to your hub. It has one account: its owner, the admin.
         </p>
 
 
         <form onSubmit={handleSubmit} autoComplete="off" className="mt-6 flex flex-col gap-3">
+          <label className="flex flex-col gap-2 text-sm text-ink/80">
+            Username or email
+            <input
+              type="text"
+              name="username"
+              value={login}
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
+              autoFocus
+              onChange={(event) => setLogin(event.target.value)}
+              className="h-11 rounded-2xl border border-line bg-white px-4 text-base text-ink outline-none focus:border-cove"
+            />
+          </label>
           <label className="flex flex-col gap-2 text-sm text-ink/80">
             Hub passphrase
             <input
@@ -39,7 +54,6 @@ export function LoginPage() {
               name="password"
               value={password}
               autoComplete="current-password"
-              autoFocus
               onChange={(event) => setPassword(event.target.value)}
               className="h-11 rounded-2xl border border-line bg-white px-4 text-base text-ink outline-none focus:border-cove"
             />
@@ -51,7 +65,7 @@ export function LoginPage() {
           ) : null}
           <button
             type="submit"
-            disabled={busy || password.length === 0}
+            disabled={busy || login.trim().length === 0 || password.length === 0}
             className="inline-flex h-11 items-center justify-center rounded-2xl bg-cove px-4 text-base font-medium text-white disabled:opacity-60"
           >
             {busy ? "Checking…" : "Sign in"}

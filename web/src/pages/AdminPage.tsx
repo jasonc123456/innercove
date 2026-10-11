@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { useAppSession } from "../session/AppSession";
+import { ADMIN_LOGINS, useAppSession } from "../session/AppSession";
 
 type PrivacyStatus = {
   locked: boolean;
@@ -88,7 +88,8 @@ export function AdminPage() {
 
       <Card title="Account">
         <Row label="Signed in as" value="admin (hub owner)" />
-        <Row label="Sign-in" value="Hub passphrase" />
+        <Row label="Username / email" value={ADMIN_LOGINS.join(" · ")} />
+        <Row label="Sign-in" value="Username or email + hub passphrase" />
         <div className="mt-4 flex flex-wrap gap-2">
           <button type="button" onClick={signOut} className={secondaryButton}>Sign out</button>
           <button type="button" onClick={() => void lockHub()} className={secondaryButton}>Lock hub now</button>
