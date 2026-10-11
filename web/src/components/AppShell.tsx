@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAppSession } from "../session/AppSession";
 
@@ -75,13 +75,25 @@ const SECTIONS = [
   },
 ] as const;
 
-/** Five tabs fit a phone; Admin is reached from Settings, which the "Me" tab also lights up for. */
-const TABS = SECTIONS.filter((s) => s.to !== "/admin").map((s) => (s.to === "/settings" ? { ...s, label: "Me" } : s));
+/** Phones show the first four sections as tabs; the rest go under "More" (•••). */
+const TABS = SECTIONS.slice(0, 4);
+const MORE = SECTIONS.slice(4);
 
 export function AppShell() {
   const { chatMode } = useAppSession();
   const path = useLocation().pathname;
   const home = path === "/";
+  const [moreOpen, setMoreOpen] = useState(false);
+  const inMore = MORE.some((s) => s.to === path);
+
+  // The menu closes on navigation and on Escape.
+  useEffect(() => setMoreOpen(false), [path]);
+  useEffect(() => {
+    if (!moreOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMoreOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [moreOpen]);
 
   return (
     <div className="app-root flex h-dvh flex-col bg-paper font-sans text-ink lg:flex-row">
@@ -145,20 +157,56 @@ export function AppShell() {
 
       {/* Phone and tablet: the tab bar sits under the page, above the home indicator. */}
       <nav
-        className="bg-paper flex shrink-0 border-t border-line px-1 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] lg:hidden"
+        className="relative flex shrink-0 border-t border-line bg-paper px-1 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] lg:hidden"
         aria-label="Sections"
       >
         {TABS.map((s) => (
-          <NavLink
-            key={s.to}
-            to={s.to}
-            end={s.to === "/"}
-            className={({ isActive }) => tabClass(isActive || (s.to === "/settings" && path === "/admin"))}
-          >
+          <NavLink key={s.to} to={s.to} end={s.to === "/"} className={({ isActive }) => tabClass(isActive)}>
             <NavIcon>{s.icon}</NavIcon>
             {s.label}
           </NavLink>
         ))}
+        <button
+          type="button"
+          className={tabClass(inMore || moreOpen)}
+          aria-expanded={moreOpen}
+          aria-controls="more-menu"
+          onClick={() => setMoreOpen((open) => !open)}
+        >
+          <NavIcon>
+            <path d="M6 12h.01M12 12h.01M18 12h.01" strokeWidth="3" strokeLinecap="round" />
+          </NavIcon>
+          More
+        </button>
+
+        {moreOpen ? (
+          <>
+            {/* Tapping anywhere else closes the menu. */}
+            <button
+              type="button"
+              aria-label="Close menu"
+              className="fixed inset-0 z-10 cursor-default bg-ink/10"
+              onClick={() => setMoreOpen(false)}
+            />
+            <div
+              id="more-menu"
+              className="absolute right-2 bottom-full z-20 mb-2 w-52 overflow-hidden rounded-2xl border border-line bg-white shadow-lg"
+            >
+              {MORE.map((s) => (
+                <NavLink
+                  key={s.to}
+                  to={s.to}
+                  className={({ isActive }) =>
+                    `flex h-12 items-center gap-3 px-4 text-base ${isActive ? "bg-foam font-semibold text-cove" : "text-ink"}`
+                  }
+                >
+                  <NavIcon>{s.icon}</NavIcon>
+                  {s.label}
+                </NavLink>
+              ))}
+            </div>
+          </>
+        ) : null}
       </nav>
     </div>
   );
