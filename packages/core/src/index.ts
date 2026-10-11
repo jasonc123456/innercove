@@ -28,3 +28,5 @@ export * from "./safety/index.js";
 export * from "./safety/golden.js";
 
 export * from "./api/transcribe.js";
+export * from "./tree-growth.js";
+export * from "./api/check-ins.js";

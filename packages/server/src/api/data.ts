@@ -1,6 +1,6 @@
 import { transcriptionRoutes } from "./transcribe.js";
 import {
-  UpdateSettingsRequestSchema,
+  UpdateSettingsRequestSchema, ListCheckInsQuerySchema, SaveCheckInRequestSchema, AcknowledgeTreeRequestSchema,
   ConversationIdSchema, DiaryEntryIdSchema, MemoryIdSchema,
   CreateMemoryRequestSchema, UpdateMemoryRequestSchema, ReviewMemoryRequestSchema, ListMemoriesQuerySchema,
   CreateConversationRequestSchema, UpdateConversationRequestSchema, ListConversationsQuerySchema, ListMessagesQuerySchema,
@@ -13,6 +13,7 @@ import { DatabaseError } from "../store/db.js";
 import { ConversationRepository } from "../store/repos/conversations.js";
 import { SettingsRepository } from "../store/repos/settings.js";
 import { MemoryRepository } from "../store/repos/memories.js";
+import { CheckInRepository } from "../store/repos/check-ins.js";
 import { DiaryRepository } from "../store/repos/diary.js";
 import { sendError } from "./errors.js";
 
@@ -30,6 +31,19 @@ function handle(reply: FastifyReply, action: () => unknown) {
 }
 export function dataRoutes(app: FastifyInstance, hasValidSession?: (request: FastifyRequest) => boolean) {
   transcriptionRoutes(app, undefined, undefined, undefined, hasValidSession);
+  app.get("/api/check-ins", async (request, reply) => handle(reply, () => {
+    const lease = request.databaseLease!;
+    return new CheckInRepository(lease).list(lease.userId, parse(ListCheckInsQuerySchema, request.query).timeZone);
+  }));
+  app.post("/api/check-ins", async (request, reply) => handle(reply, () => {
+    const lease = request.databaseLease!;
+    return new CheckInRepository(lease).save(lease.userId, parse(SaveCheckInRequestSchema, request.body));
+  }));
+  app.post("/api/check-ins/evolution/acknowledge", async (request, reply) => handle(reply, () => {
+    const lease = request.databaseLease!;
+    const input = parse(AcknowledgeTreeRequestSchema, request.body);
+    return new CheckInRepository(lease).acknowledge(lease.userId, input.stage, input.timeZone);
+  }));
   app.get("/api/settings", async (request, reply) => handle(reply, () => {
     const lease = request.databaseLease!;
     return new SettingsRepository(lease).get(lease.userId);

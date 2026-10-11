@@ -2,7 +2,7 @@ import { z } from "zod";
 import { and, count, eq } from "drizzle-orm";
 import { DiaryEntryCreateInputSchema, MemoryCreateInputSchema } from "@innercove/core";
 import { DatabaseError, type DatabaseLease } from "./db.js";
-import { conversations, diaryEntries, memories, messages, messageContext, provenance, tombstones } from "./schema.js";
+import { conversations, diaryEntries, memories, messages, messageContext, provenance, tombstones, checkInEvents, dailyCheckIns } from "./schema.js";
 import { DiaryRepository } from "./repos/diary.js";
 import { MemoryRepository } from "./repos/memories.js";
 
@@ -20,7 +20,7 @@ export function seedFictionalPersona(lease: DatabaseLease, input: unknown) {
   const memoryInputs = template.memories.map(m => MemoryCreateInputSchema.parse({ ...m, origin: "user", sources: [{ sourceType: "manual", sourceId: null }] }));
   const diaryInputs = template.diaryEntries.map(({ date, ...d }) => ({ at: `${date}T12:00:00.000Z`, input: DiaryEntryCreateInputSchema.parse(d) }));
   return lease.db.transaction(() => {
-    for (const table of [conversations, messages, diaryEntries, memories, provenance, messageContext, tombstones]) {
+    for (const table of [conversations, messages, diaryEntries, memories, provenance, messageContext, tombstones, checkInEvents, dailyCheckIns]) {
       if (lease.orm.select({ n: count() }).from(table).where(eq(table.userId, lease.userId)).get()!.n) {
         throw new DatabaseError("CONFLICT", "Demo seed requires an empty content store");
       }

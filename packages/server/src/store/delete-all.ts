@@ -1,6 +1,6 @@
 import { count, eq } from "drizzle-orm";
 import type { DatabaseLease } from "./db.js";
-import { conversations, diaryEntries, memories, messages, messageContext, provenance, tombstones } from "./schema.js";
+import { conversations, diaryEntries, memories, messages, messageContext, provenance, tombstones, checkInEvents, dailyCheckIns, treeProgress } from "./schema.js";
 
 /** Only DatabaseStore's exclusive lifecycle operation may call this: no
  * admitted requests/streams may still hold a connection or stale prompt.
@@ -15,7 +15,7 @@ export function deleteUserContent(connection: Pick<DatabaseLease, "db" | "orm" |
     };
     // Purge all links/tombstones, including retained IDs of deleted sources.
     // Use bulk deletion, not ordinary repos that would create tombstones.
-    for (const table of [messageContext, provenance, messages, conversations, diaryEntries, memories, tombstones]) {
+    for (const table of [messageContext, provenance, messages, conversations, diaryEntries, memories, tombstones, checkInEvents, dailyCheckIns, treeProgress]) {
       orm.delete(table).where(eq(table.userId, userId)).run();
     }
     // Normal triggers remove this user's postings; optimize cleans segments
