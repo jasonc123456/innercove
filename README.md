@@ -84,7 +84,7 @@ Install the CA once on each device you demo from. Open `https://<hub address>:80
 - **Windows:** open the file → Install Certificate → Current User → **Trusted Root Certification Authorities**. Restart Chrome/Edge.
 - **macOS:** open the file in Keychain Access → System → double-click it → Trust → **Always Trust**.
 
-The CA only vouches for private, Tailscale and localhost addresses and expires in 30 days. **Remove it from every device after the event.** Without HTTPS, a desktop browser can instead allow the hub's http address: Chrome/Edge `chrome://flags/#unsafely-treat-insecure-origin-as-secure`, or Firefox `about:config` `media.getusermedia.insecure.enabled` and `media.devices.insecure.enabled`. Audio is transcribed on the hub (whisper.cpp) and never leaves it.
+The CA only vouches for private, Tailscale and localhost addresses and expires in 30 days. **Remove it from every device after the event.** Without HTTPS, a desktop browser can instead allow the hub's http address: Chrome/Edge `chrome://flags/#unsafely-treat-insecure-origin-as-secure`, or Firefox `about:config` `media.getusermedia.insecure.enabled` and `media.devices.insecure.enabled`. Audio is transcribed on the hub (whisper.cpp) and never leaves it. In dev mode the image includes `whisper-cli` and ffmpeg; put the model at `data/stt/ggml-base.en.bin` (D59), or `/api/transcribe` answers 503.
 
 ## Packaged / production-style run
 

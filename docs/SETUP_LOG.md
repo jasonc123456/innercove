@@ -88,3 +88,9 @@ Every system change on the borrowed GX10, one line each, with its exact undo ste
 - `docker-compose.dev.yml` mounts `./data/tls` read-only into the web container; Vite serves `https://…:8000` (plain http on 8000 stops). Recreated the web container only: `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d web`.
 - No system packages, firewall or trust-store changes on the GX10.
 - **Undo:** `rm -rf ~/.config/innercove/tls-ca ~/innercove/data/tls ~/innercove/web/public/innercove-ca.cer`, then recreate the web container (Vite falls back to http). **On every phone or laptop that installed the CA, remove "InnerCove Demo CA (GX10)" after the event** (iOS: Settings → General → VPN & Device Management; Android: Settings → Security → Encryption & credentials → User credentials; Windows: certmgr.msc → Trusted Root Certification Authorities; macOS: Keychain Access → System).
+
+## Voice transcription in dev mode — 2026-10-11 (A, D59)
+- Dev image (`innercove-dev`) rebuilt with a `whisper` build stage (clones whisper.cpp v1.8.2 from GitHub, builds `whisper-cli`) and Debian `ffmpeg`; both containers recreated (the API restart signed everyone out once).
+- Copied `~/innercove-stt-hour1/whisper.cpp/models/ggml-base.en.bin` to `~/innercove/data/stt/` (gitignored; wiped with the repo by `resetBeforeReturn.sh`).
+- No host packages, firewall or trust-store changes.
+- **Undo:** revert the Dockerfile/`docker-compose.dev.yml` change, `rm -rf ~/innercove/data/stt`, rebuild and recreate: `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build`. `resetBeforeReturn.sh` removes `innercove*` images.

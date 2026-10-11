@@ -16,6 +16,11 @@ services:
       HOST: 127.0.0.1
       PORT: "8001"
       ALLOW_NON_LOOPBACK: "0"
+      # Voice input (D59): whisper.cpp and ffmpeg are in the dev image; the model sits in the
+      # gitignored data/stt/ (copy ggml-base.en.bin there). Missing files → 503, voice only.
+      STT_WHISPER_BIN: /usr/local/bin/whisper-cli
+      STT_FFMPEG_BIN: /usr/bin/ffmpeg
+      STT_MODEL_PATH: /app/data/stt/ggml-base.en.bin
     volumes:
       - ./:/app
       - dev_node_modules:/app/node_modules
