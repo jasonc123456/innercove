@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useId, type CSSProperties, type ReactNode } from "react";
 
 /**
  * Decorative frame for the sign-in page. It reuses the Daily check-in sapling's
@@ -168,19 +168,47 @@ function BottomSprig({ lag }: { lag: number }) {
 }
 
 function Branch({ d, width, delay, duration }: { d: string; width: number; delay: number; duration: number }) {
+  const maskId = `grove-reveal-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   return (
-    <path
-      d={d}
-      fill="none"
-      stroke="var(--grove-branch)"
-      strokeWidth={width}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      pathLength={1}
-      className="grove-branch-draw"
-      style={{ animationDelay: `${delay}s`, animationDuration: `${duration}s` }}
-    />
+    <>
+      <mask id={maskId} maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="-80" y="-80" width="560" height="960">
+        <path
+          d={extendPath(d, width / 2 + 4)}
+          fill="none"
+          stroke="#fff"
+          strokeWidth={width + 8}
+          pathLength={1}
+          className="grove-branch-draw"
+          style={{ animationDelay: `${delay}s`, animationDuration: `${duration}s` }}
+        />
+      </mask>
+      <path
+        d={d}
+        fill="none"
+        stroke="var(--grove-branch)"
+        strokeWidth={width}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        mask={`url(#${maskId})`}
+      />
+    </>
   );
+}
+
+/** Continue a branch past both ends so the reveal can cover its round caps. */
+function extendPath(d: string, extra: number) {
+  const nums = d.match(/-?\d*\.?\d+/g)?.map(Number);
+  if (!nums || nums.length < 8) return d;
+  const [sx, sy] = shift(nums[0], nums[1], nums[0] - nums[2], nums[1] - nums[3], extra);
+  const n = nums.length;
+  const [ex, ey] = shift(nums[n - 2], nums[n - 1], nums[n - 2] - nums[n - 4], nums[n - 1] - nums[n - 3], extra);
+  return `M${sx} ${sy}L${nums[0]} ${nums[1]}${d.slice(d.indexOf("C"))}L${ex} ${ey}`;
+}
+
+function shift(x: number, y: number, tx: number, ty: number, distance: number) {
+  const len = Math.hypot(tx, ty) || 1;
+  const scale = distance / len;
+  return [Math.round((x + tx * scale) * 100) / 100, Math.round((y + ty * scale) * 100) / 100] as const;
 }
 
 function LeafSet({

@@ -261,11 +261,13 @@ html[data-theme="dark"] .sign-in-page {
   transform-origin: left center;
 }
 
-/* Grow along each stroke from its path start (the base) toward the tip.
-   pathLength="1" makes a dash of 1 the whole curve. Durations and delays
-   are set per branch in SignInGrove; these are the fallbacks. */
+/* Reveal mask for a branch. Butt caps draw nothing while the dash is still
+   off the curve, so a rounded tip cannot sit ahead of the growth.
+   pathLength="1" makes the first dash the whole curve; the long gap keeps
+   the next dash from wrapping onto the unreached end. */
 .grove-branch-draw {
-  stroke-dasharray: 1;
+  stroke-linecap: butt;
+  stroke-dasharray: 1 3;
   stroke-dashoffset: 1;
   animation-name: grove-draw;
   animation-duration: 1.95s;
