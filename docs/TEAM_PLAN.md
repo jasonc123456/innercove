@@ -71,7 +71,7 @@ Compared with the original plan, retrieval and prompt assembly move from D to A,
 Recorded so ownership stays clear; see "Added during the event" in `PROJECT_PLAN.md` §5 for status.
 | Role | Added work |
 |---|---|
-| A (Jason) | Desktop UI and phone tab bar; Settings and Admin pages; server sessions (Phase 5a); Tailscale for overnight access (D48); integration lead backup for C's diary/memories wiring |
+| A (Jason) | Desktop UI and phone tab bar; Settings and Admin pages; server sessions (Phase 5a); Tailscale for overnight access (D48); integration lead backup for C's diary/memories wiring; AI-written memories (D49: note writer, chat `remembered` card, Memories page without manual add, picker as exclude switches) |
 | B (Angela) | Voice input backend: local whisper.cpp transcription (`/api/transcribe`), isolated GX10 voice runner (`docs/VOICE_VERIFY.md`) |
 | C (Mia) | Sign-in page grove, light/dark theme toggle and animations; voice recorder in chat |
 | D (Meowie) | Home dashboard (daily thought, mood check-in, growing sapling); Wellness Toolkit with guided breathing and the chat `suggestedExercise` offer; trauma-informed prompt guidance and cases; hardened safety checks |

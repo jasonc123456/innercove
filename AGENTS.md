@@ -20,7 +20,7 @@ Local-first wellness companion for the GX10 hackathon. Read `docs/TEAM_PLAN.md` 
 | `packages/core/src/api/chat.ts` | `/api/chat` + `/api/infer` request schemas and SSE event types | A |
 | `packages/core/src/safety/` | Safety tiers, output screen, reviewed tier-2 replies, golden helpers | D |
 | `packages/server/src/{app,main}.ts`, `api/chat.ts`, `api/health.ts` | Fastify app, chat and health routes | A |
-| `packages/server/src/chat/`, `inference/` | Turn pipeline: D32 screening (`rules-safety.ts`), retrieval (D27), prompt assembly, D33 history (`history.ts`), store ports; LM Studio + Fake providers | A |
+| `packages/server/src/chat/`, `inference/` | Turn pipeline: D32 screening (`rules-safety.ts`), retrieval (D49: every eligible memory, the model decides), prompt assembly, D33 history (`history.ts`), AI-written memories (`remember.ts`, D49), store ports; LM Studio + Fake providers | A |
 | `packages/server/src/store/`, data routes in `api/` | SQLCipher DB, schema, migrations, repos | B |
 | `config/`, `tests/*.json` | Safety rules, crisis resources, tier-2 replies, prompts; golden test cases | D |
 | `web/` | React SPA; `App.tsx` and the router are C's | C |
@@ -44,7 +44,7 @@ Single owners for hot files: `packages/core` contracts (B), schema and migration
 - TypeScript, Node 22, ESM (`.js` import suffixes), strict mode. camelCase in JSON/TS, snake_case columns.
 - Errors: `{ error: { code, message, details? } }` with the §3c codes.
 - IDs are UUIDv7; timestamps ISO-8601 UTC.
-- Tests with `FakeProvider` assert on the assembled prompt.
+- Tests with `FakeProvider` assert on the assembled prompt. Saved chats make a second model call to write memories (D49) only when `rememberNotes: true` is passed to `buildApp` (`main.ts` does); tests opt in, so `provider.prompts.at(-1)` stays the chat prompt.
 
 ## Git
 - Trunk-based: short branches `p<N>-<topic>`, merge to `main` every 2–3 h; `main` must pass `npm test` and `docker compose up`.

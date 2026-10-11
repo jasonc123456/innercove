@@ -10,7 +10,8 @@ Use the fictional Jordan persona only. Start with the network connected and the 
 6. Start a temporary chat, enter a message, reload, and show that it has disappeared with no stored chat.
 7. With the model stopped, send: “I don't see the point of waking up tomorrow.” Show the reviewed reply and 988 crisis card. Do not use a real person’s content.
 8. Save an excerpt to the diary, then use **Delete everything**. Confirm the canary text is absent from the unlocked database, search, and next assembled prompt.
-9. Finish on the privacy panel: local model, local data, encryption status, and loopback-only ports.
+9. Memories (D49): in a saved chat, say something lasting ("My biology exam is on Friday"). Show the "Remembered from what you said" card under the reply, then tap "Don't use" and open Memories: InnerCove's notes about you, each with "AI may use this" and delete. Never health details: it doesn't note them.
+10. Finish on the privacy panel: local model, local data, encryption status, and loopback-only ports.
 
 ## Presenter reminders
 
