@@ -36,8 +36,12 @@ services:
     working_dir: /app/web
     environment:
       INNERCOVE_API: http://127.0.0.1:8001
+      # HTTPS when scripts/make-dev-cert.sh has made a certificate (D58); http otherwise.
+      INNERCOVE_TLS_DIR: /app/tls
     volumes:
       - ./web:/app/web
+      # Site certificate and key only; the CA key never enters a container.
+      - ./data/tls:/app/tls:ro
       # The help page bundles D's crisis resources from config/.
       - ./config:/app/config:ro
       - dev_web_node_modules:/app/web/node_modules

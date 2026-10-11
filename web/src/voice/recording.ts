@@ -63,7 +63,7 @@ export class VoiceRecording {
       if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
         fail(globalThis.isSecureContext
           ? 'This browser can\'t record audio.'
-          : 'This browser blocks the microphone on this http address. Allow the hub\'s address in the browser (see Voice in the README), or open InnerCove on the hub itself.');
+          : 'This browser blocks the microphone on plain http. Open InnerCove at its https:// address (README "HTTPS on the local network").');
         return;
       }
       const mimeType = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg']

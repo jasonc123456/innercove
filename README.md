@@ -73,15 +73,18 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 
 This serves Vite on port 8000 and keeps the API on `127.0.0.1:8001`. It mounts source and uses the same `data/` database as the packaged path. This is a development server, not the judging build.
 
-## Voice input on the local network
+## HTTPS on the local network (phones and voice)
 
-InnerCove doesn't require HTTPS for voice; the hub is used over plain `http` on the local network. Browsers, though, only give pages the microphone on HTTPS or `localhost`, so allow the hub's address once on the device you demo from (the browser then asks for microphone permission):
+Browsers only give a page the microphone on HTTPS or `localhost`. On the GX10's dev site, `scripts/make-dev-cert.sh <LAN IP> <Tailscale IP> <Tailscale name>` makes a local CA and a certificate; recreate the web container (`docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d web`) and the site is `https://<hub address>:8000` (plain http on 8000 stops). Re-run the script with the new address if the hub's IP changes; devices stay trusted.
 
-- **Chrome or Edge (desktop, Android Chrome):** open `chrome://flags/#unsafely-treat-insecure-origin-as-secure` (Edge: `edge://flags/#unsafely-treat-insecure-origin-as-secure`), add `http://<hub address>:8000`, set it to Enabled and relaunch.
-- **Firefox:** in `about:config`, set `media.devices.insecure.enabled` and `media.getusermedia.insecure.enabled` to `true`.
-- **Or use localhost:** open `http://localhost:8000` in the hub's own browser, or forward it to a laptop with `ssh -L 8000:127.0.0.1:8000 <hub>` and open `http://localhost:8000` there.
+Install the CA once on each device you demo from. Open `https://<hub address>:8000/innercove-ca.crt` (accept the one-time warning), then:
 
-iOS Safari has no such setting; use one of the options above. Audio is transcribed on the hub (`/api/transcribe`, whisper.cpp) and never leaves it.
+- **iPhone/iPad:** Allow the profile download → Settings → **Profile Downloaded** → Install. Then Settings → General → About → **Certificate Trust Settings** → turn on full trust for "InnerCove Demo CA (GX10)".
+- **Android:** Settings → Security (or Security & privacy) → More → Encryption & credentials → **Install a certificate → CA certificate** → pick the downloaded file. Use Chrome.
+- **Windows:** open the file → Install Certificate → Current User → **Trusted Root Certification Authorities**. Restart Chrome/Edge.
+- **macOS:** open the file in Keychain Access → System → double-click it → Trust → **Always Trust**.
+
+The CA only vouches for private, Tailscale and localhost addresses and expires in 30 days. **Remove it from every device after the event.** Without HTTPS, a desktop browser can instead allow the hub's http address: Chrome/Edge `chrome://flags/#unsafely-treat-insecure-origin-as-secure`, or Firefox `about:config` `media.getusermedia.insecure.enabled` and `media.devices.insecure.enabled`. Audio is transcribed on the hub (whisper.cpp) and never leaves it.
 
 ## Packaged / production-style run
 

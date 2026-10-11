@@ -83,7 +83,7 @@ describe('recording-to-draft controller (mocked browser)', () => {
   it('rejects unsupported browser and permission denial without leaking error text', async () => {
     getUserMedia.mockRejectedValue(new Error('PRIVATE DEVICE')); await controller.start(); expect(JSON.stringify(update.mock.calls)).not.toContain('PRIVATE DEVICE');
     vi.stubGlobal('isSecureContext', false); vi.stubGlobal('navigator', {}); await controller.start(); expect(fetch).not.toHaveBeenCalled();
-    expect(update).toHaveBeenLastCalledWith(expect.objectContaining({ phase: 'idle', error: expect.stringContaining('http address') }));
+    expect(update).toHaveBeenLastCalledWith(expect.objectContaining({ phase: 'idle', error: expect.stringContaining('https:// address') }));
   });
   it('records on a plain-http LAN address when the browser allows the microphone', async () => {
     vi.stubGlobal('isSecureContext', false); await controller.start(); expect(getUserMedia).toHaveBeenCalled();
