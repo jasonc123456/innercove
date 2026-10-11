@@ -276,27 +276,31 @@ html[data-theme="dark"] .feeling-picker {
 }
 
 /* Sign-in grove: the same flat sapling language, as a frame around the login box.
+   Colors follow data-theme directly, so the login toggle repaints this page.
    Color changes are a short fill/stroke fade. Reduced motion drops the fade. */
 .sign-in-page {
-  color-scheme: light dark;
-  --grove-branch: light-dark(#6d5239, #e4c7a8);
-  --grove-ground: light-dark(#c7dfc2, #2b4338);
-  --grove-shade: light-dark(#a6c99e, #3e5c4c);
-  --sign-in-heading: light-dark(#1e4f4c, #d7ebe6);
-  --color-paper: light-dark(#f3efe6, #16211e);
-  --color-ink: light-dark(#1c2430, #f3efe6);
-  --color-line: light-dark(#d5cfc3, #4a615b);
+  color-scheme: light;
+  --grove-branch: #6d5239;
+  --grove-ground: #c7dfc2;
+  --grove-shade: #a6c99e;
+  --sign-in-heading: #1e4f4c;
+  --color-paper: #f3efe6;
+  --color-ink: #1c2430;
+  --color-line: #d5cfc3;
   background-color: var(--color-paper);
   color: var(--color-ink);
   transition: background-color 200ms ease, color 200ms ease;
 }
 
-html[data-theme="light"] .sign-in-page {
-  color-scheme: light;
-}
-
 html[data-theme="dark"] .sign-in-page {
   color-scheme: dark;
+  --grove-branch: #e4c7a8;
+  --grove-ground: #2b4338;
+  --grove-shade: #3e5c4c;
+  --sign-in-heading: #d7ebe6;
+  --color-paper: #16211e;
+  --color-ink: #f3efe6;
+  --color-line: #4a615b;
 }
 
 .sign-in-page h1,
@@ -310,22 +314,99 @@ html[data-theme="dark"] .sign-in-page {
   border-color: var(--sign-in-heading);
 }
 
+/* Same preference as the login toggle. Colors are pinned so the dark theme's
+   utility overrides cannot restyle the track or the knob. */
+.theme-switch {
+  position: relative;
+  width: 2.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid #d5cfc3;
+  background: #fff;
+  padding: 0;
+}
+
+.theme-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: #1e4f4c;
+  transition: transform 180ms ease;
+}
+
+.theme-switch[aria-checked="true"] {
+  border-color: #1e4f4c;
+  background: #1e4f4c;
+}
+
+.theme-switch[aria-checked="true"]::after {
+  transform: translateX(1rem);
+  background: #f3efe6;
+}
+
+html[data-theme="dark"] .theme-switch {
+  border-color: #4a615b;
+  background: #24312e;
+}
+
+html[data-theme="dark"] .theme-switch::after {
+  background: #d7ebe6;
+}
+
+html[data-theme="dark"] .theme-switch[aria-checked="true"] {
+  border-color: #9fd4cc;
+  background: #9fd4cc;
+}
+
+html[data-theme="dark"] .theme-switch[aria-checked="true"]::after {
+  background: #16211e;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-switch::after {
+    transition: none;
+  }
+}
+
 .sign-in-page input {
-  background-color: light-dark(#ffffff, #24312e);
-  color: light-dark(#1c2430, #f3efe6);
-  border-color: light-dark(#d5cfc3, #4a615b);
+  background-color: #ffffff;
+  color: #1c2430;
+  border-color: #d5cfc3;
+}
+
+html[data-theme="dark"] .sign-in-page input {
+  background-color: #24312e;
+  color: #f3efe6;
+  border-color: #4a615b;
 }
 
 .cove-mark-tile {
-  fill: light-dark(#1e4f4c, #d7ebe6);
+  fill: #1e4f4c;
+}
+
+html[data-theme="dark"] .cove-mark-tile {
+  fill: #d7ebe6;
 }
 
 .cove-mark-arch {
-  stroke: light-dark(#e4efec, #1e4f4c);
+  stroke: #e4efec;
+}
+
+html[data-theme="dark"] .cove-mark-arch {
+  stroke: #1e4f4c;
 }
 
 .cove-mark-shore {
-  stroke: light-dark(#f3efe6, #1e4f4c);
+  stroke: #f3efe6;
+}
+
+html[data-theme="dark"] .cove-mark-shore {
+  stroke: #1e4f4c;
 }
 
 .sign-in-grove,

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, PageHeader, Problem, Row, secondaryButton, useHubApi } from "../components/Panel";
 import { TwoFactorCard } from "../components/TwoFactorCard";
 import { ADMIN_LOGINS, useAppSession } from "../session/AppSession";
+import { useTheme } from "../theme";
 
 type Settings = {
   useMemoriesDefault: boolean;
@@ -11,6 +12,7 @@ type Settings = {
 /** Your account: who you are, how you sign in, your defaults and your data (all per user). */
 export function SettingsPage() {
   const { signOut } = useAppSession();
+  const { theme, toggleTheme } = useTheme();
   const [problem, setProblem] = useState<string | null>(null);
   const api = useHubApi(setProblem);
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -52,6 +54,21 @@ export function SettingsPage() {
         <Row label="Username / email" value={ADMIN_LOGINS.join(" · ")} />
         <Row label="Sign-in" value="Username or email + passphrase" />
         <button type="button" onClick={signOut} className={`${secondaryButton} mt-4`}>Sign out</button>
+      </Card>
+
+      <Card title="Appearance">
+        <div className="flex min-h-11 items-center justify-between gap-4">
+          <span id="dark-mode-label" className="text-sm text-ink">Dark mode</span>
+          <button
+            type="button"
+            role="switch"
+            className="theme-switch"
+            aria-labelledby="dark-mode-label"
+            aria-checked={theme === "dark"}
+            onClick={toggleTheme}
+          />
+        </div>
+        <p className="mt-2 text-sm leading-relaxed text-ink/60">Saved on this browser. Signing in or out does not change it.</p>
       </Card>
 
       <TwoFactorCard />
