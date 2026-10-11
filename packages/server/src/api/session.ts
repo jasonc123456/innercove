@@ -13,6 +13,8 @@ import { consumeCode, readTwoFactor } from "./two-factor.js";
 export const ADMIN_LOGINS = ["admin", "admin@innercove.local"] as const;
 export const SESSION_COOKIE = "innercove_session";
 export const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+/** "Remember me": the cookie outlives the browser for 30 days. A restart or lock still signs out. */
+export const REMEMBER_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const MAX_FAILURES = 5;
 // D47: 5 failures → 30 s, doubling on each further round, up to 15 min.
 const BACKOFF_MS = 30_000;
@@ -30,6 +32,7 @@ const SessionRequestSchema = z.object({
   login: z.string().min(1).max(254),
   passphrase: z.string().min(1),
   code: z.string().max(16).optional(),
+  remember: z.boolean().optional(),
 }).strict();
 
 export interface SessionGuard {
@@ -43,9 +46,9 @@ export class SessionStore implements SessionGuard {
   #rounds = 0;
   constructor(readonly now: () => number = Date.now) {}
 
-  create(): { token: string; expiresAt: number } {
+  create(ttlMs: number = SESSION_TTL_MS): { token: string; expiresAt: number } {
     const token = randomBytes(32).toString("base64url");
-    const expiresAt = this.now() + SESSION_TTL_MS;
+    const expiresAt = this.now() + ttlMs;
     this.#sessions.set(hash(token), expiresAt);
     return { token, expiresAt };
   }
@@ -162,9 +165,12 @@ export function sessionRoutes(app: FastifyInstance, database: DatabaseStore, ses
     }
     sessions.succeed();
     sessions.revoke(readCookie(request));
-    const { token, expiresAt } = sessions.create();
-    setCookie(request, reply, token, SESSION_TTL_MS / 1000);
-    return { signedIn: true, twoFactor, expiresAt: new Date(expiresAt).toISOString() };
+    // Without "Remember me" the cookie ends when the browser closes (and after 12 h on the hub).
+    const remember = parsed.data.remember === true;
+    const ttlMs = remember ? REMEMBER_TTL_MS : SESSION_TTL_MS;
+    const { token, expiresAt } = sessions.create(ttlMs);
+    setCookie(request, reply, token, remember ? ttlMs / 1000 : null);
+    return { signedIn: true, twoFactor, remember, expiresAt: new Date(expiresAt).toISOString() };
   });
 
   app.get("/api/session", async (request) => {
@@ -217,9 +223,11 @@ export function readCookie(request: FastifyRequest): string | undefined {
   return undefined;
 }
 
-function setCookie(request: FastifyRequest, reply: FastifyReply, token: string, maxAgeSeconds: number) {
+/** `maxAgeSeconds: null` sets a browser-session cookie, which the browser drops when it closes. */
+function setCookie(request: FastifyRequest, reply: FastifyReply, token: string, maxAgeSeconds: number | null) {
   const secure = request.protocol === "https" ? "; Secure" : "";
-  reply.header("set-cookie", `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAgeSeconds}${secure}`);
+  const maxAge = maxAgeSeconds === null ? "" : `; Max-Age=${maxAgeSeconds}`;
+  reply.header("set-cookie", `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Strict${maxAge}${secure}`);
 }
 
 /**

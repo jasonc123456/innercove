@@ -80,7 +80,7 @@ type AppSessionValue = {
   role: "admin";
   /** Username or email of the hub's admin plus the hub passphrase (D47): POST /api/session checks
    * both, unlocks the hub if needed, and sets an HttpOnly session cookie. */
-  signIn: (login: string, passphrase: string, code?: string) => Promise<SignInResult>;
+  signIn: (login: string, passphrase: string, code?: string, remember?: boolean) => Promise<SignInResult>;
   signOut: () => void;
   createAccount: (email: string, password: string, confirm: string) => string | null;
   lock: () => void;
@@ -242,7 +242,7 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
       lock() {
         setLocked(true);
       },
-      async signIn(login, passphrase, code) {
+      async signIn(login, passphrase, code, remember = false) {
         const fail = (error: string, needsCode = false): SignInResult => ({ error, needsCode });
         if (login.trim().length === 0) return fail("Enter your username or email.");
         if (passphrase.length < 1) return fail("Enter the hub passphrase.");
@@ -251,7 +251,7 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
           res = await fetch("/api/session", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ login: login.trim(), passphrase, ...(code ? { code: code.trim() } : {}) }),
+            body: JSON.stringify({ login: login.trim(), passphrase, ...(code ? { code: code.trim() } : {}), remember }),
           });
         } catch {
           return fail("The hub isn't reachable right now.");

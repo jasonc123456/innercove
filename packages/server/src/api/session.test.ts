@@ -51,11 +51,28 @@ describe("D47 sign-in and the session guard", () => {
       expect(set).toContain(`${SESSION_COOKIE}=`);
       expect(set).toMatch(/HttpOnly/);
       expect(set).toMatch(/SameSite=Strict/);
-      expect(set).toMatch(/Max-Age=43200/);
+      // No "Remember me": a browser-session cookie, gone when the browser closes.
+      expect(set).not.toMatch(/Max-Age/);
       const cookie = cookieOf(res);
       expect((await app.inject({ method: "GET", url: "/api/diary", headers: { cookie } })).statusCode).toBe(200);
       expect((await app.inject({ method: "GET", url: "/api/session", headers: { cookie } })).json()).toMatchObject({ signedIn: true });
     }
+  });
+
+  it("\"Remember me\" keeps the cookie for 30 days; a lock still signs out", async () => {
+    const { app, database, cookieOf } = await fixture();
+    const res = await app.inject({
+      method: "POST", url: "/api/session", headers: { host: HOST },
+      payload: { login: "admin", passphrase: PASSWORD, remember: true },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ signedIn: true, remember: true });
+    expect(String(res.headers["set-cookie"])).toMatch(/Max-Age=2592000/);
+    const days = (Date.parse(res.json().expiresAt) - Date.now()) / 86_400_000;
+    expect(days).toBeGreaterThan(29.9);
+    const cookie = cookieOf(res);
+    await database.lock();
+    expect((await app.inject({ method: "GET", url: "/api/session", headers: { cookie } })).json()).toMatchObject({ signedIn: false });
   });
 
   it("gives the same answer for a wrong username or passphrase, then backs off after five failures", async () => {

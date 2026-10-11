@@ -15,13 +15,15 @@ export function LoginPage() {
   // Two-factor (D47): after a correct passphrase, the hub asks for the authenticator code.
   const [needsCode, setNeedsCode] = useState(false);
   const [code, setCode] = useState("");
+  // Off by default: the sign-in then ends when the browser closes.
+  const [remember, setRemember] = useState(false);
   // The shared, saved theme (theme.ts): the toggle here and in the app are one setting.
   const { theme, toggleTheme } = useTheme();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
-    const result = await signIn(login, password, needsCode ? code : undefined);
+    const result = await signIn(login, password, needsCode ? code : undefined, remember);
     setBusy(false);
     setCode("");
     // Keep the passphrase only while the code step is open; it's sent again with the code.
@@ -92,6 +94,29 @@ export function LoginPage() {
                   className="h-11 rounded-2xl border border-line bg-white px-4 text-base tracking-widest text-ink outline-none focus:border-cove"
                 />
               </label>
+            ) : null}
+            <label className="flex min-h-11 cursor-pointer items-center gap-3 text-base text-ink">
+              <input
+                type="checkbox"
+                name="remember"
+                checked={remember}
+                onChange={(event) => setRemember(event.target.checked)}
+                aria-describedby={remember ? "remember-warning" : undefined}
+                className="size-5"
+              />
+              Remember me on this device
+            </label>
+            {remember ? (
+              <p
+                id="remember-warning"
+                role="status"
+                className="rounded-2xl border border-cove/40 bg-foam px-4 py-3 text-sm leading-relaxed text-ink"
+              >
+                <strong className="font-semibold">Only use this on your own device.</strong> You&rsquo;ll stay signed in
+                for 30 days, even after closing the browser, so anyone who can open this browser could read your
+                chats, diary and memories. Don&rsquo;t use it on a public, shared or school computer, or any device
+                others can freely use.
+              </p>
             ) : null}
             {error ? (
               <p className="text-sm leading-relaxed text-ink" role="alert">
