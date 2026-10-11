@@ -10,7 +10,7 @@ Local-first wellness companion for the GX10 hackathon. Read `docs/TEAM_PLAN.md` 
 - Dev mode on the GX10 (`docker-compose.dev.yml`): `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build`. Vite serves `web/` from source with hot reload on :8000 and proxies `/api` to the API under `tsx watch` on 127.0.0.1:8001, so a `git pull` shows up without a rebuild. A server-code change restarts the API, which locks the DB (unlock again). Back to the demo build: `docker compose up -d --build --remove-orphans`.
 - Phase 0 scripts: `scripts/run_eval.py`, `scripts/smoke-inference.py` (stdlib Python; env as above).
 - Fictional persona into an encrypted DB (B): stop the API, then `npm run seed:persona --workspace=@innercove/server -- --db <path> --confirm-fictional`.
-- Phase 6 gate: `node scripts/demo-check.mjs [BASE_URL] [--offline]` runs the demo journey through the API on an unlocked hub (entries A/B, chips, hide A → D33, temporary chat, crisis reply, ports) and cleans up after itself.
+- Phase 6 gate: `node scripts/demo-check.mjs [BASE_URL] [--offline] [--delete-all]` (`--delete-all` erases all hub content; use a throwaway hub) runs the demo journey through the API on an unlocked hub (entries A/B, chips, hide A → D33, temporary chat, crisis reply, ports) and cleans up after itself.
 
 ## Layout and owners (D44)
 | Path | What | Owner |

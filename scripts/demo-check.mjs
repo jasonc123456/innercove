@@ -7,6 +7,8 @@
  *
  * BASE_URL defaults to http://127.0.0.1:8000 (the demo build, or Vite in dev mode).
  * --offline also requires the internet to be unreachable (run it with the network unplugged).
+ * --delete-all also runs demo step 8: it ERASES ALL CONTENT ON THE HUB (D39), then checks a
+ *   canary is gone from rows, search, memories and the next prompt. Use a throwaway hub.
  * It writes two fictional diary entries and one conversation, then deletes them
  * (content-free tombstones remain, as for any deletion).
  */
@@ -16,6 +18,7 @@ import { randomBytes } from "node:crypto";
 
 const args = process.argv.slice(2);
 const offline = args.includes("--offline");
+const deleteAll = args.includes("--delete-all");
 const base = (args.find((a) => !a.startsWith("--")) ?? "http://127.0.0.1:8000").replace(/\/$/, "");
 const tag = randomBytes(4).toString("hex");
 let failures = 0;
@@ -102,8 +105,39 @@ async function main() {
   const crisis = await turn("/api/infer", { history: [], message: "I have a plan and I think tonight is the night.", useMemories: false, pinnedMemoryIds: [] });
   check("crisis phrase gets tier 2 and the reviewed reply", ev(crisis.events, "meta")?.tier === 2 && ev(crisis.events, "done")?.modelId === "reviewed-reply");
 
-  // 8. Delete-all with the canary check needs B's delete-all route.
-  console.log("[SKIP] delete-all canary check (needs B's delete-all route)");
+  // 8. Delete-all (D39): a canary that was in rows, search, a memory and a prompt is gone from all of them.
+  if (!deleteAll) {
+    console.log("[SKIP] delete-all canary check (pass --delete-all; it erases all content on the hub)");
+    return;
+  }
+  const canary = `CANARY${tag}`; // no hyphen: diary search treats "-" as FTS syntax (reported to B)
+  const entry = await api("POST", "/api/diary", {
+    origin: "manual", title: `Exam notes (demo ${tag})`, accessLevel: "ai_eligible",
+    content: `The chem midterm review session helped a lot. ${canary}`,
+  });
+  const memory = entry.status === 201 ? await api("POST", "/api/memories", {
+    origin: "user", accessLevel: "ai_eligible", content: `Finds chem midterm review sessions helpful. ${canary}`,
+    sources: [{ sourceType: "diary_entry", sourceId: entry.json.id }],
+  }) : { status: 0 };
+  const sentBefore = await turn("/api/chat", { conversationId: null, message: "How should I prepare for the chem midterm?", useMemories: true, pinnedMemoryIds: [] });
+  const searched = await api("GET", `/api/diary?q=${encodeURIComponent(canary)}`);
+  check("before delete-all: canary entry and memory stored", entry.status === 201 && memory.status === 201, `${entry.status}/${memory.status}`);
+  check("before delete-all: canary found by diary search", JSON.stringify(searched.json).includes(canary), `status ${searched.status}`);
+  check("before delete-all: canary sent in a prompt", JSON.stringify(ev(sentBefore.events, "context")).includes(canary));
+  const wiped = await api("POST", "/api/delete-all", { confirm: "DELETE" });
+  check("delete-all succeeds", wiped.status === 200, JSON.stringify(wiped.json?.deleted ?? wiped.json));
+  const wipedState = {
+    diary: await api("GET", "/api/diary"),
+    search: await api("GET", `/api/diary?q=${encodeURIComponent(canary)}`),
+    memories: await api("GET", "/api/memories"),
+    conversations: await api("GET", "/api/conversations"),
+  };
+  for (const [name, res] of Object.entries(wipedState)) {
+    check(`after delete-all: canary gone from ${name}`, res.status === 200 && !JSON.stringify(res.json).includes(canary), `status ${res.status}`);
+  }
+  const next = await turn("/api/infer", { history: [], message: "How should I prepare for the chem midterm?", useMemories: true, pinnedMemoryIds: [] });
+  check("after delete-all: the next prompt carries no canary", !!ev(next.events, "done") && !JSON.stringify(next.events).includes(canary));
+  check("after delete-all: the hub stays unlocked (passphrase kept)", (await api("GET", "/api/lock-status")).json?.locked === false);
 }
 
 function listeners() {
