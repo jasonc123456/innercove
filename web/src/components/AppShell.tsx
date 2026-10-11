@@ -58,6 +58,7 @@ const SECTIONS = [
     ),
   },
   { to: "/memories", label: "Memories", icon: <path d="M7 4.5h10v15l-5-3-5 3z" strokeLinejoin="round" /> },
+  { to: "/exercises", label: "Wellness toolkit", icon: <><path d="M5 12h14" strokeLinecap="round" /><path d="M8 8c1.2 1.3 1.2 2.7 0 4s-1.2 2.7 0 4M16 8c1.2 1.3 1.2 2.7 0 4s-1.2 2.7 0 4" strokeLinecap="round" /></> },
   {
     to: "/settings",
     label: "Settings",
@@ -73,7 +74,6 @@ const SECTIONS = [
     label: "Admin",
     icon: <path d="M12 4 5.5 6.5v5c0 4 2.8 7.2 6.5 8.5 3.7-1.3 6.5-4.5 6.5-8.5v-5z" strokeLinejoin="round" />,
   },
-  { to: "/exercises", label: "WELLNESS TOOLKIT", icon: <><path d="M5 12h14" strokeLinecap="round" /><path d="M8 8c1.2 1.3 1.2 2.7 0 4s-1.2 2.7 0 4M16 8c1.2 1.3 1.2 2.7 0 4s-1.2 2.7 0 4" strokeLinecap="round" /></> },
 ] as const;
 
 /** Phones show the first four sections as tabs; the rest go under "More" (•••). */
