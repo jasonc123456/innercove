@@ -3,7 +3,7 @@ import coveWash from "../assets/cove-wash.jpg";
 import { streamAssistantReply } from "../chat/streamReply";
 import { MessageInput } from "../components/MessageInput";
 import { MessageList, type ChatMessage } from "../components/MessageList";
-import { useAppSession } from "../session/AppSession";
+import { useAppSession, uuidv7 } from "../session/AppSession";
 
 export function ChatPage() {
   const { chatMode, useMemories, pinnedMemoryIds, setChatMode, setUseMemories } =
@@ -29,10 +29,10 @@ export function ChatPage() {
     }
 
     setFailed(false);
-    const assistantId = crypto.randomUUID();
+    const assistantId = uuidv7();
     setMessages((current) => [
       ...current,
-      { id: crypto.randomUUID(), role: "user", content: text },
+      { id: uuidv7(), role: "user", content: text },
       { id: assistantId, role: "assistant", content: "" },
     ]);
     setStreamingId(assistantId);
