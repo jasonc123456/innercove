@@ -904,3 +904,10 @@ html[data-theme="dark"] .bg-\[\#e8f1e6\] {
     border-color: var(--color-ink);
   }
 }
+
+/* Composer phase changes fade in without moving controls or exposing drafts. */
+@keyframes voice-composer-enter { from { opacity: 0; } to { opacity: 1; } }
+.voice-composer-enter { animation: voice-composer-enter 140ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .voice-composer-enter { animation: none; }
+}

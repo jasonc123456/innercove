@@ -144,3 +144,21 @@ inspection. C/user should verify quiet/noisy mic responsiveness, five-bar
 layout/mobile focus/reduced motion, static fallback, and disposal across
 Stop/Cancel/error/lock/sign-out/navigation in an isolated browser. Previous
 GX10 results remain historical evidence for the earlier UI. Live GX10 untouched.
+
+## Composer recording panel — 2026-10-11
+
+The composer now keeps a fixed-height input/panel area: microphone tap hides
+the mounted draft textarea and shows Listening…, a centered five-bar live
+microphone waveform, elapsed time, Stop and Cancel. Stop or the existing
+60-second limit switches to Transcribing… with a spinner and Cancel. Success
+restores the editable draft with the transcript appended; cancellation/error
+restores the original draft, with existing errors visible. Sending stays explicit.
+Phase changes use a 140 ms fade, disabled for reduced motion. Keyboard focus
+moves to Stop/Cancel and returns to the input; a separate status region announces
+phase changes without announcing elapsed time or waveform updates.
+
+Local verification: focused recorder/meter/SSR composer tests 27/27, complete
+regression 238/238, web typecheck/build and git diff --check passed. Render tests
+use controlled states; browser focus, visual transitions and real microphone
+behavior still need isolated browser verification. No browser tooling was
+available here. Backend, microphone policy and live GX10 remain unchanged.

@@ -1189,6 +1189,8 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Demo script vs app:** step 8's "save an excerpt" has no UI (cut it or build it); saved chats can't be listed or reopened; a fresh browser starts Temporary with Memories off; start a new chat after step 7 (D50); Remember me stays unticked on the GX10.
 - **Should do:** judge-facing README intro (B); README line 3 has an uncommitted typo in the working tree ("we1.ness"); after the event, `~/resetBeforeReturn.sh` from a plain SSH session (A).
 
+**2026-10-11 — voice composer panel (user-authorized C UI edit):** Listening panel with centered live mic waveform, elapsed time, Stop/Cancel; Transcribing spinner with processing Cancel; fixed-height input/panel area and reduced-motion-aware fade. Typed draft stays mounted and hidden until return; success appends an editable transcript, cancel/error restores the original draft; explicit Send preserved. Phase-only screen-reader status and keyboard focus handling added. Focused mocked/SSR tests 27/27; full regression 238/238; web typecheck/build and diff check passed. Real browser visual/focus/microphone checks remain pending; no backend/policy/deployment changes. See `VOICE_INPUT.md`.
+
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
 1. Write diary entries A and B. Allow AI access to A only.
