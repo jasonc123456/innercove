@@ -787,6 +787,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
   - **Real model in the app (later on 2026-10-10):** the container now runs `INFERENCE_PROVIDER=lmstudio`. Verified against a throwaway instance: `/api/infer` streams sentence-gated deltas (first word 0.7 s, ~18 tok/s), `/api/chat` with the demo store sends memory and diary chips and persists, tier 2 returns `reviewed-reply`, and the server log contains no message text. **The browser check of Phase 1 waits on the UI's setup/unlock screen (C, on B's endpoints):** until the passphrase is set, chat answers 423.
   - **B's target gate passed on the GX10** (host and container): 99 tests, `smoke:db`, spike 18/18. `DB_ENCRYPTION` stays `sqlcipher` (D26).
   - **LAN access (D46):** the container binds 0.0.0.0:8000 on the GX10 (opt-in via `.env`), ufw allows 8000 from 192.168.2.0/24 only (`SETUP_LOG.md` #18); LM Studio stays on loopback. Open `http://192.168.2.151:8000` from the LAN.
+  - **CI:** `.github/workflows/ci.yml` on every push and PR: `npm ci`, typecheck, 99 tests, `validate`, `check-safety`, the web build and a gitleaks secret scan (public repo, D40). Not a required check, so it flags rather than blocks. No ESLint during the event: strict TypeScript covers most of it, and a new linter mid-event means churn across four people's code.
 - **Next (A):** the A half of `/api/privacy-status`, Phase 6 prep (offline test, `ss -ltnp`, demo-script checks), then wire B's SQL-backed `ChatStore` into `AppDeps.store` when it lands.
 
 **D (Meowie), Phase 4 safety handoff (2026-10-10):**

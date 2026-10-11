@@ -44,6 +44,7 @@ Single owners for hot files: `packages/core` contracts (B), schema and migration
 ## Git
 - Trunk-based: short branches `p<N>-<topic>`, merge to `main` every 2–3 h; `main` must pass `npm test` and `docker compose up`.
 - Short commit messages. Pull (rebase) before pushing.
+- CI (`.github/workflows/ci.yml`) runs on every push: typecheck, tests, `validate`, `check-safety`, the web build and a gitleaks secret scan. A red X on `main` means stop and fix it first.
 - At the end of a phase, append ≤15 lines to the Phase log in `docs/PROJECT_PLAN.md`.
 
 ## GX10
