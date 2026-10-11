@@ -1131,6 +1131,8 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Checks:** `npm test` 212/212 (7 new note-writer tests, 2 retrieval tests rewritten for D49, 1 new targeted-D33 test), typecheck, validate, web build. Real Qwen on a throwaway hub: noted "Has a biology exam on Friday" and "Roommate Sam quizzes them every night", **no note** for "I think I might have depression", a later reply used the lake-walk memory; UI exclude/re-enable verified; `demo-check.mjs` all pass (it now deletes memories its chats create).
 - **Owners:** touched B's `chat-store.ts` (notes port) and `api/memories.test.ts` (D49 expectations), C's `MemoryPage`/`MessageList`/`ChatPage`. Note quality not yet in D's prompt eval.
 
+**A (Jason), dark mode fixes (2026-10-11, ~03:00):** the sign-in page had its own theme state (started from the system theme, never saved, and deleted `data-theme` on sign-in), so a saved dark mode reverted to light after sign-out. It now uses the shared, saved `theme.ts` store. Added a "Dark mode" switch to the desktop sidebar (above the storage note) and to the phone "More" menu. Mood check-in labels keep dark ink on their pastel tiles in dark mode. Verified in headless Firefox (system light): dark chosen on sign-in → kept after sign-in, sign-out and reload; both switches flip and persist.
+
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
 1. Write diary entries A and B. Allow AI access to A only.
