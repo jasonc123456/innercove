@@ -35,6 +35,9 @@ export function AppShell() {
             <NavLink to="/diary" className={({ isActive }) => sectionClass(isActive)}>
               Diary
             </NavLink>
+            <NavLink to="/memories" className={({ isActive }) => sectionClass(isActive)}>
+              Memories
+            </NavLink>
           </nav>
         </div>
       </header>

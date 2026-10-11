@@ -6,3 +6,4 @@ dist/
 !.env.example
 data/
 *.log
+__pycache__/
