@@ -51,7 +51,7 @@ function MemoryWorkspace() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex flex-col gap-3 px-4 pt-4">
+      <div className="flex flex-col gap-3 page-x px-4 pt-4">
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-lg font-semibold leading-tight tracking-tight text-cove">
             Memories
@@ -80,9 +80,9 @@ function MemoryWorkspace() {
         </button>
       </div>
       {memories.length === 0 ? (
-        <p className="px-4 py-6 text-base text-ink/75">No memories yet.</p>
+        <p className="page-x px-4 py-6 text-base text-ink/75">No memories yet.</p>
       ) : (
-        <ul className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
+        <ul className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto page-x px-4 py-4">
           {memories.map((memory) => {
             const pinned = pinnedMemoryIds.includes(memory.id);
             const focused = memory.id === focusId;
@@ -163,7 +163,7 @@ function MemoryForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4"
+      className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto page-x px-4 py-4"
     >
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-lg font-semibold leading-tight tracking-tight text-cove">

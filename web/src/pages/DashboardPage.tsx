@@ -47,7 +47,7 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="dashboard-scroll min-h-0 flex-1 overflow-y-auto px-4 py-5 lg:px-10 lg:py-12">
+    <div className="dashboard-scroll min-h-0 flex-1 overflow-y-auto page-x px-4 py-5 lg:px-10 lg:py-12">
       {/* Desktop only: a quiet, time-aware greeting above the grid. */}
       <header className="dashboard-welcome hidden lg:mb-8 lg:block">
         <p className="text-sm font-medium text-ink/55">{today}</p>

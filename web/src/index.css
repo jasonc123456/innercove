@@ -191,6 +191,14 @@ textarea:focus-visible {
   }
 }
 
+/* Phones and tablets: <main> spans the window so scrollbars and dividers reach its edge.
+   Page-level rows centre their content in the same 30rem column the capped <main> used to give. */
+@media (width < 64rem) {
+  .page-x {
+    padding-inline: max(1rem, calc((100% - 30rem) / 2));
+  }
+}
+
 /* Sign-in grove: the same flat sapling language, as a frame around the login box.
    Color changes are a short fill/stroke fade. Reduced motion drops the fade. */
 .sign-in-page {

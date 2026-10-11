@@ -3,7 +3,7 @@ import { EXERCISES } from "../exercises/catalog";
 
 export function ExercisesPage() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5 sm:px-6">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto page-x px-4 py-5 sm:px-6">
       <p className="text-sm font-medium uppercase tracking-[0.18em] text-cove/75">Wellness toolkit</p>
       <h1 className="mt-2 text-3xl font-semibold text-ink">A little space for yourself.</h1>
       <p className="mt-3 max-w-2xl text-base leading-relaxed text-ink/75">Explore simple exercises to help you pause, reflect, and work through difficult moments at your own pace. They are optional wellness tools, not medical treatment or a substitute for care.</p>

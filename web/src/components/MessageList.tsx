@@ -41,7 +41,7 @@ export function MessageList({
 
   if (messages.length === 0) {
     return (
-      <div className="flex flex-1 items-center px-4">
+      <div className="flex flex-1 items-center page-x px-4">
         <p className="text-base leading-relaxed text-ink/75">
           {chatMode === "saved"
             ? "This chat will be saved encrypted on your hub."
@@ -52,7 +52,7 @@ export function MessageList({
   }
 
   return (
-    <ol className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
+    <ol className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto page-x px-4 py-4">
       {messages.map((message) => {
         const isUser = message.role === "user";
         const isStreaming = message.id === streamingId;

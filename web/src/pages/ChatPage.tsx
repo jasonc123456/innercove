@@ -120,7 +120,7 @@ export function ChatPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* One compact row of controls, so the conversation keeps the height. */}
-      <div className="flex shrink-0 flex-col gap-1.5 border-b border-line px-4 py-2">
+      <div className="flex shrink-0 flex-col gap-1.5 border-b border-line page-x px-4 py-2">
         <div className="flex items-center gap-2">
           <div className="flex flex-1 rounded-full bg-foam p-1" role="group" aria-label="Save or temporary">
             <button
@@ -175,7 +175,7 @@ export function ChatPage() {
           }}
         />
         {failed ? (
-          <p className="px-4 pb-2 text-sm text-ink/70" role="status">
+          <p className="page-x px-4 pb-2 text-sm text-ink/70" role="status">
             The reply stopped. Try sending again.
           </p>
         ) : null}

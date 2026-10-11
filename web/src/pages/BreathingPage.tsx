@@ -17,7 +17,7 @@ export function BreathingPage() {
   const circleClass = snapshot.phase === "inhale" ? "breathing-circle breathing-inhale" : snapshot.phase === "exhale" ? "breathing-circle breathing-exhale" : "breathing-circle";
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5 sm:px-6">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto page-x px-4 py-5 sm:px-6">
       <Link to="/exercises" className="inline-flex min-h-11 items-center text-sm font-medium text-cove">← All exercises</Link>
       <div className="mx-auto w-full max-w-2xl text-center">
         <p className="mt-2 text-sm font-medium uppercase tracking-[0.18em] text-cove/75">Guided exercise</p>

@@ -7,7 +7,7 @@ export function HelpPage() {
   const writing = params.get("note") === "1";
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto page-x px-4 py-4">
       <h1 className="text-lg font-semibold leading-tight tracking-tight text-cove">
         Get help
       </h1>

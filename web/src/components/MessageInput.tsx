@@ -41,7 +41,7 @@ export function MessageInput({ disabled, onSend }: MessageInputProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="shrink-0 border-t border-line bg-paper px-4 py-3 lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      className="shrink-0 border-t border-line bg-paper page-x px-4 py-3 lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
       <label htmlFor="message" className="sr-only">
         Message

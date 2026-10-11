@@ -148,7 +148,8 @@ export function AppShell() {
 
       <main
         className={[
-          "mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col",
+          // Phones and tablets: full width so scrollbars sit at the window edge; `page-x` centres the content.
+          "mx-auto flex min-h-0 w-full flex-1 flex-col",
           // Home spreads its cards over the ambient background; other pages sit in one glass sheet.
           home ? "lg:max-w-6xl" : "glass-panel lg:my-6 lg:max-w-3xl lg:self-stretch",
         ].join(" ")}

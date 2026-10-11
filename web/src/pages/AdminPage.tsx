@@ -34,7 +34,7 @@ export function AdminPage() {
   }
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 lg:px-8 lg:py-8">
+    <div className="min-h-0 flex-1 overflow-y-auto page-x px-4 py-5 lg:px-8 lg:py-8">
       <PageHeader title="Hub admin" subtitle="This hub and who can use it. Everything runs here; nothing leaves it." />
       <Problem text={problem} />
 
