@@ -1,11 +1,27 @@
+import type { ReactNode } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useAppSession } from "../session/AppSession";
 
 function sectionClass(isActive: boolean): string {
   return [
-    "inline-flex h-11 items-center rounded-2xl px-4 text-base",
+    "inline-flex h-11 items-center gap-1.5 rounded-2xl px-3 text-base",
     isActive ? "bg-foam font-semibold text-cove" : "text-ink/80",
   ].join(" ");
+}
+
+function NavIcon({ children }: { children: ReactNode }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="size-5 shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      aria-hidden="true"
+    >
+      {children}
+    </svg>
+  );
 }
 
 export function AppShell() {
@@ -28,14 +44,24 @@ export function AppShell() {
               Save and the diary stay in this tab. They are not stored.
             </p>
           </div>
-          <nav className="flex gap-2" aria-label="Sections">
+          <nav className="flex flex-wrap gap-2" aria-label="Sections">
             <NavLink to="/" end className={({ isActive }) => sectionClass(isActive)}>
+              <NavIcon>
+                <path d="M5 6.5h14v8.5H9l-4 3v-3H5z" strokeLinejoin="round" />
+              </NavIcon>
               Chat
             </NavLink>
             <NavLink to="/diary" className={({ isActive }) => sectionClass(isActive)}>
+              <NavIcon>
+                <path d="M7 4.5h10.5v15H7A1.5 1.5 0 0 1 5.5 18V6A1.5 1.5 0 0 1 7 4.5z" strokeLinejoin="round" />
+                <path d="M9.5 8.5h5M9.5 12h5" strokeLinecap="round" />
+              </NavIcon>
               Diary
             </NavLink>
             <NavLink to="/memories" className={({ isActive }) => sectionClass(isActive)}>
+              <NavIcon>
+                <path d="M7 4.5h10v15l-5-3-5 3z" strokeLinejoin="round" />
+              </NavIcon>
               Memories
             </NavLink>
           </nav>
