@@ -1,7 +1,8 @@
-import { useLayoutEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { SignInGrove } from "../components/SignInGrove";
 import { useAppSession } from "../session/AppSession";
+import { useTheme } from "../theme";
 
 export function LoginPage() {
   // One hub, one user (D47): no self-registration. Extra accounts would come from an
@@ -14,7 +15,8 @@ export function LoginPage() {
   // Two-factor (D47): after a correct passphrase, the hub asks for the authenticator code.
   const [needsCode, setNeedsCode] = useState(false);
   const [code, setCode] = useState("");
-  const { theme, toggleTheme } = useSignInTheme();
+  // The shared, saved theme (theme.ts): the toggle here and in the app are one setting.
+  const { theme, toggleTheme } = useTheme();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -120,25 +122,6 @@ export function LoginPage() {
   );
 }
 
-
-function useSignInTheme() {
-  const [theme, setTheme] = useState<"light" | "dark">(() =>
-    window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
-  );
-
-  useLayoutEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    return () => {
-      delete document.documentElement.dataset.theme;
-    };
-  }, [theme]);
-
-  function toggleTheme() {
-    setTheme((current) => (current === "dark" ? "light" : "dark"));
-  }
-
-  return { theme, toggleTheme };
-}
 
 function CoveMark() {
   return (

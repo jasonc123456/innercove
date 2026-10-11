@@ -1,8 +1,20 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAppSession } from "../session/AppSession";
+import { useTheme } from "../theme";
 
 const STORAGE_NOTE = "Saved chats, your diary and memories are stored encrypted on your hub.";
+
+/** The site-wide dark mode switch (theme.ts): saved on this browser, kept across sign-in and sign-out. */
+function DarkModeSwitch({ id, className }: { id: string; className: string }) {
+  const { theme, toggleTheme } = useTheme();
+  return (
+    <div className={className}>
+      <span id={id}>Dark mode</span>
+      <button type="button" role="switch" className="theme-switch" aria-labelledby={id} aria-checked={theme === "dark"} onClick={toggleTheme} />
+    </div>
+  );
+}
 
 /** Phone tab bar (Taobao-style): icon over a short label; colour marks the current tab. */
 function tabClass(isActive: boolean): string {
@@ -132,6 +144,7 @@ export function AppShell() {
           ))}
         </nav>
         <div className="mt-auto flex flex-col gap-4">
+          <DarkModeSwitch id="sidebar-dark-mode" className="flex min-h-11 items-center justify-between gap-3 px-3 text-sm text-ink/80" />
           <p className="rounded-2xl bg-white/50 px-4 py-3 text-xs leading-relaxed text-ink/65">{STORAGE_NOTE}</p>
           <NavLink
             to="/help"
@@ -206,6 +219,7 @@ export function AppShell() {
                   {s.label}
                 </NavLink>
               ))}
+              <DarkModeSwitch id="more-dark-mode" className="flex h-12 items-center justify-between gap-3 border-t border-line px-4 text-base text-ink" />
             </div>
           </>
         ) : null}
