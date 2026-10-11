@@ -7,4 +7,4 @@ dist/
 data/
 *.log
 __pycache__/
-web/public/innercove-ca.crt
+web/public/innercove-ca.cer

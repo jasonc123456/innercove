@@ -77,7 +77,7 @@ This serves Vite on port 8000 and keeps the API on `127.0.0.1:8001`. It mounts s
 
 Browsers only give a page the microphone on HTTPS or `localhost`. On the GX10's dev site, `scripts/make-dev-cert.sh <LAN IP> <Tailscale IP> <Tailscale name>` makes a local CA and a certificate; recreate the web container (`docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d web`) and the site is `https://<hub address>:8000` (plain http on 8000 stops). Re-run the script with the new address if the hub's IP changes; devices stay trusted.
 
-Install the CA once on each device you demo from. Open `https://<hub address>:8000/innercove-ca.crt` (accept the one-time warning), then:
+Install the CA once on each device you demo from. Open `https://<hub address>:8000/innercove-ca.cer` (accept the one-time warning), then:
 
 - **iPhone/iPad:** Allow the profile download → Settings → **Profile Downloaded** → Install. Then Settings → General → About → **Certificate Trust Settings** → turn on full trust for "InnerCove Demo CA (GX10)".
 - **Android:** Settings → Security (or Security & privacy) → More → Encryption & credentials → **Install a certificate → CA certificate** → pick the downloaded file. Use Chrome.

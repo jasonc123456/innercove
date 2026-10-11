@@ -14,7 +14,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CA_DIR="${INNERCOVE_CA_DIR:-$HOME/.config/innercove/tls-ca}"
 OUT_DIR="$ROOT/data/tls"
-PUBLIC_CA="$ROOT/web/public/innercove-ca.crt"
+PUBLIC_CA="$ROOT/web/public/innercove-ca.cer"
 umask 077
 mkdir -p "$CA_DIR" "$OUT_DIR" "$(dirname "$PUBLIC_CA")"
 
@@ -40,8 +40,9 @@ openssl x509 -req -in "$OUT_DIR/server.csr" -CA "$CA_DIR/ca.crt" -CAkey "$CA_DIR
   -extfile <(printf 'basicConstraints=CA:FALSE\nkeyUsage=critical,digitalSignature,keyEncipherment\nextendedKeyUsage=serverAuth\nsubjectAltName=%s\n' "$san") \
   2>/dev/null
 rm -f "$OUT_DIR/server.csr"
-cp "$CA_DIR/ca.crt" "$PUBLIC_CA"
+# DER .cer: served as application/pkix-cert, which iOS, Android and Windows offer to install.
+openssl x509 -in "$CA_DIR/ca.crt" -outform der -out "$PUBLIC_CA"
 chmod 644 "$OUT_DIR/server.crt" "$PUBLIC_CA"
 openssl verify -CAfile "$CA_DIR/ca.crt" "$OUT_DIR/server.crt" >/dev/null
 echo "Certificate for: $san"
-echo "Devices install the CA from https://<hub address>:8000/innercove-ca.crt (README \"HTTPS on the local network\")."
+echo "Devices install the CA from https://<hub address>:8000/innercove-ca.cer (README \"HTTPS on the local network\")."
