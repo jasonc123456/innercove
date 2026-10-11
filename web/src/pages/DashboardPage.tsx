@@ -29,6 +29,17 @@ export function DashboardPage() {
   const [logs, setLogs] = useState<Mood[]>([]);
   const [selected, setSelected] = useState<Mood | null>(null);
   const quote = useMemo(() => quotes[new Date().getDate() % quotes.length]!, []);
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 5) return "Still up? Go gently tonight.";
+    if (hour < 12) return "Good morning.";
+    if (hour < 18) return "Good afternoon.";
+    return "Good evening.";
+  }, []);
+  const today = useMemo(
+    () => new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }),
+    [],
+  );
 
   function logMood(mood: Mood) {
     setLogs((current) => [...current, mood]);
@@ -36,28 +47,35 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="dashboard-scroll min-h-0 flex-1 overflow-y-auto px-4 py-5">
-      <section className="dashboard-welcome rounded-[2rem] bg-cove px-6 py-7 text-white shadow-sm">
-        <p className="text-sm font-medium tracking-wide text-white/75">Your space, at your pace</p>
+    <div className="dashboard-scroll min-h-0 flex-1 overflow-y-auto px-4 py-5 lg:px-10 lg:py-12">
+      {/* Desktop only: a quiet, time-aware greeting above the grid. */}
+      <header className="dashboard-welcome hidden lg:mb-8 lg:block">
+        <p className="text-sm font-medium text-ink/55">{today}</p>
+        <h1 className="mt-1 text-5xl font-semibold leading-[1.05] tracking-[-0.025em] text-ink">{greeting}</h1>
+      </header>
+      <div className="lg:grid lg:grid-cols-12 lg:gap-6">
+      <section className="dashboard-welcome rounded-[2rem] bg-cove px-6 py-7 text-white shadow-sm lg:col-span-7 lg:flex lg:flex-col lg:justify-center lg:bg-gradient-to-br lg:from-cove lg:to-[#2b6662] lg:px-10 lg:py-10">
+        <p className="text-sm font-medium tracking-wide text-white/75 lg:hidden">Your space, at your pace</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Welcome back.</h1>
         <p className="mt-2 max-w-sm text-base leading-relaxed text-white/85">
           Take a small moment to notice how you are arriving today.
         </p>
         <Link
           to="/chat"
-          className="mt-5 inline-flex h-11 items-center justify-center rounded-2xl bg-white px-5 text-base font-semibold text-cove shadow-sm transition hover:bg-foam focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-cove"
+          className="mt-5 inline-flex h-11 items-center justify-center self-start rounded-2xl bg-white px-5 lg:mt-7 lg:h-12 lg:px-6 text-base font-semibold text-cove shadow-sm transition hover:bg-foam focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-cove"
         >
           Continue to chat
         </Link>
       </section>
 
-      <section className="mt-5 rounded-[1.7rem] border border-line bg-white/70 p-5 shadow-sm" aria-labelledby="quote-title">
+      <section className="glass-card mt-5 rounded-[1.7rem] border border-line bg-white/70 p-5 shadow-sm lg:col-span-5 lg:mt-0 lg:flex lg:flex-col lg:justify-center lg:border-white/70 lg:p-8" aria-labelledby="quote-title">
         <p id="quote-title" className="text-sm font-semibold uppercase tracking-[0.14em] text-cove">Today&apos;s thought</p>
-        <blockquote className="mt-3 text-xl leading-snug text-ink">“{quote.text}”</blockquote>
+        <blockquote className="mt-3 text-xl leading-snug text-ink lg:text-2xl lg:leading-snug lg:tracking-[-0.01em]">“{quote.text}”</blockquote>
         <p className="mt-3 text-sm text-ink/65">— {quote.by}</p>
       </section>
 
-      <section className="mt-5 rounded-[1.7rem] border border-line bg-white/70 p-5 shadow-sm" aria-labelledby="mood-title">
+      <section className="glass-card mt-5 rounded-[1.7rem] border border-line bg-white/70 p-5 shadow-sm lg:col-span-12 lg:mt-0 lg:grid lg:grid-cols-2 lg:gap-10 lg:border-white/70 lg:p-8" aria-labelledby="mood-title">
+        <div>
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.14em] text-cove">Daily check-in</p>
@@ -72,11 +90,11 @@ export function DashboardPage() {
               key={mood.label}
               type="button"
               onClick={() => logMood(mood)}
-              className="mood-choice flex min-h-20 flex-col items-center justify-center rounded-2xl border px-1 text-center transition focus:outline-none focus:ring-2 focus:ring-cove"
+              className="mood-choice flex min-h-20 lg:min-h-28 lg:rounded-3xl flex-col items-center justify-center rounded-2xl border px-1 text-center transition focus:outline-none focus:ring-2 focus:ring-cove"
               style={{ backgroundColor: mood.shade, borderColor: mood.color }}
               aria-label={`Log mood: ${mood.label}`}
             >
-              <span className="text-2xl" aria-hidden="true">{mood.emoji}</span>
+              <span className="text-2xl lg:text-3xl" aria-hidden="true">{mood.emoji}</span>
               <span className="mt-1 text-xs font-semibold text-ink">{mood.label}</span>
             </button>
           ))}
@@ -85,9 +103,13 @@ export function DashboardPage() {
           {selected ? `${selected.emoji} ${selected.note} A ${selected.color === "#ca6d82" ? "gentle" : "new"} leaf has joined your tree.` : "Choose the feeling that fits best right now."}
         </p>
 
+        </div>
+        <div className="lg:flex lg:flex-col">
         <MoodTree leaves={logs} />
-        <p className="mt-1 text-center text-xs text-ink/55">{logs.length === 0 ? "Your sapling is ready when you are." : `${logs.length} check-in${logs.length === 1 ? "" : "s"} in this session.`}</p>
+        <p className="mt-1 text-center text-xs text-ink/55 lg:mt-3">{logs.length === 0 ? "Your sapling is ready when you are." : `${logs.length} check-in${logs.length === 1 ? "" : "s"} in this session.`}</p>
+        </div>
       </section>
+      </div>
     </div>
   );
 }

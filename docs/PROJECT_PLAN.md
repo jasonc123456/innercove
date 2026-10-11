@@ -937,6 +937,8 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Rerun/undo:** repo-root `npm run spike:sqlcipher --workspace=@innercove/server` and `npm run smoke:db --workspace=@innercove/server`; image/worktree creation and exact undo logged in `SETUP_LOG.md`. Cleanup not executed; encrypted configuration unchanged, no plaintext fallback or external SQLCipher/Android interoperability claim.
 - **Next B assignment (assessment only):** no Phase 4 implementation ownership (D safety, A integration/backup, C UI). Phase 5 settings/delete-all with VACUUM and unlocked-database/FTS/derived-item/next-prompt canary checks; reuse existing privacy-status implementation. TEAM_PLAN assigns persona seed to B, while A’s latest P0 table lists A: coordinate seed ownership and D’s reviewed persona. C UI, A CSP/offline/deployment and live integration are team dependencies; no next-phase implementation started.
 
+**UI pass (A, at Jason's request, 2026-10-10 evening):** the home page's mood tree now grows every leaf from a visible branch (leaves were at fixed spots, and the CSS grow animation overrode their rotation). Desktop (≥1024px) gets its own layout following the apple-design guidance: a translucent sidebar with "Get help" always visible, a static ambient background (no looping motion), a two-column home with a time-of-day greeting, and other pages in one glass panel at reading width; `prefers-reduced-motion`, `prefers-reduced-transparency` and `prefers-contrast` are honoured. Phone layout unchanged. **C:** please build on `AppShell.tsx`'s shared `SECTIONS` list for new nav items.
+
 **P0 gap check (A, integration lead, 2026-10-10 evening, at `63c2ab1`):** what the code does today vs §4 P0 and §5 acceptance.
 
 | P0 item | Server | UI | Missing |
