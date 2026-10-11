@@ -48,7 +48,7 @@ describe("GET /api/privacy-status", () => {
       lastReply: null,
     });
 
-    await app.inject({ method: "POST", url: "/api/infer", payload: { history: [], message: "hi" } });
+    await app.inject({ method: "POST", url: "/api/infer", payload: { history: [], message: "please respond" } });
     const after = PrivacyStatusSchema.parse((await app.inject({ method: "GET", url: "/api/privacy-status" })).json());
     expect(after.lastReply).toEqual({ firstWordMs: expect.any(Number), tokPerS: expect.any(Number) });
   });

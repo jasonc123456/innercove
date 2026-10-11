@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { SignInGrove } from "../components/SignInGrove";
 import { useAppSession } from "../session/AppSession";
@@ -19,6 +19,21 @@ export function LoginPage() {
   const [remember, setRemember] = useState(false);
   // The shared, saved theme (theme.ts): the toggle here and in the app are one setting.
   const { theme, toggleTheme } = useTheme();
+  const [needsSetup, setNeedsSetup] = useState<boolean | null>(null);
+  const [confirm, setConfirm] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    void fetch("/api/lock-status")
+      .then((response) => response.json())
+      .then((status: { hasPassphrase?: boolean }) => {
+        if (active) setNeedsSetup(status.hasPassphrase === false);
+      })
+      .catch(() => {
+        if (active) setNeedsSetup(false);
+      });
+    return () => { active = false; };
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -30,6 +45,39 @@ export function LoginPage() {
     if (!result.needsCode) setPassword("");
     setNeedsCode(result.needsCode);
     setError(result.error || null);
+  }
+
+  async function handleSetup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (password.length < 8) return setError("Use at least 8 characters.");
+    if (password !== confirm) return setError("Those passphrases do not match.");
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/setup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passphrase: password }),
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        if (body?.error?.code === "CONFLICT") {
+          setNeedsSetup(false);
+          setError("This hub was set up in another tab. Sign in with its passphrase.");
+        } else setError("The hub could not be set up. Please try again.");
+        return;
+      }
+      const result = await signIn("admin", password);
+      if (!result.needsCode) setPassword("");
+      setConfirm("");
+      setNeedsCode(result.needsCode);
+      setError(result.error);
+      setNeedsSetup(false);
+    } catch {
+      setError("The hub isn't reachable right now.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -51,10 +99,22 @@ export function LoginPage() {
             </button>
           </div>
           <p className="mt-4 text-base leading-relaxed text-ink/80">
-            Sign in to your hub.
+            {needsSetup ? "Set up your local hub." : "Sign in to your hub."}
           </p>
 
-          <form onSubmit={handleSubmit} autoComplete="off" className="mt-6 flex flex-col gap-3">
+          {needsSetup ? <form onSubmit={handleSetup} autoComplete="off" className="mt-6 flex flex-col gap-3">
+            <p className="text-sm leading-relaxed text-ink/70">Choose a hub passphrase. It unlocks this local encrypted diary; it cannot be recovered if forgotten.</p>
+            <label className="flex flex-col gap-2 text-sm text-ink/80">
+              New hub passphrase
+              <input type="password" name="new-password" value={password} autoComplete="new-password" onChange={(event) => setPassword(event.target.value)} className="h-11 rounded-2xl border border-line bg-white px-4 text-base text-ink outline-none focus:border-cove" />
+            </label>
+            <label className="flex flex-col gap-2 text-sm text-ink/80">
+              Confirm hub passphrase
+              <input type="password" name="confirm-password" value={confirm} autoComplete="new-password" onChange={(event) => setConfirm(event.target.value)} className="h-11 rounded-2xl border border-line bg-white px-4 text-base text-ink outline-none focus:border-cove" />
+            </label>
+            {error ? <p className="text-sm leading-relaxed text-ink" role="alert">{error}</p> : null}
+            <button type="submit" disabled={busy || password.length === 0 || confirm.length === 0} className="inline-flex h-11 items-center justify-center rounded-2xl bg-cove px-4 text-base font-medium text-white disabled:opacity-60">{busy ? "Setting up…" : "Set up hub"}</button>
+          </form> : <form onSubmit={handleSubmit} autoComplete="off" className="mt-6 flex flex-col gap-3">
             <label className="flex flex-col gap-2 text-sm text-ink/80">
               Username or email
               <input
@@ -134,6 +194,7 @@ export function LoginPage() {
               Forgot your password or sign-in details? Contact your hub administrator.
             </p>
           </form>
+          }
         </div>
       </div>
       <Link

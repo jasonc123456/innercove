@@ -57,7 +57,7 @@ describe("POST /api/infer", () => {
     const res = await app.inject({
       method: "POST",
       url: "/api/infer",
-      payload: { history: [{ role: "user", content: "earlier" }, { role: "assistant", content: "reply" }], message: "hello" },
+      payload: { history: [{ role: "user", content: "earlier" }, { role: "assistant", content: "reply" }], message: "a simple question" },
     });
     expect(res.headers["content-type"]).toMatch(/^text\/event-stream/);
     const events = parseSse(res.body);
@@ -70,7 +70,7 @@ describe("POST /api/infer", () => {
       { role: "system", content: "SYSTEM" },
       { role: "user", content: "earlier" },
       { role: "assistant", content: "reply" },
-      { role: "user", content: "hello" },
+      { role: "user", content: "a simple question" },
     ]);
     expect(stats.lastReply).not.toBeNull();
   });
@@ -93,7 +93,7 @@ describe("POST /api/infer", () => {
       },
     };
     const { app } = await setup(down);
-    const res = await app.inject({ method: "POST", url: "/api/infer", payload: { history: [], message: "hi" } });
+    const res = await app.inject({ method: "POST", url: "/api/infer", payload: { history: [], message: "please respond" } });
     const events = parseSse(res.body);
     expect(events.at(-1)).toEqual({ name: "error", data: { code: "MODEL_UNAVAILABLE", message: expect.any(String) } });
   });

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { FakeProvider } from "../inference/index.js";
 import type { ChatEvents } from "@innercove/core";
 import { SentenceGate, type SafetyLayer } from "./safety.js";
-import { REVIEWED_REPLY_MODEL_ID, runTurn } from "./turn.js";
+import { GREETING_REPLY_MODEL_ID, REVIEWED_REPLY_MODEL_ID, casualGreetingReply, runTurn } from "./turn.js";
 
 const PLANTED = "PLANTED-METHOD-DETAIL";
 
@@ -21,7 +21,7 @@ const safety: SafetyLayer = {
   tier2Reply: (a) => `Reviewed reply for ${a.category}`,
 };
 
-async function turn(reply: string[], message = "hello") {
+async function turn(reply: string[], message = "ordinary message") {
   const provider = new FakeProvider({ reply });
   const events: { name: keyof ChatEvents; data: any }[] = [];
   const blocks: string[][] = [];
@@ -49,6 +49,20 @@ describe("SentenceGate", () => {
 });
 
 describe("runTurn screen-before-display (D32)", () => {
+  it("answers a simple greeting casually without calling the model", async () => {
+    const { provider, events, names } = await turn(["This must not be used."], "hello");
+    expect(provider.prompts).toHaveLength(0);
+    expect(names).toEqual(["meta", "context", "delta", "done"]);
+    expect(events[2]!.data.text).toBe("Hi! It’s nice to see you. How are you doing today?");
+    expect(events[3]!.data.modelId).toBe(GREETING_REPLY_MODEL_ID);
+  });
+
+  it("keeps greeting matching narrow so meaningful conversation reaches normal chat", () => {
+    expect(casualGreetingReply("How are you?")).toContain("ready to listen");
+    expect(casualGreetingReply("hello, I feel overwhelmed")).toBeNull();
+    expect(casualGreetingReply("This exam is killing me")).toBeNull();
+  });
+
   it("tier 0: a planted method detail mid-stream never reaches the client", async () => {
     const { events, blocks, wire, names } = await turn([
       "That sounds really hard. ",

@@ -62,6 +62,7 @@ export function carriedTier(safety: SafetyLayer, recent: readonly string[] = [])
 }
 
 export const REVIEWED_REPLY_MODEL_ID = "reviewed-reply";
+export const GREETING_REPLY_MODEL_ID = "guided-greeting";
 
 /**
  * One chat turn (plan §3 "Chat turn pipeline"): pre-screen, retrieve and
@@ -81,6 +82,17 @@ export async function runTurn(input: TurnInput): Promise<ReplyStats | null> {
     send("delta", { text });
     const assistantMessageId = (await hooks.finish?.({ text, modelId: REVIEWED_REPLY_MODEL_ID, tier, context: [] })) ?? null;
     send("done", { assistantMessageId, modelId: REVIEWED_REPLY_MODEL_ID, firstWordMs: null, tokPerS: null });
+    return null;
+  }
+
+  // Keep simple social greetings warm and proportionate. This is deliberately
+  // exact/narrow: anything carrying more context still reaches normal chat.
+  const greeting = tier === 0 ? casualGreetingReply(input.message) : null;
+  if (greeting) {
+    send("context", { sources: [], sent: [] });
+    send("delta", { text: greeting });
+    const assistantMessageId = (await hooks.finish?.({ text: greeting, modelId: GREETING_REPLY_MODEL_ID, tier, context: [] })) ?? null;
+    send("done", { assistantMessageId, modelId: GREETING_REPLY_MODEL_ID, firstWordMs: null, tokPerS: null });
     return null;
   }
 
@@ -179,4 +191,16 @@ export async function runTurn(input: TurnInput): Promise<ReplyStats | null> {
 
 function round1(n: number): number {
   return Math.round(n * 10) / 10;
+}
+
+/** Returns a friendly response only for a complete, content-free greeting. */
+export function casualGreetingReply(message: string): string | null {
+  const normalized = message.trim().toLowerCase().replace(/[!?.,]+$/g, "");
+  if (/^(?:hi|hello|hey|good morning|good afternoon|good evening)$/.test(normalized)) {
+    return "Hi! It’s nice to see you. How are you doing today?";
+  }
+  if (/^(?:how are you|how's it going|how is it going|what's up|whats up)$/.test(normalized)) {
+    return "I’m here and ready to listen. How are you doing today?";
+  }
+  return null;
 }

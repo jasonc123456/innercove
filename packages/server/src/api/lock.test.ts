@@ -168,7 +168,7 @@ describe("database lifecycle HTTP contract", () => {
     };
     const { app, database } = await fixture({ provider }); await database.setup(PASSWORD);
     const native = database.acquire(); native.release();
-    const active = app.inject({ method: "POST", url: "/api/infer", payload: { history: [], message: "hello" } }); await entered;
+    const active = app.inject({ method: "POST", url: "/api/infer", payload: { history: [], message: "please respond" } }); await entered;
     const lock = app.inject({ method: "POST", url: "/api/lock" });
     try {
       await vi.waitFor(() => expect(database.locked).toBe(true));

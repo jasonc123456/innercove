@@ -1023,6 +1023,17 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Checks:** `npm test` 178/178 (6 new sign-in tests on the real store); typecheck and web build pass. On the GX10: `demo-check.mjs` (now signs in with `HUB_PASSPHRASE` from the environment) all checks pass, including "no cookie → 401"; LAN `curl` without the cookie gets `401`; Firefox over the LAN: wrong passphrase refused, sign-in, reload keeps the session, chat replies, sign-out then `401`.
 - **Next:** two-factor (P1 #2); then HTTPS for phone pairing (D31).
 
+**Initial hub setup UI (2026-10-10):**
+- The sign-in screen now checks `/api/lock-status`. For a new hub it presents a local passphrase setup form, calls `/api/setup`, and then signs in as the initial admin; an already configured hub keeps the ordinary sign-in form.
+- The passphrase is not stored in browser storage or logged by the client. A forgotten passphrase cannot be recovered.
+
+**Web build cleanup (2026-10-10):**
+- Restored the declared QR-code packages in the local web install and removed two unused page-only icon helpers that stopped TypeScript's strict production build. No user-facing behavior changed.
+
+**Casual greeting behavior (2026-10-10):**
+- Short, content-free greetings such as “hi,” “hello,” and “how are you?” now receive a warm, casual response before normal model generation. The narrow rule runs only after safety assessment, does not apply to messages containing additional context, and never bypasses a crisis tier.
+- Prompt guidance also tells the model to avoid treating ordinary small talk as distress. A deterministic test verifies no model call occurs for a simple greeting.
+
 | P0 item | Server | UI | Missing |
 |---|---|---|---|
 | 1. Streaming local chat, reasoning off | ✅ `/api/infer`, `/api/chat` (A) | ✅ chat page streams from Qwen | none |
