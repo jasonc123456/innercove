@@ -944,7 +944,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 | 7. Data controls + privacy panel | ⚠️ `/api/privacy-status` ✅ (A); **`/api/settings` and `/api/delete-all` missing** (B); **no CSP header** | ❌ settings/privacy panel not wired | **B:** settings, delete-all; **A:** CSP; **C:** panel + delete UI |
 | 8. Verified offline demo | ✅ `scripts/demo-check.mjs` passes online | | **A:** `--offline` run with the router's uplink unplugged |
 | Lock screen (Phase 2) | ✅ setup/unlock/lock | ❌ `SetupPage`/`UnlockPage` exist but aren't routed or calling the API | **C** (top priority: every restart locks the hub) |
-| Phase 6 extras | | | seed script for the persona (A), README (B), backup recording (C) |
+| Phase 6 extras | | | seed script for the persona (B, per TEAM_PLAN Phase 5), README (B), backup recording (C) |
 
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
