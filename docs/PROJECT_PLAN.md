@@ -958,7 +958,7 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 | 7. Data controls + privacy panel | ✅ `/api/privacy-status` (A), `/api/settings` and `/api/delete-all` (B); ⚠️ **no CSP header yet** | ❌ settings/privacy panel and delete controls not wired | **A:** CSP; **C:** panel + delete UI |
 | 8. Verified offline demo | ✅ `scripts/demo-check.mjs` passes online | | **A:** add the delete-all canary check (demo step 8, now possible); `--offline` run with the router's uplink unplugged (the GX10 has no monitor; run it over SSH) |
 | Lock screen (Phase 2) | ✅ setup/unlock/lock | ❌ `SetupPage`/`UnlockPage` exist but aren't routed or calling the API | **C** (top priority: every restart locks the hub) |
-| Phase 6 extras | ✅ persona seed: `npm run seed:persona --workspace=@innercove/server -- --db <path> --confirm-fictional` (B; API stopped first) | | README (B), backup recording (C) |
+| Phase 6 extras | ✅ persona seed: `npm run seed:persona --workspace=@innercove/server -- --db <path> --confirm-fictional` (B; API stopped first) | | ✅ root README run steps (B); backup recording (C) remains unverified |
 
 
 **B (Angela), Phase 5 backend handoff (2026-10-10; locally complete, team acceptance pending):**
@@ -984,6 +984,16 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Phase 6:** B’s seed tool is ready for A’s integration; root README run steps remain B’s deliverable (root README absent). A’s unplugged offline journey/current-stack network checks and C’s backup recording remain unverified here. D’s candidate prompt changes still need the recorded Q6_K evaluation follow-up; isolated database smoke does not establish a new model score.
 - **Next concrete B task (assessment only):** prepare Phase 6 root README run steps for encrypted setup/unlock, explicit fictional seeding, settings/reset and the existing demo gate, then support A/C’s remaining integration checks. No Phase 6 or P1 implementation started; D34 Summary to share remains the first later stretch, ahead of phone pairing.
 - **Undo:** `docker image rm innercove-phase5-verify:b6082ef` and `git worktree remove ~/innercove-phase5-verify`, logged in SETUP_LOG #25/#24. Neither command executed; no encryption configuration or live deployment change.
+
+
+**B (Angela), Phase 6 root run documentation (2026-10-10; B documentation complete, team gate incomplete):**
+- **Done:** created root `README.md` (none existed) with prerequisites/install, fake/LM Studio configuration, native development/compiled and Linux Compose paths, loopback/D46 LAN behavior, encrypted setup/unlock/423, explicit offline fictional seed, checks, troubleshooting and links to detailed handoffs.
+- **Accuracy:** npm scripts do not implicitly load `.env`; native file-based commands use Node `--env-file`, and source watch uses `--import tsx`. Root build excludes the web build; seed requires the API stopped and an initialized empty store. Home-page login is not hub authentication. Gate still skips delete-all; no startup reset command included.
+- **Published evidence preserved:** fetched origin/main through `f4cec18`; Phase 5 verification documentation merge `2f78829` is already an ancestor of origin/main. Linked its existing records, without duplicating the GX10 run or repeating completed checks; teammate UI/login, prompt and setup-log updates preserved.
+- **Documentation checks PASS:** all 16 Bash blocks parse; local links/anchors resolve; documented npm script/workspace targets exist; Compose binding/proxy and gate limitation checked against source; Node env-file/tsx import validated with an isolated dummy fixture; Python prompt snippets compile; `git diff --check` passes. No app, credential prompt, seed, reset, live GX10 operation or runtime test suite run for this docs-only task.
+- **Backend support next:** help A/C reproduce API failures in setup/unlock/423, diary CRUD/FTS, settings persistence, saved-history reload, memory/pin/provenance/D33, explicit excerpt/support-note save and controlled reset cleanup. Route/storage/permission/lifecycle failures are B defects to investigate if observed; latest handoffs identify no outstanding confirmed B backend defect.
+- **UI/deployment next:** C wires real setup/unlock, diary/memory/pins, saved list/reopen, settings/delete/privacy/cache reset and excerpt/support-note flows; preserve prior Save-to-chat/static help results. A owns CSP, adds step-8 reset canary to the demo checker and runs the deployed Qwen/UI and unplugged offline journey/network checks; B supports unlocked-database/FTS/derived/next-prompt evidence on an agreed fictional fixture.
+- **Remaining acceptance:** whole-team Phase 5 UI/privacy/CSP and Phase 6 unplugged full demo/backup recording remain open; D’s newer prompt/trauma cases await the next quality evaluation. README acceptance and seed implementation are complete; no new UI, CSP, live deployment, model-quality or offline result claimed. No P1 stretch work begun.
 
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**
