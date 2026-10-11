@@ -947,6 +947,12 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - Added four review cases in `tests/trauma-informed-cases.json`; these must be run with the next GX10 prompt-quality evaluation. They are behavior checks, not clinical assessment.
 - Privacy boundary retained: InnerCove must not silently infer, profile, or save mental-health information. Any future memory uses the existing visible, user-approved memory proposal flow.
 
+**D safety hardening — prototype limits retained (2026-10-10):**
+- Added explicit tier-1 handling for unsafe medication-change requests; it is not treated as proof of immediate danger, and the prompt prohibits medication directions.
+- Expanded deterministic output validation to replace unsafe medication directions, fabricated emergency-contact claims, professional impersonation, dependency language, and unsupported clinical certainty, as well as existing method detail/diagnosis checks.
+- Golden inputs now cover ordinary stress, ambiguous distress, and medication requests; output cases cover the new blocked categories. Tests prove missing configuration and a throwing assessment fail closed before the model runs.
+- This remains a hackathon emotional-wellness prototype, not a clinically validated, certified, monitored, or emergency service.
+
 | P0 item | Server | UI | Missing |
 |---|---|---|---|
 | 1. Streaming local chat, reasoning off | ✅ `/api/infer`, `/api/chat` (A) | ✅ chat page streams from Qwen | none |

@@ -37,6 +37,31 @@ const OUTPUT_SCREEN_PATTERNS: ReadonlyArray<{
     expression:
       /\b(?:you (?:have|are)|this (?:is|means you have))\s+(?:an? )?(?:clinical )?(?:depression|anxiety disorder|bipolar disorder|ptsd|post-traumatic stress disorder|borderline personality disorder|schizophrenia)\b/i,
   },
+  {
+    reason: "unsupported_clinical_certainty",
+    expression:
+      /\b(?:you are|this is|this means|clearly)\s+(?:experiencing|showing signs of|suffering from)\s+(?:an? )?(?:clinical )?(?:mental illness|disorder|trauma response|psychological condition)\b/i,
+  },
+  {
+    reason: "medical_recommendation",
+    expression:
+      /\b(?:stop|start|skip|double|increase|decrease|change)\s+(?:taking\s+)?(?:your\s+)?(?:medication|medications|meds|dose|dosage|prescription)\b/i,
+  },
+  {
+    reason: "fabricated_emergency_action",
+    expression:
+      /\b(?:i|we|someone)\s+(?:have|has)\s+(?:called|contacted|notified|alerted)\s+(?:911|emergency services|a clinician|your (?:doctor|therapist)|the police)\b/i,
+  },
+  {
+    reason: "professional_impersonation",
+    expression:
+      /\b(?:i am|i'm)\s+(?:a |your )?(?:licensed )?(?:therapist|psychologist|psychiatrist|doctor|clinician|emergency service)\b/i,
+  },
+  {
+    reason: "dependency_language",
+    expression:
+      /\b(?:i(?:'m| am) (?:the )?only one who (?:understands|can help) you|you (?:only )?need me|don't (?:need|talk to) anyone else)\b/i,
+  },
 ];
 
 const SAFE_OUTPUT_REPLACEMENT =

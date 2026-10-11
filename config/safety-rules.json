@@ -69,6 +69,12 @@
       "patterns": ["\\b(?:only eaten once in three days|like feeling empty)\\b"]
     },
     {
+      "id": "unsafe-medication-request",
+      "tier": 1,
+      "category": "medical_concern",
+      "patterns": ["\\b(?:should|can) i (?:stop|start|skip|double|increase|decrease|change) (?:taking )?(?:my )?(?:medication|meds|dose|dosage|prescription)\\b", "\\b(?:tell me (?:what|how much) (?:medication|medicine|meds) (?:to take|i should take))\\b"]
+    },
+    {
       "id": "third-party-immediate-risk",
       "tier": 2,
       "category": "third_party_concern",

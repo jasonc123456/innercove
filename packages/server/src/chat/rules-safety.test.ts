@@ -13,12 +13,14 @@ import { buildApp } from "../app.js";
 import { FakeProvider } from "../inference/index.js";
 import { fromRoot } from "../paths.js";
 import { loadSafetyConfigs, rulesSafety } from "./rules-safety.js";
+import type { SafetyLayer } from "./safety.js";
 
 const configs = loadSafetyConfigs();
 const safety = rulesSafety(configs);
 const readJson = <T>(p: string): T => JSON.parse(readFileSync(fromRoot(p), "utf8")) as T;
 const safetyCases = readJson<SafetyGoldenCase[]>("tests/safety-cases.json");
 const screenCases = readJson<OutputScreenGoldenCase[]>("tests/output-screen-cases.json");
+const systemPrompt = readFileSync(fromRoot("config/prompts/system-prompt.txt"), "utf8");
 
 function events(body: string) {
   return body
@@ -30,13 +32,13 @@ function events(body: string) {
     }));
 }
 
-async function chat(provider: FakeProvider, message: string) {
+async function chat(provider: FakeProvider, message: string, safetyLayer: SafetyLayer = safety) {
   const dir = mkdtempSync(path.join(tmpdir(), "innercove-safety-"));
   const database = new DatabaseStore(path.join(dir, "test.db"));
   let app: Awaited<ReturnType<typeof buildApp>> | undefined;
   try {
     await database.setup("fixture-only-passphrase");
-    app = await buildApp({ database, provider, safety, systemPrompt: "SYSTEM", stats: { lastReply: null } }, false);
+    app = await buildApp({ database, provider, safety: safetyLayer, systemPrompt: "SYSTEM", stats: { lastReply: null } }, false);
     const res = await app.inject({
       method: "POST",
       url: "/api/chat",
@@ -50,12 +52,25 @@ async function chat(provider: FakeProvider, message: string) {
 }
 
 describe("D's safety engine (golden sets)", () => {
+  it("ships the required non-diagnostic, autonomy-respecting system instructions", () => {
+    expect(systemPrompt).toContain("You are not a therapist, doctor or crisis service");
+    expect(systemPrompt).toContain("Do not diagnose or label conditions");
+    expect(systemPrompt).toContain("one open question");
+    expect(systemPrompt).toContain("Do not silently create clinical notes");
+    expect(systemPrompt).toContain("Ask permission before suggesting a body-based or grounding technique");
+    expect(systemPrompt).toContain("Never suggest you can replace them");
+  });
+
   it("tiers all safety cases as expected", () => {
     expect(runSafetyGoldenCases(safetyCases, configs.rules)).toEqual([]);
   });
 
   it("screens all output cases as expected", () => {
     expect(runOutputScreenGoldenCases(screenCases)).toEqual([]);
+  });
+
+  it("fails closed at startup when the required safety configuration is unavailable", () => {
+    expect(() => loadSafetyConfigs("/definitely-missing-innercove-safety-config")).toThrow();
   });
 });
 
@@ -78,5 +93,20 @@ describe("/api/chat with D's engine", () => {
     expect(body).not.toMatch(/steps to suicide/i);
     expect(body).not.toContain("more text");
     expect(ev.map((e) => e.name)).toEqual(["meta", "context", "delta", "replaced", "done"]);
+  });
+
+  it("does not call the model if safety assessment fails", async () => {
+    const provider = new FakeProvider({ reply: ["This must never be generated."] });
+    const brokenSafety: SafetyLayer = {
+      assess: () => { throw new Error("safety unavailable"); },
+      screen: () => ({ allowed: true, reasons: [] }),
+      tier2Reply: () => "unused",
+    };
+    const { events: ev } = await chat(provider, "ordinary message", brokenSafety);
+    expect(provider.prompts).toHaveLength(0);
+    expect(ev).toContainEqual({
+      name: "error",
+      data: { code: "INTERNAL_ERROR", message: expect.any(String) },
+    });
   });
 });

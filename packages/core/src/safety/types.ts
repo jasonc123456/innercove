@@ -5,6 +5,7 @@ export type SafetyCategory =
   | "explicit_self_harm"
   | "eating_concern"
   | "harm_to_others"
+  | "medical_concern"
   | "method_seeking"
   | "overdose"
   | "passive_self_harm"
@@ -30,7 +31,14 @@ export interface SafetyAssessment {
   matchedRuleIds: string[];
 }
 
-export type OutputScreenReason = "diagnostic_language" | "method_detail";
+export type OutputScreenReason =
+  | "dependency_language"
+  | "diagnostic_language"
+  | "fabricated_emergency_action"
+  | "medical_recommendation"
+  | "method_detail"
+  | "professional_impersonation"
+  | "unsupported_clinical_certainty";
 
 export interface OutputScreenResult {
   allowed: boolean;
