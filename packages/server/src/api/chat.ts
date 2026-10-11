@@ -1,4 +1,5 @@
 import {
+  type ChatTone,
   ChatRequestSchema,
   InferRequestSchema,
   type ConversationId,
@@ -23,7 +24,7 @@ export function chatRoutes(app: FastifyInstance, deps: AppDeps) {
   app.post("/api/chat", async (request, reply) => {
     const parsed = ChatRequestSchema.safeParse(request.body);
     if (!parsed.success) return sendError(reply, "VALIDATION_ERROR", "Invalid chat request", validationDetails(parsed.error));
-    const { conversationId, message, useMemories, pinnedMemoryIds, dismissedExerciseIds } = parsed.data;
+    const { conversationId, message, useMemories, pinnedMemoryIds, dismissedExerciseIds, tone } = parsed.data;
     const store = deps.store ?? new SqlChatStore(request.databaseLease!);
 
     let prior: MessageRecord[] = [];
@@ -36,14 +37,14 @@ export function chatRoutes(app: FastifyInstance, deps: AppDeps) {
       }
     }
     const hooks = savedChatHooks(store, conversationId, prior, message, useMemories, pinnedMemoryIds, dismissedExerciseIds, deps);
-    return stream(request, reply, deps, message, hooks, userTexts(prior));
+    return stream(request, reply, deps, message, hooks, userTexts(prior), tone);
   });
 
   /** Temporary chats (D35): history comes from the browser; never writes rows or content logs. */
   app.post("/api/infer", async (request, reply) => {
     const parsed = InferRequestSchema.safeParse(request.body);
     if (!parsed.success) return sendError(reply, "VALIDATION_ERROR", "Invalid infer request", validationDetails(parsed.error));
-    const { history, message, useMemories, pinnedMemoryIds, dismissedExerciseIds } = parsed.data;
+    const { history, message, useMemories, pinnedMemoryIds, dismissedExerciseIds, tone } = parsed.data;
     const store = deps.store ?? new SqlChatStore(request.databaseLease!);
     return stream(request, reply, deps, message, {
       prepare: async () => ({
@@ -62,7 +63,7 @@ export function chatRoutes(app: FastifyInstance, deps: AppDeps) {
         // narrower contract for the suggestion policy.
         recentHistory: history.map(({ role, content }) => ({ role: role as "user" | "assistant", content })),
       }),
-    }, userTexts(history));
+    }, userTexts(history), tone);
   });
 }
 
@@ -169,6 +170,7 @@ async function stream(
   message: string,
   hooks: TurnHooks,
   recentUserMessages: readonly string[],
+  tone: ChatTone,
 ) {
   const controller = new AbortController();
   reply.raw.on("close", () => {
@@ -186,6 +188,7 @@ async function stream(
       send,
       hooks,
       recentUserMessages,
+      tone,
       onScreenBlock: (tier, reasons) =>
         request.log.info({ event: "output_screened", tier, reasons }, "output screen blocked a reply"),
     });

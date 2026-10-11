@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import chatTreeBackground from "../assets/chatTreeBackground.png";
-import { ReplyError, streamAssistantReply } from "../chat/streamReply";
+import { CHAT_TONES, ReplyError, streamAssistantReply, type ChatTone } from "../chat/streamReply";
 import { MessageInput } from "../components/MessageInput";
 import { MemoryPicker } from "../components/MemoryPicker";
 import { MessageList } from "../components/MessageList";
 import { useAppSession, uuidv7 } from "../session/AppSession";
+
+const TONE_KEY = "innercove-chat-tone";
 
 /** Shown in place of a reply when LM Studio can't be reached. InnerCove never fakes an answer. */
 const OFFLINE_NOTICE =
@@ -30,6 +32,15 @@ export function ChatPage() {
     chatConversation.current = { id: null, mode: chatMode };
   }
   const [failed, setFailed] = useState(false);
+  // Chat tone, kept on this browser only. Safety replies and the crisis card don't change with it.
+  const [tone, setTone] = useState<ChatTone>(() => {
+    try {
+      const saved = localStorage.getItem(TONE_KEY);
+      return CHAT_TONES.some((t) => t.id === saved) ? (saved as ChatTone) : "warm";
+    } catch {
+      return "warm";
+    }
+  });
   const [pickerOpen, setPickerOpen] = useState(false);
   const [openSource, setOpenSource] = useState<{
     messageId: string;
@@ -81,6 +92,7 @@ export function ChatPage() {
           useMemories,
           pinnedMemoryIds,
           dismissedExerciseIds: dismissedExerciseIds.current,
+          tone,
           ...(chatMode === "saved" ? { saved: { conversationId: chatConversation.current.id } } : {}),
         },
         {
@@ -187,6 +199,28 @@ export function ChatPage() {
               Memories: {memories.filter((m) => m.accessLevel === "ai_eligible").length} InnerCove can use
             </button>
           ) : null}
+          <label className="ml-auto inline-flex items-center gap-1.5 text-ink/80">
+            Tone
+            <select
+              value={tone}
+              onChange={(event) => {
+                const next = event.target.value as ChatTone;
+                setTone(next);
+                try {
+                  localStorage.setItem(TONE_KEY, next);
+                } catch {
+                  /* Private mode: the choice still applies for this visit. */
+                }
+              }}
+              className="h-8 rounded-full border border-line bg-paper px-2 text-xs text-ink"
+            >
+              {CHAT_TONES.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </label>
           {pickerOpen && useMemories ? <MemoryPicker onClose={() => setPickerOpen(false)} /> : null}
         </div>
       </div>

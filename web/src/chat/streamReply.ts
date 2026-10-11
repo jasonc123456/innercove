@@ -62,6 +62,13 @@ export class ReplyError extends Error {
 
 const MAX_HISTORY = 40; // 20 turns
 
+export type ChatTone = "warm" | "calm" | "upbeat";
+export const CHAT_TONES: { id: ChatTone; label: string }[] = [
+  { id: "warm", label: "Warm" },
+  { id: "calm", label: "Calm & brief" },
+  { id: "upbeat", label: "Upbeat" },
+];
+
 export async function streamAssistantReply(
   request: {
     message: string;
@@ -69,6 +76,8 @@ export async function streamAssistantReply(
     useMemories?: boolean;
     pinnedMemoryIds?: string[];
     dismissedExerciseIds?: ("breathing478" | "comfortable-breathing")[];
+    /** The user's chat tone; the server ignores it on any turn that shows risk. */
+    tone?: ChatTone;
     /** Present for saved chats: `null` starts a new conversation (its id arrives in `onMeta`). */
     saved?: { conversationId: string | null };
   },
@@ -87,6 +96,7 @@ export async function streamAssistantReply(
             useMemories: request.useMemories ?? true,
             pinnedMemoryIds,
             dismissedExerciseIds: request.dismissedExerciseIds ?? [],
+            tone: request.tone ?? "warm",
           }
         : {
             history: request.history.slice(-MAX_HISTORY),
@@ -94,6 +104,7 @@ export async function streamAssistantReply(
             useMemories: request.useMemories ?? false,
             pinnedMemoryIds,
             dismissedExerciseIds: request.dismissedExerciseIds ?? [],
+            tone: request.tone ?? "warm",
           },
     ),
     signal,

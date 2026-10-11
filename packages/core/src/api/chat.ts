@@ -18,6 +18,13 @@ export const SuggestedExerciseSchema = z.object({
 }).strict();
 export type SuggestedExercise = z.infer<typeof SuggestedExerciseSchema>;
 
+/**
+ * Chat tone the user picked. A fixed choice, never free text: the server maps it to a reviewed
+ * style line and ignores it whenever the turn shows risk (tier 1 or carried), so safety wording is unchanged.
+ */
+export const ChatToneSchema = z.enum(["warm", "calm", "upbeat"]);
+export type ChatTone = z.infer<typeof ChatToneSchema>;
+
 /** `POST /api/chat`. A `null` conversationId creates a saved conversation. */
 export const ChatRequestSchema = z
   .object({
@@ -26,6 +33,7 @@ export const ChatRequestSchema = z
     useMemories: z.boolean(),
     pinnedMemoryIds: z.array(MemoryIdSchema).max(5),
     dismissedExerciseIds: z.array(ExerciseSuggestionIdSchema).max(2).default([]),
+    tone: ChatToneSchema.default("warm"),
   })
   .strict();
 export type ChatRequest = z.infer<typeof ChatRequestSchema>;
@@ -46,6 +54,7 @@ export const InferRequestSchema = z
     useMemories: z.boolean().default(false),
     pinnedMemoryIds: z.array(MemoryIdSchema).max(5).default([]),
     dismissedExerciseIds: z.array(ExerciseSuggestionIdSchema).max(2).default([]),
+    tone: ChatToneSchema.default("warm"),
   })
   .strict();
 export type InferRequest = z.infer<typeof InferRequestSchema>;

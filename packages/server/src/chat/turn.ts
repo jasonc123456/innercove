@@ -1,4 +1,4 @@
-import type { SafetyTier, SuggestedExercise } from "@innercove/core";
+import type { ChatTone, SafetyTier, SuggestedExercise } from "@innercove/core";
 import {
   ModelUnavailableError,
   type ChatMessage,
@@ -8,6 +8,7 @@ import type { SendEvent } from "../api/sse.js";
 import { assemblePrompt, contextEvent } from "./prompt.js";
 import type { ContextItem } from "./retrieval.js";
 import { SAFE_FALLBACK, SentenceGate, type SafetyLayer } from "./safety.js";
+import { withTone } from "./tone.js";
 
 export interface ReplyStats {
   firstWordMs: number | null;
@@ -47,6 +48,8 @@ export interface TurnInput {
   onScreenBlock?: (tier: number, reasons: readonly string[]) => void;
   /** Recent user messages in this conversation, newest last; a risky one keeps this turn at tier 1 or above. */
   recentUserMessages?: readonly string[];
+  /** The user's chat tone; only applied on tier-0 turns (tone.ts). */
+  tone?: ChatTone;
 }
 
 /** How many recent user messages a tier-1+ assessment carries over from. */
@@ -103,7 +106,7 @@ export async function runTurn(input: TurnInput): Promise<ReplyStats | null> {
   if (prepared.historyExcluded > 0) send("historyExcluded", { count: prepared.historyExcluded });
 
   const messages = assemblePrompt({
-    systemPrompt: input.systemPrompt,
+    systemPrompt: withTone(input.systemPrompt, input.tone, tier),
     context: prepared.context,
     history: prepared.history,
     message: input.message,
