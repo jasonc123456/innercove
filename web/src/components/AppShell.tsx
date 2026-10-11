@@ -85,7 +85,7 @@ export function AppShell() {
   const path = useLocation().pathname;
   const home = path === "/";
   const [moreOpen, setMoreOpen] = useState(false);
-  const inMore = MORE.some((s) => s.to === path);
+  const inMore = MORE.some((s) => path === s.to || path.startsWith(`${s.to}/`));
 
   // The menu closes on navigation and on Escape.
   useEffect(() => setMoreOpen(false), [path]);
