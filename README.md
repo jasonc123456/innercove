@@ -8,7 +8,7 @@ Run commands below from the repository root in a Bash-compatible terminal unless
 
 - Node.js 22 and npm; Git.
 - Python 3, Make and a C++ compiler for native SQLite modules when prebuilt binaries are unavailable. Full backend tests also use `strings` and either the `sqlite3` CLI or Python's `sqlite3` binding. The demo port checks use Linux `ss`.
-- For real inference: LM Studio on the same hub, with the Qwen3.8-27B Q6_K model loaded as `qwen/qwen3.8-27b` (D43/D45). Fake-provider development needs no model/GPU.
+- For real inference: LM Studio on the same hub, with the Qwen3.8-27B Q6_K model loaded as `qwen/qwen3.8-27b` (D43/D45). Without a GPU, forward the hub's model server (`ssh -L 1234:127.0.0.1:1234 <hub>`); the fake provider is for automated tests only (D54).
 - For Compose: Docker Engine and Docker Compose v2 on Linux with host networking. Docker Desktop/WSL needs integration enabled; these Compose files target the Linux hub.
 
 ```bash
