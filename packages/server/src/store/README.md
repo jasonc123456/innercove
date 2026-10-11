@@ -1,4 +1,4 @@
-# Database foundation (B, Phase 2)
+# Encrypted database and persistence (B, Phases 2–3)
 
 The hub starts locked. `POST /api/setup` exclusively creates `data/innercove.db`
 (or `DB_PATH`, resolved from the repo root); it never overwrites an existing
@@ -95,16 +95,15 @@ messages, context links or other table changes, and content is never logged.
 Normal `main.ts` no longer selects the volatile store via `DEV_STORE=demo`;
 the legacy flag is ignored. Existing in-memory adapters/persona helpers stay
 available for A's isolated tests, and no deployed GX10 service/config was
-changed. Fictional persona seeding into SQL and memory CRUD APIs remain later
-work; switching to this server version does not auto-import demo content.
+changed. Fictional persona seeding into SQL remains Phase 5 work; switching
+to this server version does not auto-import demo content.
 
 Read ports are scoped to the lease user; approved/eligible memories and
 eligible diary entries are returned only when their provenance resolves to
 eligible same-user sources. Missing, private or cyclic sources fail closed.
-Message-based derived sources have no independent access flag and remain
-excluded conservatively, matching the earlier demo adapter's policy, until
-Phase 3's permission workflow is implemented. This slice supplies the existing
-read seams, not Phase 3 memory APIs or full revoke/re-confirmation workflows.
+Message sources now resolve through the same-user saved message and all its
+actual context source IDs. A context-free user message can supply provenance
+after explicit creation consent; a reply that used an ineligible source cannot.
 A's ranking, prompt assembly, safety and D33 exclusion remain unchanged.
 
 C can wire setup/unlock/status, diary CRUD/search, `/api/chat` and conversation
@@ -112,3 +111,52 @@ reload to these contracts. C's current mock-only diary/Save UI and lock-screen
 crisis/help acceptance remain separate team work. Backend Phase 2 acceptance
 is locally covered by `api/data.test.ts` and the expanded compiled-entrypoint
 smoke. Whole-team Phase 2 and deployment verification remain incomplete.
+
+## Phase 3 memory and permission handoff
+
+`repos/memories.ts` and `api/data.ts` implement the existing §3c contracts:
+GET/POST `/api/memories`, GET/PATCH/DELETE `/api/memories/:id`, and POST
+`/api/memories/:id/review`. Create requires `origin`, `content`, `accessLevel`
+and nonempty `sources`; user-written memories use
+`[{ sourceType: "manual", sourceId: null }]` and start approved. AI proposals
+start proposed and only their dedicated review route can approve/reject them;
+reviewing a user-written memory returns 409. PATCH only edits content/access.
+No automatic proposal generation or persona seeding is included in Phase 3.
+List supports status/origin filters and the existing limit/recency cursor.
+Source provenance is immutable, validated before any write and committed
+atomically. Foreign or missing IDs/cursors/sources return 404; malformed input
+returns generic 400. All routes use the admitted encrypted request lease and
+return 423 while locked. UI CRUD lists include the user's private/proposed
+records; only the permission-filtered read port can supply AI candidates.
+
+`permissions.ts` is the common provenance policy for read ports, creation and
+explicit grants. Creation clamps access to the most restrictive source. Hide,
+delete or approved-to-rejected review traverses provenance and reply-context
+edges in one transaction, making derived diary/memory items private and
+adding content-free revocation tombstones. The private access level is the
+durable invalidation flag, including across encrypted reopen. Restoring a
+source does not silently restore descendants. C can re-confirm each item via
+PATCH `{ accessLevel: "ai_eligible" }` after all its sources are eligible;
+otherwise the server returns 409. Missing/deleted/cyclic provenance stays
+excluded and cannot be re-confirmed. Approval does not change private access.
+Deleting a conversation invalidates items derived from its saved messages
+before cascading the messages/context rows. Independent same-user manually
+created records remain eligible; foreign records are never traversed.
+
+A's existing retrieval/prompt/history integration consumes these SQL ports.
+No chat interfaces were changed. The context event's `sources` gives link IDs
+and `sent` gives the exact injected text; existing D33 sends an exchange count
+in `historyExcluded`. SQL-backed tests assert the full prompt, relevant top 5
+plus pins/top 3 diary entries, hidden/deleted/proposed exclusion, Use memories
+off, provenance revocation reaching history and the notice. Temporary infer
+with memories enabled leaves every encrypted table unchanged and logs no
+content. Existing safety and lease/drain tests remain in the full suite.
+
+Local checks and precise counts are in the Phase log. The compiled HTTP smoke
+now also covers memory CRUD/review/provenance, durable revocation/re-confirmation
+and D33 history. Phase 2's recorded GX10 result predates these Phase 3 additions;
+this new code still requires isolated ARM64 verification and real UI/Qwen
+integration. C must connect its memory CRUD/access/pin pages to these contracts
+and verify chips, the exact-sent panel and revocation notice against the SQL
+backend. Whole-team Phase 2/3 completion is not claimed. External
+SQLCipher/Android interoperability remains unverified and out of this scope.

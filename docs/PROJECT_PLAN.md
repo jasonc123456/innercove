@@ -550,6 +550,7 @@ Estimates are uncertain. P0 is about **18–25 engineer-hours, or 8–10 wall-cl
   - Without the passphrase, the database file is unreadable: the `sqlite3` CLI can't open it, and `strings` shows no diary text.
 
 **Phase 3 — Memory, permission-controlled retrieval and citations.** Owner A for core, B for the API and permission tests, C for the UI (see `TEAM_PLAN.md`) · 3–4 h · Prerequisite: Phase 2.
+**Backend status (2026-10-10): B implementation complete and locally verified; reuses A’s retrieval/prompt/history. Whole-team Phase 3 remains incomplete: real UI/API integration and GX10 verification of the new Phase 3 code remain pending.**
 - **Files:** `core/retrieval`, `core/prompt`, `store/repos/memories`, provenance, `/api/memories`, the memory page and the context chips.
 - **Acceptance:** `FakeProvider` tests assert on the **assembled prompt**:
   - An entry with `ai_access=false` or a deleted entry is never present.
@@ -881,6 +882,19 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Criterion — unreadable without passphrase/no diary strings:** prior local plain SQLite CLI/strings tests plus target encrypted reopen/plaintext rejection and spike support backend acceptance; no external SQLCipher/Android interoperability claim.
 - **Whole-team Phase 2 incomplete:** connect C's real setup/unlock, diary CRUD/search and Save/reload UI; verify those flows and lock-screen crisis/help on the live GX10 deployment, including diary operation with Qwen stopped. The isolated image did not replace or verify the running Compose/UI/Qwen stack.
 - **Rerun/undo:** `npm run spike:sqlcipher --workspace=@innercove/server`, `npm run smoke:db --workspace=@innercove/server`; image/worktree undo logged in `SETUP_LOG.md`, not executed. No runtime encryption configuration or live deployment changed; no plaintext fallback enabled.
+
+
+**B (Angela), Phase 3 memory/permissions handoff (2026-10-10; backend locally complete):**
+- **Done:** `store/repos/memories.ts`, `store/permissions.ts`, `api/data.ts`: scoped memory CRUD, status/origin pagination, user-origin approval on create and proposal-only review via existing §3c schemas. No automatic proposal generation (P1), schema migration or API shape change.
+- **Provenance:** validates same-user message/diary/manual sources atomically; creation clamps derived access to the most restrictive source. Read ports resolve saved messages and their actual reply-context IDs; missing, private, unapproved or cyclic provenance fails closed.
+- **D16:** hide/delete/reject traverses provenance plus reply-context edges transactionally, makes derived memory/diary items private and writes content-free revocation tombstones. Conversation deletion invalidates message-derived items before cascade. The private flag survives encrypted reopen.
+- **Re-confirmation:** restoring a source never automatically restores descendants. Explicit PATCH `accessLevel: ai_eligible` re-confirms each item only after all sources are eligible; otherwise 409. Deleted/missing sources cannot be re-confirmed. Approval does not override private access.
+- **A reused:** existing keyword ranking/top 5 plus pins/top 3 diary, prompt delimiters, exact `context.sources`/`context.sent`, D33 exchange exclusion/notice and safety pipeline consume B's SQL ports without chat-interface changes. Lock/request leases and encrypted configuration preserved.
+- **Tests:** 9 new SQL-backed `api/memories.test.ts` cases cover CRUD/review/FTS, strict inputs, foreign IDs/cursors/sources and rollback, transitive/reply-derived revocation, re-confirmation/reopen, deletion, full assembled prompts/history notice, relevance/pins/exact sent text, locked endpoints and temporary inference leaving every table/log unchanged. Existing cyclic-source/lease/safety tests also pass.
+- **Local verification:** WSL Linux x64, Node v22.22.1: core/server typechecks and builds exit 0; 52 schema checks exit 0; `npm test` 120/120 across 10 files exit 0; SQLCipher spike 18/18 exit 0; expanded compiled HTTP database smoke exit 0 (now also memory CRUD/review/provenance, durable revocation/re-confirmation and D33). These are local results, not new GX10 measurements.
+- **Run/handoff:** repo-root `npm run typecheck`, `npm run typecheck --workspace=@innercove/core`, `npm run validate`, `npm test`, `npm run build`, `npm run spike:sqlcipher --workspace=@innercove/server`, `npm run smoke:db --workspace=@innercove/server`; API/re-confirmation details in `packages/server/src/store/README.md`.
+- **B Phase 3 complete locally; team incomplete:** C's recorded memory/chip/panel work is mock-backed. Connect real memory CRUD/access/pins and saved-chat history, then verify linked chips, exact-sent panel and D33 notice against the SQL backend. Run isolated GX10 ARM64 verification of this new code and live Qwen/UI integration with A/C; Phase 2's `6d8a89c` result does not verify these additions.
+- **Separate/preserved:** whole-team Phase 2 UI/lock-screen/deployment checks stay open. Phase 5 settings/delete-all/seed and external SQLCipher/Android interoperability are outside this work. No live GX10 deployment, teammate-owned pipeline/UI, plaintext fallback or runtime encryption configuration changed.
 
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**

@@ -8,6 +8,7 @@ import { NotFoundError, type ChatStore } from "../chat/ports.js";
 import type { DatabaseLease } from "./db.js";
 import { diaryEntries, memories, messages, messageContext, provenance, tombstones } from "./schema.js";
 import { ConversationRepository } from "./repos/conversations.js";
+import { PermissionPolicy } from "./permissions.js";
 import { owner, requireRow } from "./repos/common.js";
 
 /** Request-bound adapter: never caches a native connection across lock/reopen.
@@ -61,16 +62,18 @@ export class SqlChatStore implements ChatStore {
   reads: DiaryMemoryReadPort = {
     listDiaryCandidates: async ({ userId, limit, cursor }) => {
       this.assertUser(userId);
+      const policy = new PermissionPolicy(this.lease, userId);
       return this.lease.orm.select().from(diaryEntries).where(and(eq(diaryEntries.userId, userId),
         eq(diaryEntries.accessLevel, "ai_eligible"), cursor ? gt(diaryEntries.id, cursor) : undefined))
-        .orderBy(asc(diaryEntries.id)).all().filter(r => this.eligible("diary_entry", r.id, new Set())).slice(0, limit)
+        .orderBy(asc(diaryEntries.id)).all().filter(r => policy.eligible("diary_entry", r.id)).slice(0, limit)
         .map(r => DiaryEntryRecordSchema.parse(r));
     },
     listMemoryCandidates: async ({ userId, limit, cursor }) => {
       this.assertUser(userId);
+      const policy = new PermissionPolicy(this.lease, userId);
       return this.lease.orm.select().from(memories).where(and(eq(memories.userId, userId),
         eq(memories.accessLevel, "ai_eligible"), eq(memories.status, "approved"), cursor ? gt(memories.id, cursor) : undefined))
-        .orderBy(asc(memories.id)).all().filter(r => this.eligible("memory", r.id, new Set())).slice(0, limit)
+        .orderBy(asc(memories.id)).all().filter(r => policy.eligible("memory", r.id)).slice(0, limit)
         .map(r => ({ ...MemoryRecordSchema.parse(r), provenance: this.links("memory", r.id) as Awaited<ReturnType<DiaryMemoryReadPort["listMemoryCandidates"]>>[number]["provenance"] }));
     },
   };
@@ -92,20 +95,5 @@ export class SqlChatStore implements ChatStore {
   }
   private links(type: "diary_entry" | "memory", id: string) {
     return this.lease.orm.select().from(provenance).where(and(eq(provenance.userId, this.userId), eq(provenance.derivedType, type), eq(provenance.derivedId, id))).all();
-  }
-  private eligible(type: "diary_entry" | "memory", id: string, path: Set<string>): boolean {
-    const key = `${type}:${id}`;
-    if (path.has(key)) return false; // Cyclic/unresolvable provenance fails closed.
-    const table = type === "diary_entry" ? diaryEntries : memories;
-    const row = this.lease.orm.select().from(table).where(owner(table, this.userId, id)).get();
-    if (!row || row.accessLevel !== "ai_eligible" || ("status" in row && row.status !== "approved")) return false;
-    const next = new Set(path).add(key);
-    return this.links(type, id).every(link => {
-      if (link.sourceType === "manual") return link.sourceId === null;
-      if (link.sourceType === "diary_entry" && link.sourceId) return this.eligible("diary_entry", link.sourceId, next);
-      // Messages have no independent permission flag. Until Phase 3 defines
-      // their source eligibility, derived message sources stay private.
-      return false;
-    });
   }
 }

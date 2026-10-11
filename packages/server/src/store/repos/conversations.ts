@@ -6,6 +6,7 @@ import {
 } from "@innercove/core";
 import type { DatabaseLease } from "../db.js";
 import { conversations, messages } from "../schema.js";
+import { invalidateDependents } from "../permissions.js";
 import { olderThan, owner, page, requireRow, timestamp, tombstone, uuidv7 } from "./common.js";
 
 export class ConversationRepository {
@@ -59,7 +60,10 @@ export class ConversationRepository {
   delete(userId: UserId, id: string) {
     return this.lease.db.transaction(() => {
       this.get(userId, id);
-      for (const message of this.listMessages(userId, id)) tombstone(this.lease, userId, "message", message.id);
+      for (const message of this.listMessages(userId, id)) {
+        invalidateDependents(this.lease, userId, "message", message.id);
+        tombstone(this.lease, userId, "message", message.id);
+      }
       this.lease.orm.delete(conversations).where(owner(conversations, userId, id)).run();
       return { tombstone: tombstone(this.lease, userId, "conversation", id) };
     })();

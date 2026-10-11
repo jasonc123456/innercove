@@ -13,6 +13,7 @@ import { noSafety } from "../chat/safety.js";
 import { DatabaseStore } from "../store/db.js";
 import { SqlChatStore } from "../store/chat-store.js";
 import { ConversationRepository } from "../store/repos/conversations.js";
+import { MemoryRepository } from "../store/repos/memories.js";
 import { DiaryRepository } from "../store/repos/diary.js";
 import { uuidv7 } from "../store/repos/common.js";
 import { diaryEntries, memories, messageContext, provenance, settings, users } from "../store/schema.js";
@@ -254,8 +255,11 @@ describe("Phase 2 data routes and persistent chat", () => {
     expect(await candidates()).toEqual([]);
     expect((await store.reads.listDiaryCandidates({ userId, limit: 10 })).map(d => d.id)).not.toContain(derived.id);
     const since = lease.db.prepare("SELECT deleted_at FROM tombstones WHERE user_id=? AND entity_id=?").get(userId, source.id) as { deleted_at: string };
-    expect(await store.revocations.listTombstonesSince({ userId, since: since.deleted_at })).toHaveLength(1);
+    expect(await store.revocations.listTombstonesSince({ userId, since: since.deleted_at })).toEqual(expect.arrayContaining([expect.objectContaining({ entityId: source.id, reason: "access_revoked" })]));
     diary.update(userId, source.id, { accessLevel: "ai_eligible" });
+    expect(await candidates()).toEqual([]); // Restoring a source does not re-confirm descendants.
+    diary.update(userId, derived.id, { accessLevel: "ai_eligible" });
+    new MemoryRepository(lease).update(userId, memoryId, { accessLevel: "ai_eligible" });
     expect(await candidates()).toHaveLength(1);
     lease.orm.update(memories).set({ status: "proposed" }).where(eq(memories.id, memoryId)).run();
     expect(await candidates()).toEqual([]);
