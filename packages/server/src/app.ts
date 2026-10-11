@@ -5,11 +5,12 @@ import Fastify, { type FastifyServerOptions } from "fastify";
 import type { InferenceProvider } from "./inference/index.js";
 import type { ChatStore } from "./chat/ports.js";
 import type { SafetyLayer } from "./chat/safety.js";
-import type { ReplyStats } from "./chat/turn.js";
+import type { SystemInfo } from "./system.js";
 import { sendError } from "./api/errors.js";
 import { chatRoutes } from "./api/chat.js";
 import { healthRoutes } from "./api/health.js";
 import { dataRoutes } from "./api/data.js";
+import { privacyRoutes } from "./api/privacy.js";
 import { databaseRoutes } from "./api/lock.js";
 import type { DatabaseStore } from "./store/db.js";
 
@@ -17,8 +18,10 @@ export interface AppDeps {
   provider: InferenceProvider;
   safety: SafetyLayer;
   systemPrompt: string;
-  /** Speed of the last reply, for the privacy panel (plan §3c, A's fields). In memory only. */
-  stats: { lastReply: ReplyStats | null };
+  /** Speed of the last fully measured reply, for the privacy panel (plan §3c, A's fields). In memory only. */
+  stats: { lastReply: { firstWordMs: number; tokPerS: number } | null };
+  /** Endpoint class, acceleration and memory for the privacy panel; defaults suit the fake provider. */
+  system?: SystemInfo;
   database: DatabaseStore;
   /** Explicit test adapter; production uses the request-bound SQL store. */
   store?: ChatStore;
@@ -45,6 +48,7 @@ export async function buildApp(deps: AppDeps, logger: FastifyServerOptions["logg
 
   dataRoutes(app);
   healthRoutes(app, deps);
+  privacyRoutes(app, deps);
   chatRoutes(app, deps);
 
   if (deps.webDist && existsSync(path.join(deps.webDist, "index.html"))) {

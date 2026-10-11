@@ -140,7 +140,10 @@ async function stream(request: FastifyRequest, reply: FastifyReply, deps: AppDep
       onScreenBlock: (tier, reasons) =>
         request.log.info({ event: "output_screened", tier, reasons }, "output screen blocked a reply"),
     });
-    if (stats) deps.stats.lastReply = stats;
+    // Screened or empty replies have no speed; keep the last full measurement.
+    if (stats?.firstWordMs != null && stats.tokPerS != null) {
+      deps.stats.lastReply = { firstWordMs: stats.firstWordMs, tokPerS: stats.tokPerS };
+    }
     if (controller.signal.aborted) request.log.info("chat stream aborted by client");
   } catch (error) {
     // Store failures after the stream opened: report without echoing content.
