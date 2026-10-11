@@ -10,7 +10,7 @@ node scripts/check-safety.mjs
 
 This checks each of the 30 approved safety inputs against the deterministic tier rules.
 
-The output-screen cases are in `tests/output-screen-cases.json`. They run with the safety module (`packages/core/src/safety`, D44) in `packages/server/src/chat/rules-safety.test.ts` (`npm test`); they cover actionable method details and diagnostic wording.
+The output-screen cases are in `tests/output-screen-cases.json`. They run with the safety module (`packages/core/src/safety`, D44) in `packages/server/src/chat/rules-safety.test.ts` (`npm test`); they cover actionable method details, including euphemistic outcomes such as “end your life,” and diagnostic wording.
 
 Prompt-quality re-evaluation: after changing `config/prompts/system-prompt.txt`, A runs all 40 `docs/prep/` prompts on the GX10 at Q6_K and records the score sheets. Review Tier-1 abuse/resource cases and context-discipline cases before accepting a new score; never report an unrun prompt change as an improved model result.
 
