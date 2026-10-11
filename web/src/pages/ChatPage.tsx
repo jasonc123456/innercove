@@ -2,20 +2,26 @@ import { useEffect, useRef, useState } from "react";
 import coveWash from "../assets/cove-wash.jpg";
 import { streamAssistantReply } from "../chat/streamReply";
 import { MessageInput } from "../components/MessageInput";
-import { MessageList, type ChatMessage } from "../components/MessageList";
+import { MessageList } from "../components/MessageList";
 import { useAppSession, uuidv7 } from "../session/AppSession";
 
 export function ChatPage() {
-  const { chatMode, useMemories, pinnedMemoryIds, setChatMode, setUseMemories } =
-    useAppSession();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const {
+    chatMode,
+    useMemories,
+    pinnedMemoryIds,
+    setChatMode,
+    setUseMemories,
+    chatMessages: messages,
+    setChatMessages: setMessages,
+    chatConversation,
+  } = useAppSession();
   const [streamingId, setStreamingId] = useState<string | null>(null);
-  // Saved chats: the hub's conversation id, set from the first reply's `meta` event.
-  const conversationIdRef = useRef<string | null>(null);
-  useEffect(() => {
-    // Switching mode starts a fresh saved conversation; temporary turns are never saved.
-    conversationIdRef.current = null;
-  }, [chatMode]);
+  // Switching mode starts a fresh saved conversation; temporary turns are never saved.
+  // Only a real switch resets it: coming back from the diary keeps the conversation (D33 demo step).
+  if (chatConversation.current.mode !== chatMode) {
+    chatConversation.current = { id: null, mode: chatMode };
+  }
   const [failed, setFailed] = useState(false);
   const [openSource, setOpenSource] = useState<{
     messageId: string;
@@ -67,7 +73,7 @@ export function ChatPage() {
           useMemories,
           pinnedMemoryIds,
           dismissedExerciseIds: dismissedExerciseIds.current,
-          ...(chatMode === "saved" ? { saved: { conversationId: conversationIdRef.current } } : {}),
+          ...(chatMode === "saved" ? { saved: { conversationId: chatConversation.current.id } } : {}),
         },
         {
           onDelta: (chunk) => setReply((content) => content + chunk),
@@ -87,7 +93,8 @@ export function ChatPage() {
               ),
             ),
           onMeta: (meta) => {
-            if (chatMode === "saved" && meta.conversationId) conversationIdRef.current = meta.conversationId;
+            // Saved chats: the hub's conversation id comes from the first reply's `meta` event.
+            if (chatMode === "saved" && meta.conversationId) chatConversation.current.id = meta.conversationId;
             setMessages((current) =>
               current.map((message) =>
                 message.id === assistantId ? { ...message, tier: meta.tier } : message,

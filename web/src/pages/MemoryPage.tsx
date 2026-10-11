@@ -1,27 +1,18 @@
 import { useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
-import { SetupPage } from "./SetupPage";
-import { UnlockPage } from "./UnlockPage";
 import {
   useAppSession,
   type AccessLevel,
   type PracticeMemory,
 } from "../session/AppSession";
 
+/** Signing in (D47) already unlocked the hub, so the page opens straight onto its data. */
 export function MemoryPage() {
-  const { hasPassphrase, locked } = useAppSession();
-
-  if (!hasPassphrase) {
-    return <SetupPage />;
-  }
-  if (locked) {
-    return <UnlockPage />;
-  }
   return <MemoryWorkspace />;
 }
 
 function MemoryWorkspace() {
-  const { memories, pinnedMemoryIds, lock, addMemory, updateMemory, deleteMemory, pinMemory } =
+  const { memories, pinnedMemoryIds, hubProblem, addMemory, updateMemory, deleteMemory, pinMemory } =
     useAppSession();
   const [params] = useSearchParams();
   const focusId = params.get("id");
@@ -65,18 +56,13 @@ function MemoryWorkspace() {
           <h1 className="text-lg font-semibold leading-tight tracking-tight text-cove">
             Memories
           </h1>
-          <button
-            type="button"
-            onClick={lock}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-line px-4 text-base text-ink"
-          >
-            <LockIcon />
-            Lock
-          </button>
         </div>
         <p className="text-sm text-ink/70">
-          Practice list. /api/memories is not connected, so these are not the hub&apos;s memories.
+          Stored encrypted on your hub. With &ldquo;Use memories&rdquo; on, the AI may use the relevant ones marked &ldquo;AI may use this&rdquo;.
         </p>
+        {hubProblem ? (
+          <p className="rounded-2xl bg-white/80 px-4 py-3 text-sm text-ink" role="alert">{hubProblem}</p>
+        ) : null}
         <p className="text-sm text-ink/70">
           {pinnedMemoryIds.length} of 5 selected for this chat.
         </p>
@@ -94,7 +80,7 @@ function MemoryWorkspace() {
         </button>
       </div>
       {memories.length === 0 ? (
-        <p className="px-4 py-6 text-base text-ink/75">No memories in this tab.</p>
+        <p className="px-4 py-6 text-base text-ink/75">No memories yet.</p>
       ) : (
         <ul className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
           {memories.map((memory) => {
@@ -192,7 +178,7 @@ function MemoryForm({
         </button>
       </div>
       <p className="text-sm text-ink/70">
-        Kept in this tab only. New memories are marked approved and written by you.
+        Saved on your hub. Memories you write are approved straight away.
       </p>
       <label className="flex flex-col gap-2 text-sm text-ink/80">
         Memory

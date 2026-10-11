@@ -1,4 +1,16 @@
-import { TRANSCRIPTION_MAX_BYTES, TRANSCRIPTION_MAX_SECONDS, TranscriptionResponseSchema } from '@innercove/core';
+// web/ is its own npm project (D44) and can't import @innercove/core: neither the web Docker
+// stage, the dev web container nor CI's web job has the workspace packages. These mirror
+// packages/core/src/api/transcribe.ts (B's contract); keep them in step with it.
+const TRANSCRIPTION_MAX_BYTES = 4 * 1024 * 1024;
+const TRANSCRIPTION_MAX_SECONDS = 60;
+function parseTranscription(body: unknown): { text: string; durationMs: number } | null {
+  if (!body || typeof body !== 'object') return null;
+  const { text, durationMs, ...rest } = body as Record<string, unknown>;
+  if (Object.keys(rest).length > 0 || typeof text !== 'string' || typeof durationMs !== 'number') return null;
+  const trimmed = text.trim();
+  if (trimmed.length < 1 || trimmed.length > 16000 || !(durationMs > 0) || durationMs > 60000) return null;
+  return { text: trimmed, durationMs };
+}
 
 export type VoiceState = { phase: 'idle' | 'requesting' | 'recording' | 'processing'; seconds: number; error?: string };
 export function appendTranscript(draft: string, text: string) { return draft ? `${draft}\n${text}` : text; }
@@ -74,10 +86,10 @@ export class VoiceRecording {
             const message = response.status === 401 ? 'Sign in to the hub before transcribing.' : response.status === 423 ? 'Unlock the hub before transcribing.' : response.status === 409 ? 'Transcription is busy. Try again shortly.' : response.status === 400 ? 'Audio could not be transcribed. Try a shorter, clearer recording.' : 'Local transcription is unavailable. Please try again later.';
             fail(message); return;
           }
-          const result = TranscriptionResponseSchema.safeParse(await response.json());
+          const result = parseTranscription(await response.json());
           if (id !== this.generation) return;
-          if (!result.success) { fail('The transcription response was invalid.'); return; }
-          this.draft(result.data.text); this.publish('idle');
+          if (!result) { fail('The transcription response was invalid.'); return; }
+          this.draft(result.text); this.publish('idle');
         } catch { fail('Transcription stopped or the hub could not be reached.'); }
         finally { clearTimeout(timeout); if (this.abort === controller) this.abort = undefined; }
       };

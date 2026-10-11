@@ -3,30 +3,31 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
+  type Dispatch,
+  type MutableRefObject,
   type ReactNode,
+  type SetStateAction,
 } from "react";
+import type { ChatMessage } from "../components/MessageList";
 
 /**
- * TEMPORARY in-memory UI session.
- * Field names follow packages/core (lock status, diary records, access
- * levels). This module does not call those routes and does not store a
- * passphrase. Sign-in is a practice gate: credentials are checked, then
- * discarded, and are not written to localStorage or sessionStorage.
+ * The signed-in session (D47) plus the hub's diary and memories.
+ * Field names follow packages/core. Diary entries and memories live in the hub's encrypted
+ * database (/api/diary, /api/memories); this module keeps only a working copy for the pages.
+ * The passphrase is never stored: not in localStorage, sessionStorage or this state.
  */
 
 export type AccessLevel = "private" | "ai_eligible";
 export type ChatMode = "temporary" | "saved";
 
-/**
- * TEMPORARY memory rows. Field names follow packages/core MemoryRecord.
- * There is no /api/memories client here.
- */
+/** A memory as /api/memories returns it (packages/core MemoryRecord). */
 export type PracticeMemory = {
   id: string;
   userId: string;
-  origin: "user";
-  status: "approved";
+  origin: "user" | "ai_proposal";
+  status: "proposed" | "approved" | "rejected";
   content: string;
   accessLevel: AccessLevel;
   createdAt: string;
@@ -36,13 +37,13 @@ export type PracticeMemory = {
 export type DiaryEntry = {
   id: string;
   userId: string;
-  origin: "manual";
+  origin: "manual" | "excerpt" | "ai_draft" | "support_note";
   title: string | null;
   content: string;
   accessLevel: AccessLevel;
-  includeInHandoff: false;
-  tags: [];
-  mood: null;
+  includeInHandoff: boolean;
+  tags: string[];
+  mood: unknown;
   createdAt: string;
   updatedAt: string;
 };
@@ -64,6 +65,14 @@ type AppSessionValue = {
   entries: DiaryEntry[];
   memories: PracticeMemory[];
   pinnedMemoryIds: string[];
+  /** The open chat, kept here so it survives visiting the diary (demo step 3: hide an entry, keep chatting).
+   * In memory only; cleared on sign-out. */
+  chatMessages: ChatMessage[];
+  setChatMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  /** The hub's id for the open saved conversation, and the mode it was started in. */
+  chatConversation: MutableRefObject<{ id: string | null; mode: ChatMode }>;
+  /** Set when a diary or memory call to the hub fails; the pages show it. */
+  hubProblem: string | null;
   completeSetup: (passphrase: string, confirm: string) => string | null;
   completeUnlock: (passphrase: string) => string | null;
   /** The demo hub's only account is its admin (D47: one user, the hub owner). */
@@ -76,12 +85,12 @@ type AppSessionValue = {
   lock: () => void;
   setChatMode: (mode: ChatMode) => void;
   setUseMemories: (enabled: boolean) => void;
-  addEntry: (input: NewDiaryEntry) => void;
-  updateEntry: (id: string, input: NewDiaryEntry) => void;
-  deleteEntry: (id: string) => void;
-  addMemory: (input: { content: string; accessLevel: AccessLevel }) => void;
-  updateMemory: (id: string, input: { content: string; accessLevel: AccessLevel }) => void;
-  deleteMemory: (id: string) => void;
+  addEntry: (input: NewDiaryEntry) => Promise<void>;
+  updateEntry: (id: string, input: NewDiaryEntry) => Promise<void>;
+  deleteEntry: (id: string) => Promise<void>;
+  addMemory: (input: { content: string; accessLevel: AccessLevel }) => Promise<void>;
+  updateMemory: (id: string, input: { content: string; accessLevel: AccessLevel }) => Promise<void>;
+  deleteMemory: (id: string) => Promise<void>;
   pinMemory: (id: string) => string | null;
 };
 
@@ -89,7 +98,14 @@ type AppSessionValue = {
 export const ADMIN_LOGINS = ["admin", "admin@innercove.local"] as const;
 const SIGN_IN_FAILED = "That username or passphrase didn't work.";
 
-const DEMO_USER_ID = "01900000-0000-7000-8000-000000000001";
+const JSON_HEADERS = { "Content-Type": "application/json" };
+
+/** One JSON call to the hub; throws on any non-2xx so callers can report and resync. */
+async function hub<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(path, init);
+  if (!res.ok) throw new Error(`hub ${res.status}`);
+  return (await res.json()) as T;
+}
 
 const AppSessionContext = createContext<AppSessionValue | null>(null);
 
@@ -103,6 +119,52 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [memories, setMemories] = useState<PracticeMemory[]>([]);
   const [pinnedMemoryIds, setPinnedMemoryIds] = useState<string[]>([]);
+  const [hubProblem, setHubProblem] = useState<string | null>(null);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const chatConversation = useRef<{ id: string | null; mode: ChatMode }>({ id: null, mode: "temporary" });
+
+  // The diary and memories come from the hub while signed in, and are dropped on sign-out.
+  async function reloadHubData() {
+    try {
+      const [diary, mems] = await Promise.all([
+        hub<{ entries: DiaryEntry[] }>("/api/diary?limit=100"),
+        hub<{ memories: PracticeMemory[] }>("/api/memories?status=approved&limit=100"),
+      ]);
+      setEntries(diary.entries);
+      setMemories(mems.memories);
+      setPinnedMemoryIds((current) =>
+        current.filter((id) => mems.memories.some((m) => m.id === id && m.accessLevel === "ai_eligible")),
+      );
+      setHubProblem(null);
+    } catch {
+      setHubProblem("Couldn't load your diary and memories from the hub. Try again in a moment.");
+    }
+  }
+
+  /** Runs one change on the hub, then reloads so the page shows what the hub stored. */
+  async function change(call: () => Promise<unknown>) {
+    try {
+      await call();
+      await reloadHubData();
+    } catch {
+      setHubProblem("That change didn't reach the hub. Nothing was saved; try again.");
+      await reloadHubData();
+    }
+  }
+
+  useEffect(() => {
+    if (signedIn) {
+      setHasPassphrase(true);
+      void reloadHubData();
+    } else {
+      setEntries([]);
+      setMemories([]);
+      setPinnedMemoryIds([]);
+      setHubProblem(null);
+      setChatMessages([]);
+      chatConversation.current = { id: null, mode: "temporary" };
+    }
+  }, [signedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // A reload keeps the session: the cookie is HttpOnly, so ask the hub.
   useEffect(() => {
@@ -147,6 +209,10 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
       entries,
       memories,
       pinnedMemoryIds,
+      hubProblem,
+      chatMessages,
+      setChatMessages,
+      chatConversation,
       completeSetup(passphrase, confirm) {
         if (passphrase.length < 8) {
           return "Use at least 8 characters.";
@@ -211,78 +277,64 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
         setUseMemoriesState(enabled);
       },
       addEntry(input) {
-        const timestamp = new Date().toISOString();
-        setEntries((current) => [
-          {
-            id: uuidv7(),
-            userId: DEMO_USER_ID,
-            origin: "manual",
-            title: blankToNull(input.title),
-            content: input.content,
-            accessLevel: input.accessLevel,
-            includeInHandoff: false,
-            tags: [],
-            mood: null,
-            createdAt: timestamp,
-            updatedAt: timestamp,
-          },
-          ...current,
-        ]);
+        return change(() =>
+          hub("/api/diary", {
+            method: "POST",
+            headers: JSON_HEADERS,
+            body: JSON.stringify({
+              origin: "manual",
+              title: blankToNull(input.title),
+              content: input.content,
+              accessLevel: input.accessLevel,
+            }),
+          }),
+        );
       },
       updateEntry(id, input) {
-        setEntries((current) =>
-          current.map((entry) =>
-            entry.id === id
-              ? {
-                  ...entry,
-                  title: blankToNull(input.title),
-                  content: input.content,
-                  accessLevel: input.accessLevel,
-                  updatedAt: new Date().toISOString(),
-                }
-              : entry,
-          ),
+        return change(() =>
+          hub(`/api/diary/${encodeURIComponent(id)}`, {
+            method: "PATCH",
+            headers: JSON_HEADERS,
+            body: JSON.stringify({
+              title: blankToNull(input.title),
+              content: input.content,
+              accessLevel: input.accessLevel,
+            }),
+          }),
         );
       },
       deleteEntry(id) {
-        setEntries((current) => current.filter((entry) => entry.id !== id));
+        return change(() => hub(`/api/diary/${encodeURIComponent(id)}`, { method: "DELETE" }));
       },
       addMemory(input) {
-        const timestamp = new Date().toISOString();
-        setMemories((current) => [
-          {
-            id: uuidv7(),
-            userId: DEMO_USER_ID,
-            origin: "user",
-            status: "approved",
-            content: input.content.trim(),
-            accessLevel: input.accessLevel,
-            createdAt: timestamp,
-            updatedAt: timestamp,
-          },
-          ...current,
-        ]);
+        return change(() =>
+          hub("/api/memories", {
+            method: "POST",
+            headers: JSON_HEADERS,
+            body: JSON.stringify({
+              origin: "user",
+              content: input.content.trim(),
+              accessLevel: input.accessLevel,
+              sources: [{ sourceType: "manual", sourceId: null }],
+            }),
+          }),
+        );
       },
       updateMemory(id, input) {
-        setMemories((current) =>
-          current.map((memory) =>
-            memory.id === id
-              ? {
-                  ...memory,
-                  content: input.content.trim(),
-                  accessLevel: input.accessLevel,
-                  updatedAt: new Date().toISOString(),
-                }
-              : memory,
-          ),
-        );
         if (input.accessLevel === "private") {
           setPinnedMemoryIds((current) => current.filter((pinned) => pinned !== id));
         }
+        return change(() =>
+          hub(`/api/memories/${encodeURIComponent(id)}`, {
+            method: "PATCH",
+            headers: JSON_HEADERS,
+            body: JSON.stringify({ content: input.content.trim(), accessLevel: input.accessLevel }),
+          }),
+        );
       },
       deleteMemory(id) {
-        setMemories((current) => current.filter((memory) => memory.id !== id));
         setPinnedMemoryIds((current) => current.filter((pinned) => pinned !== id));
+        return change(() => hub(`/api/memories/${encodeURIComponent(id)}`, { method: "DELETE" }));
       },
       pinMemory(id) {
         const memory = memories.find((item) => item.id === id);
@@ -301,7 +353,7 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
         return null;
       },
     };
-  }, [chatMode, entries, hasPassphrase, locked, memories, pinnedMemoryIds, sessionChecked, signedIn, useMemories]);
+  }, [chatMessages, chatMode, entries, hasPassphrase, hubProblem, locked, memories, pinnedMemoryIds, sessionChecked, signedIn, useMemories]);
 
   return (
     <AppSessionContext.Provider value={value}>

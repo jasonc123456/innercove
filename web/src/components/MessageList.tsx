@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import type { ReplyContext } from "../chat/streamReply";
 import { CrisisCard } from "./CrisisCard";
 import { ExerciseSuggestionCard, type ExerciseSuggestion } from "./ExerciseSuggestionCard";
+import { useAppSession } from "../session/AppSession";
 
 export type ChatMessage = {
   id: string;
@@ -31,6 +32,7 @@ export function MessageList({
   onCloseSource,
   onDismissExercise,
 }: MessageListProps) {
+  const { chatMode } = useAppSession();
   const endRef = useRef<HTMLLIElement>(null);
 
   useEffect(() => {
@@ -41,7 +43,9 @@ export function MessageList({
     return (
       <div className="flex flex-1 items-center px-4">
         <p className="text-base leading-relaxed text-ink/75">
-          This chat stays in this tab until you leave or reload.
+          {chatMode === "saved"
+            ? "This chat will be saved encrypted on your hub."
+            : "This chat stays in this tab until you leave or reload."}
         </p>
       </div>
     );

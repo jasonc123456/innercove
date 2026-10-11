@@ -1001,6 +1001,12 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - Renamed the app navigation item to **WELLNESS TOOLKIT**. The library now presents Guided breathing as the only active tool; its no-hold comfortable-breathing option stays inside the guide.
 - Grounding, guided journaling, and thought reflection remain clearly marked as planned rather than appearing partially implemented.
 
+**A (Jason), diary and memories wired to the hub (2026-10-10, night):**
+- `AppSession` now loads the diary and approved memories from `/api/diary` and `/api/memories` after sign-in and writes every change there (then reloads); a failed call shows a notice and resyncs. The Diary/Memories pages lost their practice setup/unlock gate and "this tab" copy.
+- The open chat (messages + conversation id) lives in the session, so leaving for the diary and coming back continues the same saved conversation.
+- **Fixed a broken live site:** `web/src/voice/recording.ts` imported `@innercove/core`, which `web/` can't resolve in the dev container, the web Docker stage or CI's web job (it only worked with a root `node_modules`); the two limits and the response check are mirrored locally with a pointer to B's contract.
+- **Checks:** Firefox over the LAN through the real UI: entries A (AI) and B (private) stored on the hub; the saved chat's chips show A only; hiding A in the diary and returning keeps the chat and shows the D33 notice; a memory saves to the hub; no page errors. `npm test` 195/195, web typecheck and build pass. Test data removed.
+
 **A (Jason), Phase 5a sign-in (D47) (2026-10-10, night):**
 - **Server:** `api/session.ts` adds the session guard before the lock gate and any lease: `401` on every protected route (no loopback or env bypass), `POST /api/session` (username or email + hub passphrase; unlocks a locked hub), `GET/DELETE /api/session`, `DELETE /api/sessions`. HttpOnly, SameSite=Strict, 12 h cookie; hashed in memory; "Lock the hub" and restarts sign everyone out. `Origin` must match `Host` on state-changing requests. Shared 30 s backoff after 5 failures. B's transcribe route now gets the real session callback via `dataRoutes`. `lock.ts` allowlists the session routes while locked (one line in B's file).
 - **Web:** sign-in, reload and sign-out use the session routes; any `401`/`423` returns to sign-in. The dev Vite proxy keeps `Host` (`changeOrigin: false`), or the Origin check would refuse it.
@@ -1011,8 +1017,8 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 |---|---|---|---|
 | 1. Streaming local chat, reasoning off | ✅ `/api/infer`, `/api/chat` (A) | ✅ chat page streams from Qwen | none |
 | 2. Saved vs temporary + Use memories | ✅ both routes; saved chats persist in SQLCipher (B) | ✅ "Save" now calls `/api/chat` and keeps the conversation id (A, `streamReply.ts`; verified in a browser: one conversation stored) | **C:** conversation list + reopening a saved chat |
-| 3. Diary CRUD, search, AI access | ✅ `/api/diary` incl. `?q=` (B) | ⚠️ diary page is tab-local; only the support note calls `/api/diary` | **C:** wire the diary page |
-| 4. Memories, D27 retrieval, chips + "what was sent" | ✅ `/api/memories` (B), retrieval/prompt/D33 (A) | ⚠️ chips/panel render from SSE; memories page is a placeholder | **C:** wire memories; pinned IDs from the hub |
+| 3. Diary CRUD, search, AI access | ✅ `/api/diary` incl. `?q=` (B) | ✅ **wired (A, as integration lead, 2026-10-10 night):** create/edit/delete and the AI-access switch go to `/api/diary`; the list loads from the hub; search filters the loaded entries | none; hub FTS search in the UI waits on B's hyphen fix |
+| 4. Memories, D27 retrieval, chips + "what was sent" | ✅ `/api/memories` (B), retrieval/prompt/D33 (A) | ✅ chips/panel from SSE; **memories page wired to `/api/memories` (A)**; pinned IDs are real hub ids; the open chat survives visiting the diary, so demo step 3 (hide A, keep chatting, D33 notice) works in the UI | none |
 | 5. Save chat messages to the diary (excerpt) | ✅ `/api/diary` `origin: "excerpt"` | ❌ | **C** |
 | 6. Safety layer, crisis card, Get help | ✅ tiers, D32 screen, tier-2 replies (D/A) | ✅ crisis card, help page, support note | D: review Phase 0 scores |
 | 7. Data controls + privacy panel | ✅ `/api/privacy-status` (A), `/api/settings` and `/api/delete-all` (B), **CSP + security headers (A): verified in Firefox on the production build: UI renders fully, `fetch("https://example.com")` blocked by `connect-src 'self'`, same-origin API OK** | ✅ **Settings** (`/settings`): defaults and "Delete all my data" (typed `DELETE`); **Admin** (`/admin`): the privacy/hub-status panel (model, endpoint, CUDA, memory, last-reply speed, encryption, data path) (A) | none (C may restyle) |

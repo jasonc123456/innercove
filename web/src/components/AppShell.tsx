@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAppSession } from "../session/AppSession";
 
-const STORAGE_NOTE = "Saved chats are stored on the hub. The diary still stays in this tab.";
+const STORAGE_NOTE = "Saved chats, your diary and memories are stored encrypted on your hub.";
 
 /** Phone tab bar (Taobao-style): icon over a short label; colour marks the current tab. */
 function tabClass(isActive: boolean): string {
