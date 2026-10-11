@@ -20,7 +20,7 @@ Local-first wellness companion for the GX10 hackathon. Read `docs/TEAM_PLAN.md` 
 | `packages/core/src/api/chat.ts` | `/api/chat` + `/api/infer` request schemas and SSE event types | A |
 | `packages/core/src/safety/` | Safety tiers, output screen, reviewed tier-2 replies, golden helpers | D |
 | `packages/server/src/{app,main}.ts`, `api/chat.ts`, `api/health.ts` | Fastify app, chat and health routes | A |
-| `packages/server/src/chat/`, `inference/` | Turn pipeline: D32 screening (`rules-safety.ts`), retrieval (D49: every eligible memory, the model decides), prompt assembly, D33 history (`history.ts`), AI-written memories (`remember.ts`, D49), store ports; LM Studio + Fake providers | A |
+| `packages/server/src/chat/`, `inference/` | Turn pipeline: D32 screening (`rules-safety.ts`; risk carries 3 turns, D50), retrieval (D49: every eligible memory, the model decides), prompt assembly, D33 history (`history.ts`), AI-written memories (`remember.ts`, D49; support notes D51), store ports; LM Studio + Fake providers | A |
 | `packages/server/src/store/`, data routes in `api/` | SQLCipher DB, schema, migrations, repos | B |
 | `config/`, `tests/*.json` | Safety rules, crisis resources, tier-2 replies, prompts; golden test cases | D |
 | `web/` | React SPA; `App.tsx` and the router are C's | C |
