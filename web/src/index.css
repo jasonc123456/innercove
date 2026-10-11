@@ -251,15 +251,7 @@ html[data-theme="dark"] .sign-in-page {
   pointer-events: none;
 }
 
-.sign-in-grove .grove-leaf,
-.sign-in-grove svg.grove-leaf {
-  pointer-events: auto;
-}
-
 .grove-leaf {
-  cursor: pointer;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
 
@@ -269,13 +261,36 @@ html[data-theme="dark"] .sign-in-page {
   transform-origin: left center;
 }
 
-.grove-leaf:focus {
-  outline: none;
+/* Grow along each stroke from its path start (the base) toward the tip.
+   pathLength="1" makes a dash of 1 the whole curve. Durations and delays
+   are set per branch in SignInGrove; these are the fallbacks. */
+.grove-branch-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation-name: grove-draw;
+  animation-duration: 1.95s;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
 }
 
-.grove-leaf:focus-visible .grove-leaf-fill {
-  stroke: var(--sign-in-heading);
-  stroke-width: 1.6;
+.grove-leaf-unfold,
+.grove-leaf-sway {
+  transform-box: fill-box;
+  transform-origin: left center;
+}
+
+.grove-leaf-unfold {
+  animation-name: grove-leaf-open;
+  animation-duration: 0.74s;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+
+.grove-leaf-sway {
+  animation-name: grove-leaf-sway;
+  animation-duration: 11s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
 }
 
 .grove-leaf-fill {
@@ -360,11 +375,53 @@ html[data-theme="dark"] .sign-in-page {
   }
 }
 
+@keyframes grove-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes grove-leaf-open {
+  from {
+    opacity: 0;
+    transform: scale(0.18) rotate(var(--leaf-tilt, -12deg));
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes grove-leaf-sway {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(var(--sway, 1.4deg));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .grove-leaf-fill,
   .grove-leaf-vein,
   .sign-in-page {
     transition: none;
+  }
+
+  .grove-branch-draw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .grove-leaf-unfold,
+  .grove-leaf-sway {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }
 
