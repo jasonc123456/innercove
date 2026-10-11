@@ -36,7 +36,14 @@ Every system change on the borrowed GX10, one line each, with its exact undo ste
 | 18 | 2026-10-10 | `sudo ufw allow from 192.168.2.0/24 to any port 8000 proto tcp comment 'innercove: app from LAN (D46)'`; the app container binds 0.0.0.0:8000 via `INNERCOVE_HOST`/`ALLOW_NON_LOOPBACK` in `~/innercove/.env` | `sudo ufw delete allow from 192.168.2.0/24 to any port 8000 proto tcp`; remove the two lines from `.env` and `docker compose up -d` |
 | 19 | 2026-10-10 | Built separate ARM64 database verification image `innercove-db-verify:8e96d52` from checkout `8e96d52`; linux arm64 / Node v22.23.3; spike 18/18 and production database smoke passed (combined exit 0). Existing running Compose service not replaced | `docker image rm innercove-db-verify:8e96d52` |
 
+| 20 | 2026-10-10 | Created separate detached verification worktree `~/innercove-phase2-verify` at `6d8a89c`; teammates' modified checkout preserved | `git worktree remove ~/innercove-phase2-verify` |
+| 21 | 2026-10-10 | Built isolated image `innercove-phase2-verify:6d8a89c` (build exit 0); linux arm64 / Node v22.23.3; SQLCipher spike 18/18 and expanded production smoke passed (combined exit 0). Separate container with no network or live data mounts; running teammate containers preserved; smoke/Fake provider only | `docker image rm innercove-phase2-verify:6d8a89c` |
+
 ## Verification follow-up (2026-10-10; no system change)
 - Operator confirmed Qwen replies in the deployed UI and progressive `/api/infer` SSE (`delta` events at distinct timestamps, then `done`). A successful temporary-chat canary left every encrypted table's row count/content hash unchanged; the input canary was absent from current container app logs.
 - Running `innercove-app-1`: host networking, `/app/data` mounted, `DEV_STORE=demo` active (fictional in-memory chat data; no claim of SQL-backed saved-chat persistence).
 - Final network check at checkout `86e63cb`: UFW active, incoming default deny, port 8000 restricted to the D46 LAN subnet; LM Studio port 1234 on loopback. Teammates redeployed during testing, so earlier UI/canary checks are not all attributed to this checkout. Existing deployment/firewall undo remains in entries #12/#18; these observations require no additional undo.
+
+## Phase 2 verification follow-up (2026-10-10, checkout `6d8a89c`)
+- Expanded production smoke passed setup/lock/unlock, diary CRUD/FTS, SQL saved chat/reopen including legacy demo flag, packaged migrations, SIGTERM shutdown and plaintext rejection. Build exit 0; spike/smoke combined exit 0.
+- This verifies the isolated backend image, not live Qwen, browser integration or the running Compose deployment. Image/worktree undo is recorded in #21/#20; cleanup has not been executed.

@@ -533,7 +533,7 @@ Estimates are uncertain. P0 is about **18–25 engineer-hours, or 8–10 wall-cl
   - `docker compose up` works on the GX10, bound to 127.0.0.1 by default; D46 explicitly amends the event deployment to opt-in LAN access restricted by UFW to the approved subnet.
 
 **Phase 2 — Persistence: encrypted database, conversations, diary.** Owner B for the backend, C for the UI · 4–5 h · Prerequisites: Phase 1 and decisions 5, 7 and D26.
-**Backend status (2026-10-10): B implementation complete and locally verified; whole-team Phase 2 remains incomplete (C integration/lock-screen UX and new deployment verification pending).**
+**Backend status (2026-10-10): B implementation complete, locally verified and verified in an isolated GX10 ARM64 image at `6d8a89c`; whole-team Phase 2 remains incomplete (C integration/lock-screen UX and live deployment checks pending).**
 - **Files:**
   - `store/db` (SQLCipher open, key derivation, lock and unlock).
   - `store/schema` and migrations, including the `devices` table, which stays unused until P1.
@@ -867,6 +867,20 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 - **Production adapter change:** legacy `DEV_STORE=demo` no longer selects volatile persistence in main; in-memory adapters/persona helpers remain for A's tests. No automatic SQL persona import; seed tooling is later work. Live GX10 service/config untouched; new repository/API/chat code is deployment-unverified there.
 - **Whole-team Phase 2 incomplete:** C's latest handoff still has mock diary/setup/unlock and Save does not call `/api/chat`; C must connect real endpoints, saved reload and lock-screen crisis/help UX. Run the new backend/API/runtime acceptance on the deployed GX10 before claiming deployment completion.
 - **Next/separate:** hand C the existing contracts and coordinate target verification with A. Phase 3 memory CRUD/revoke/re-confirmation and Phase 5 settings/delete-all/seed remain separate; external SQLCipher/Android interoperability remains unverified. No plaintext fallback or runtime encryption configuration change.
+
+**B (Angela), Phase 2 isolated GX10 verification (2026-10-10, checkout `6d8a89c`):**
+- **Build/runtime:** operator-reported image `innercove-phase2-verify:6d8a89c` built successfully (exit 0); runtime linux arm64, Node v22.23.3.
+- **Checks:** SQLCipher spike 18/18 and expanded production smoke PASS; combined exit 0. Smoke covers setup/lock/unlock, diary CRUD/FTS, SQL saved chat/reopen including the legacy demo flag, packaged migrations, SIGTERM shutdown and plaintext rejection.
+- **Isolation:** separate detached worktree `~/innercove-phase2-verify` and container with no network or live data mounts. Teammates' modified checkout and running containers were preserved. These checks used the smoke/Fake provider, not live Qwen or browser integration.
+- **B status:** implemented Phase 2 backend now verified both locally and in the isolated GX10 ARM64 image. This supersedes the previous handoff's target-runtime-pending status; its local 111-test results remain local, not a newly claimed GX10 suite run.
+- **Criterion — model-stopped diary CRUD/search:** prior local stopped-provider test plus target runtime CRUD/FTS smoke support backend acceptance; real diary UI against the deployed APIs remains unverified.
+- **Criterion — Save persistence/reload:** SQL-backed backend covered by local history/context/reopen tests and target saved-chat/reopen smoke; C's current Save UI does not call `/api/chat`, so whole-team acceptance remains open.
+- **Criterion — FTS deletion/secure-delete:** prior local deletion/index tests and migration checks plus target CRUD/FTS smoke and 18/18 spike support backend acceptance.
+- **Criteria — ownership columns and user-scoped queries:** prior schema and 111-test local suite cover `user_id`, foreign IDs/cursors/sources and scoped ports. These structural/scoping results are not inferred from the isolated target smoke alone.
+- **Criterion — locked start/423 and lock-screen crisis card:** backend lifecycle covered by local tests and target setup/lock/unlock smoke; static crisis/help UX on the real lock screen still requires C/team verification.
+- **Criterion — unreadable without passphrase/no diary strings:** prior local plain SQLite CLI/strings tests plus target encrypted reopen/plaintext rejection and spike support backend acceptance; no external SQLCipher/Android interoperability claim.
+- **Whole-team Phase 2 incomplete:** connect C's real setup/unlock, diary CRUD/search and Save/reload UI; verify those flows and lock-screen crisis/help on the live GX10 deployment, including diary operation with Qwen stopped. The isolated image did not replace or verify the running Compose/UI/Qwen stack.
+- **Rerun/undo:** `npm run spike:sqlcipher --workspace=@innercove/server`, `npm run smoke:db --workspace=@innercove/server`; image/worktree undo logged in `SETUP_LOG.md`, not executed. No runtime encryption configuration or live deployment changed; no plaintext fallback enabled.
 
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**

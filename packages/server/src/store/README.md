@@ -55,8 +55,12 @@ Run from the repo root: `npm run typecheck`, `npm run validate`, `npm test`,
 Native database dependencies remain in the server workspace. Docker packages
 migration assets and provides a writable `/app/data`; a bind mount must also
 be writable by the container's `node` user. The foundation passed GX10 host and isolated ARM64 image checks at `8e96d52`;
-see the Phase log. The new Phase 2 repositories/routes and saved-chat adapter
-are locally verified only until separately tested on the deployed GX10.
+see the Phase log. The Phase 2 repositories/routes and saved-chat adapter also passed the
+expanded production smoke in isolated GX10 ARM64 image
+`innercove-phase2-verify:6d8a89c` (Node v22.23.3) on 2026-10-10; build and
+combined spike/smoke exits were 0. The detached worktree/container had no
+network or live data mounts, and used the smoke/Fake provider. Live
+Compose/Qwen/browser integration remains unverified for this implementation.
 
 ## Phase 2 repositories and API handoff
 
