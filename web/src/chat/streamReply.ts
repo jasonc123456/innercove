@@ -63,10 +63,10 @@ export class ReplyError extends Error {
 const MAX_HISTORY = 40; // 20 turns
 
 export type ChatTone = "warm" | "calm" | "upbeat";
-export const CHAT_TONES: { id: ChatTone; label: string }[] = [
-  { id: "warm", label: "Warm" },
-  { id: "calm", label: "Calm & brief" },
-  { id: "upbeat", label: "Upbeat" },
+export const CHAT_TONES: { id: ChatTone; label: string; hint: string }[] = [
+  { id: "warm", label: "Warm", hint: "Gentle and supportive. The default." },
+  { id: "calm", label: "Calm", hint: "Short, quiet replies." },
+  { id: "upbeat", label: "Upbeat", hint: "Encouraging; notices what's going well." },
 ];
 
 export async function streamAssistantReply(

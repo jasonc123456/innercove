@@ -1,14 +1,19 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 
+import type { ChatTone } from "../chat/streamReply";
 import { useAppSession } from "../session/AppSession";
+import { TonePicker } from "./TonePicker";
 import { VoiceRecording, appendTranscript, type VoiceState } from "../voice/recording";
 
 type MessageInputProps = {
   disabled: boolean;
   onSend: (text: string) => void;
+  /** Chat tone (D56); the picker shows only when both are given. */
+  tone?: ChatTone;
+  onToneChange?: (tone: ChatTone) => void;
 };
 
-export function MessageInput({ disabled, onSend }: MessageInputProps) {
+export function MessageInput({ disabled, onSend, tone, onToneChange }: MessageInputProps) {
   const [draft, setDraft] = useState("");
   const { locked, signedIn, chatMode } = useAppSession();
   const [voice, setVoice] = useState<VoiceState>({ phase: "idle", seconds: 0 });
@@ -73,6 +78,7 @@ export function MessageInput({ disabled, onSend }: MessageInputProps) {
             placeholder="Write a message"
             className="min-h-11 max-h-48 w-full min-w-0 resize-none overflow-y-auto border-0 bg-transparent px-2 py-2.5 text-base leading-6 text-ink outline-none placeholder:text-ink/55 disabled:opacity-60" />
           <div className="flex h-11 shrink-0 items-center justify-end gap-1">
+            {tone && onToneChange ? <TonePicker tone={tone} onChange={onToneChange} disabled={busy} /> : null}
             <button type="button" aria-label="Record voice message"
               disabled={disabled || locked || !signedIn || busy}
               onClick={() => void recording.current?.start()}

@@ -199,28 +199,6 @@ export function ChatPage() {
               Memories: {memories.filter((m) => m.accessLevel === "ai_eligible").length} InnerCove can use
             </button>
           ) : null}
-          <label className="ml-auto inline-flex items-center gap-1.5 text-ink/80">
-            Tone
-            <select
-              value={tone}
-              onChange={(event) => {
-                const next = event.target.value as ChatTone;
-                setTone(next);
-                try {
-                  localStorage.setItem(TONE_KEY, next);
-                } catch {
-                  /* Private mode: the choice still applies for this visit. */
-                }
-              }}
-              className="h-8 rounded-full border border-line bg-paper px-2 text-xs text-ink"
-            >
-              {CHAT_TONES.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </label>
           {pickerOpen && useMemories ? <MemoryPicker onClose={() => setPickerOpen(false)} /> : null}
         </div>
       </div>
@@ -249,7 +227,19 @@ export function ChatPage() {
           </p>
         ) : null}
       </div>
-      <MessageInput disabled={streamingId !== null} onSend={handleSend} />
+      <MessageInput
+        disabled={streamingId !== null}
+        onSend={handleSend}
+        tone={tone}
+        onToneChange={(next) => {
+          setTone(next);
+          try {
+            localStorage.setItem(TONE_KEY, next);
+          } catch {
+            /* Private mode: the choice still applies for this visit. */
+          }
+        }}
+      />
     </div>
   );
 }
