@@ -1,6 +1,6 @@
 # InnerCove demo runbook
 
-For the spoken talk track for judges (privacy and local hosting), see [JUDGE_DEMO_SCRIPT.md](JUDGE_DEMO_SCRIPT.md). For the recorded Devpost video, see [VIDEO_DEMO_SCRIPT.md](VIDEO_DEMO_SCRIPT.md).
+For the spoken talk track for judges (privacy and local hosting), see [JUDGE_DEMO_SCRIPT.md](JUDGE_DEMO_SCRIPT.md). For the recorded Devpost video, see [VIDEO_DEMO_SCRIPT.md](VIDEO_DEMO_SCRIPT.md). To read aloud word for word, see [READ_ALOUD_SCRIPT.md](READ_ALOUD_SCRIPT.md).
 
 Use the fictional Jordan persona only. Start with the network connected and the app unlocked.
 
