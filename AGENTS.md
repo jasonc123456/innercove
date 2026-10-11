@@ -7,7 +7,9 @@ Local-first wellness companion for the GX10 hackathon. Read `docs/TEAM_PLAN.md` 
 - Real model: copy `.env.example` to `.env` (untracked), set `LOCAL_AI_API_KEY` from `~/.config/innercove/lmstudio.token`, set `INFERENCE_PROVIDER=lmstudio`.
 - `npm test` (vitest), `npm run typecheck`, `npm run validate` (B's contract checks). `@innercove/core` resolves to its `dist/`, so these scripts build it first.
 - `sudo docker compose up -d --build`: the demo build (web + API in one container, host network, 127.0.0.1:8000).
+- Dev mode on the GX10 (`docker-compose.dev.yml`): `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build`. Vite serves `web/` from source with hot reload on :8000 and proxies `/api` to the API under `tsx watch` on 127.0.0.1:8001, so a `git pull` shows up without a rebuild. A server-code change restarts the API, which locks the DB (unlock again). Back to the demo build: `docker compose up -d --build --remove-orphans`.
 - Phase 0 scripts: `scripts/run_eval.py`, `scripts/smoke-inference.py` (stdlib Python; env as above).
+- Phase 6 gate: `node scripts/demo-check.mjs [BASE_URL] [--offline]` runs the demo journey through the API on an unlocked hub (entries A/B, chips, hide A → D33, temporary chat, crisis reply, ports) and cleans up after itself.
 
 ## Layout and owners (D44)
 | Path | What | Owner |
@@ -44,6 +46,7 @@ Single owners for hot files: `packages/core` contracts (B), schema and migration
 ## Git
 - Trunk-based: short branches `p<N>-<topic>`, merge to `main` every 2–3 h; `main` must pass `npm test` and `docker compose up`.
 - Short commit messages. Pull (rebase) before pushing.
+- CI (`.github/workflows/ci.yml`) runs on every push: typecheck, tests, `validate`, `check-safety`, the web build and a gitleaks secret scan. A red X on `main` means stop and fix it first.
 - At the end of a phase, append ≤15 lines to the Phase log in `docs/PROJECT_PLAN.md`.
 
 ## GX10

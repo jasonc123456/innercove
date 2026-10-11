@@ -18,4 +18,60 @@ body,
 
 body {
   margin: 0;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2 {
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+button,
+a {
+  touch-action: manipulation;
+}
+
+button,
+a.rounded-2xl {
+  transition: transform 100ms ease-out;
+}
+
+button:active:not(:disabled),
+a.rounded-2xl:active {
+  transform: scale(0.97);
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-cove);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  a.rounded-2xl:hover:not(.bg-cove) {
+    background-color: color-mix(in srgb, var(--color-foam) 80%, white);
+  }
+
+  button:hover:not(:disabled) {
+    filter: brightness(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  a.rounded-2xl {
+    transition: none;
+  }
+
+  button:active:not(:disabled),
+  a.rounded-2xl:active {
+    transform: none;
+  }
 }

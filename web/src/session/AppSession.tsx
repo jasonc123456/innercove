@@ -236,7 +236,8 @@ function blankToNull(title: string): string | null {
   return trimmed.length === 0 ? null : trimmed;
 }
 
-function uuidv7(): string {
+/** Uses getRandomValues, not crypto.randomUUID, which browsers only expose on HTTPS or localhost (the LAN demo is plain HTTP, D46). */
+export function uuidv7(): string {
   const bytes = new Uint8Array(16);
   crypto.getRandomValues(bytes);
   const now = BigInt(Date.now());
