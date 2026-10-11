@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import chatTreeBackground from "../assets/chatTreeBackground.png";
-import { streamAssistantReply } from "../chat/streamReply";
+import { ReplyError, streamAssistantReply } from "../chat/streamReply";
 import { MessageInput } from "../components/MessageInput";
 import { MemoryPicker } from "../components/MemoryPicker";
 import { MessageList } from "../components/MessageList";
 import { useAppSession, uuidv7 } from "../session/AppSession";
+
+/** Shown in place of a reply when LM Studio can't be reached. InnerCove never fakes an answer. */
+const OFFLINE_NOTICE =
+  "InnerCove's AI model is offline right now, so there's no reply to this message. Try again in a minute. If you need to talk to someone now, Help lists people you can reach.";
 
 export function ChatPage() {
   const {
@@ -58,7 +62,7 @@ export function ChatPage() {
     abortRef.current = controller;
 
     const history = messages
-      .filter((message) => message.content !== "")
+      .filter((message) => message.content !== "" && !message.offline)
       .map(({ role, content }) => ({ role, content }));
     const setReply = (update: (content: string) => string) =>
       setMessages((current) =>
@@ -114,7 +118,15 @@ export function ChatPage() {
         controller.signal,
       );
     } catch (error) {
-      if (!(error instanceof DOMException && error.name === "AbortError")) {
+      if (error instanceof ReplyError && error.code === "MODEL_UNAVAILABLE") {
+        setMessages((current) =>
+          current.map((message) =>
+            message.id === assistantId && message.content === ""
+              ? { ...message, content: OFFLINE_NOTICE, offline: true }
+              : message,
+          ),
+        );
+      } else if (!(error instanceof DOMException && error.name === "AbortError")) {
         setFailed(true);
       }
     } finally {

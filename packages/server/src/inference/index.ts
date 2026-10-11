@@ -8,16 +8,26 @@ export { LMStudioProvider } from "./lmstudio.js";
 export { ReasoningStripper, stripReasoning } from "./strip-reasoning.js";
 
 export interface InferenceEnv {
+  NODE_ENV?: string;
   INFERENCE_PROVIDER?: string;
   LOCAL_AI_BASE_URL?: string;
   LOCAL_AI_API_KEY?: string;
   LOCAL_AI_MODEL?: string;
 }
 
-/** Switching to the fake provider is an environment change only (Phase 1 acceptance). */
+/**
+ * The app always answers with the real model. The fake provider is for automated tests only
+ * (NODE_ENV=test), so nobody mistakes its canned reply for InnerCove. When the model is
+ * offline, the chat says so instead of replying.
+ */
 export function createProvider(env: InferenceEnv): InferenceProvider {
   const kind = env.INFERENCE_PROVIDER ?? "lmstudio";
-  if (kind === "fake") return new FakeProvider({ delayMs: 40 });
+  if (kind === "fake") {
+    if (env.NODE_ENV !== "test") {
+      throw new Error("INFERENCE_PROVIDER=fake is for automated tests only (NODE_ENV=test); use lmstudio");
+    }
+    return new FakeProvider({ delayMs: 40 });
+  }
   if (kind !== "lmstudio") throw new Error(`Unknown INFERENCE_PROVIDER: ${kind}`);
   if (!env.LOCAL_AI_API_KEY) throw new Error("LOCAL_AI_API_KEY is required for the lmstudio provider");
   return new LMStudioProvider({

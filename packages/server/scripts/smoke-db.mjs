@@ -14,7 +14,7 @@ const passphrase = "fixture-only-runtime-passphrase";
 const cwd = fileURLToPath(new URL("../", import.meta.url));
 function launch(encryption = "sqlcipher") {
   const child = spawn(process.execPath, ["dist/main.js"], { cwd, env: {
-    ...process.env, INFERENCE_PROVIDER: "fake", HOST: "127.0.0.1", PORT: "0",
+    ...process.env, INFERENCE_PROVIDER: "fake", NODE_ENV: "test", HOST: "127.0.0.1", PORT: "0",
     DB_PATH: file, DB_ENCRYPTION: encryption, DEV_STORE: "demo", WEB_DIST: path.join(dir, "no-web"),
   }, stdio: ["ignore", "pipe", "pipe"] });
   let output = "";

@@ -3,7 +3,7 @@ Local-first wellness companion for the GX10 hackathon. Read `docs/TEAM_PLAN.md` 
 
 ## Run and test
 - `npm install` at the root (npm workspaces; `web/` has its own `npm install`).
-- `INFERENCE_PROVIDER=fake npm run dev`: builds `@innercove/core`, then runs the API on 127.0.0.1:8000 with the fake model. Saved chat/history now use the SQLCipher request lease; set up/unlock the database before chatting. The legacy `DEV_STORE=demo` flag no longer selects an in-memory production store. `cd web && npm run dev` proxies `/api` to it.
+- The app always uses the real model; when LM Studio is unreachable the chat shows an offline notice, never a canned reply. `INFERENCE_PROVIDER=fake` is refused unless `NODE_ENV=test` (automated tests and `smoke-db.mjs` only). `npm run dev` builds `@innercove/core`, then runs the API on 127.0.0.1:8000. Saved chat/history now use the SQLCipher request lease; set up/unlock the database before chatting. The legacy `DEV_STORE=demo` flag no longer selects an in-memory production store. `cd web && npm run dev` proxies `/api` to it.
 - Real model: copy `.env.example` to `.env` (untracked), set `LOCAL_AI_API_KEY` from `~/.config/innercove/lmstudio.token`, set `INFERENCE_PROVIDER=lmstudio`.
 - `npm test` (vitest), `npm run typecheck`, `npm run validate` (B's contract checks). `@innercove/core` resolves to its `dist/`, so these scripts build it first.
 - `sudo docker compose up -d --build`: the demo build (web + API in one container, host network, 127.0.0.1:8000).
@@ -55,4 +55,4 @@ Single owners for hot files: `packages/core` contracts (B), schema and migration
 ## GX10
 - It's borrowed: log every system change with its undo in `docs/SETUP_LOG.md`.
 - LM Studio runs inside the xrdp desktop session (it needs a display). **Disconnect** xrdp by closing the window; logging out stops the model server. If LM Studio dies, its `llama-server` engine can survive orphaned and keep ~50 GB: check `nvidia-smi` for two engines before loading again.
-- Only A uses the GX10 during Phase 0; others use `FakeProvider` or `ssh -L 1234:127.0.0.1:1234 gx10`.
+- Only A uses the GX10 during Phase 0; others use `ssh -L 1234:127.0.0.1:1234 gx10` (tests use `FakeProvider` in code).

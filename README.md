@@ -41,7 +41,7 @@ DB_PATH=data/innercove.db
 DB_ENCRYPTION=sqlcipher
 ```
 
-Use `INFERENCE_PROVIDER=fake` for fixture replies instead. Set acceleration to `cuda`, `vulkan` or `cpu` only when known; it is an operator-supplied privacy-panel field, not autodetection. Keep LM Studio loopback-only, require authentication, enable content redaction, and disable verbose/file logging and per-request MCP integrations. See [decisions and model setup](docs/DECISIONS.md).
+The app only answers with the real model: if LM Studio can't be reached, the chat says the model is offline instead of replying. `INFERENCE_PROVIDER=fake` is for automated tests only and is refused unless `NODE_ENV=test`. Set acceleration to `cuda`, `vulkan` or `cpu` only when known; it is an operator-supplied privacy-panel field, not autodetection. Keep LM Studio loopback-only, require authentication, enable content redaction, and disable verbose/file logging and per-request MCP integrations. See [decisions and model setup](docs/DECISIONS.md).
 
 Never commit `.env`, tokens or real personal data. Database passphrases are submitted through setup/unlock, never configured in `.env`. The runtime supports SQLCipher only; `DB_ENCRYPTION=off` is rejected. `DEV_STORE=demo` is ignored and does not provide an unlocked in-memory database.
 
@@ -49,10 +49,11 @@ Never commit `.env`, tokens or real personal data. Database passphrases are subm
 
 ## Development
 
-For a fake-provider API, terminal 1:
+Without the GX10 on your machine, forward its model server first (`ssh -L 1234:127.0.0.1:1234 gx10`) and put the LM Studio token in `.env`. Terminal 1:
 
 ```bash
-INFERENCE_PROVIDER=fake npm run dev
+npm run build --workspace=@innercove/core
+node --env-file=.env --watch --import tsx packages/server/src/main.ts
 ```
 
 API: `http://127.0.0.1:8000`. In terminal 2:
@@ -62,14 +63,7 @@ cd web
 npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
-Open `http://127.0.0.1:5173`; Vite proxies `/api` to port 8000. To develop with your `.env` provider/configuration, replace terminal 1's command with:
-
-```bash
-npm run build --workspace=@innercove/core
-node --env-file=.env --watch --import tsx packages/server/src/main.ts
-```
-
-Rebuild `@innercove/core` when changing shared source. API restarts lock the database again; unlock after a watcher restart.
+Open `http://127.0.0.1:5173`; Vite proxies `/api` to port 8000. Rebuild `@innercove/core` when changing shared source. API restarts lock the database again; unlock after a watcher restart.
 
 For the existing Linux Compose hot-reload path:
 

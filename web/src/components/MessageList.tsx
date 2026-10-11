@@ -15,6 +15,8 @@ export type ChatMessage = {
   suggestedExercise?: ExerciseSuggestion;
   /** Saved chats (D49): memories InnerCove wrote from the user's message in this exchange. */
   remembered?: { id: string; content: string }[];
+  /** The model couldn't be reached: a notice in place of a reply, never sent back as history. */
+  offline?: boolean;
 };
 
 /** Chips shown before "+N more": every memory is sent now (D49), so a reply can have many. */
@@ -70,7 +72,9 @@ export function MessageList({
             className={
               isUser
                 ? "ml-8 rounded-2xl bg-cove px-4 py-3 text-base leading-relaxed break-words text-white"
-                : "mr-8 rounded-2xl bg-foam px-4 py-3 text-base leading-relaxed break-words text-ink"
+                : message.offline
+                  ? "mr-8 rounded-2xl border border-dashed border-line bg-paper px-4 py-3 text-base leading-relaxed break-words text-ink/80"
+                  : "mr-8 rounded-2xl bg-foam px-4 py-3 text-base leading-relaxed break-words text-ink"
             }
           >
             <span className="sr-only">
