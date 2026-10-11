@@ -10,7 +10,8 @@
     "start": "node dist/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "spike:sqlcipher": "npm run build && node dist/store/sqlcipher-spike.js",
-    "smoke:db": "npm run build && node scripts/smoke-db.mjs"
+    "smoke:db": "npm run build && node scripts/smoke-db.mjs",
+    "seed:persona": "npm run build && node scripts/seed-persona.mjs"
   },
   "dependencies": {
     "@innercove/core": "*",

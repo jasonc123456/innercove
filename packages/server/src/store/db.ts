@@ -4,6 +4,7 @@ import path from "node:path";
 import Database from "better-sqlite3-multiple-ciphers";
 import { eq } from "drizzle-orm";
 import { UserIdSchema, type ApiErrorCode, type UserId } from "@innercove/core";
+import { deleteUserContent } from "./delete-all.js";
 import { configureCipher } from "./cipher.js";
 import { migrateDatabase } from "./migrate.js";
 import { settings, users } from "./schema.js";
@@ -48,6 +49,7 @@ export class DatabaseStore {
   #leases = 0;
   #drained: (() => void) | undefined;
   #pendingLocks = 0;
+  #pendingDeletes = 0;
   #shutdown = false;
   #failures = 0;
   #blockedUntil = 0;
@@ -56,7 +58,7 @@ export class DatabaseStore {
     this.dataPath = path.resolve(dataPath);
   }
 
-  get locked() { return !this.#connection || this.#pendingLocks > 0 || this.#shutdown; }
+  get locked() { return !this.#connection || this.#pendingLocks > 0 || this.#pendingDeletes > 0 || this.#shutdown; }
   get status() { return { hasPassphrase: existsSync(this.dataPath), locked: this.locked }; }
 
   #serialize<T>(action: () => T | Promise<T>): Promise<T> {
@@ -179,6 +181,32 @@ export class DatabaseStore {
       released = true;
       if (--this.#leases === 0) this.#drained?.();
     } };
+  }
+
+  deleteAll(): Promise<ReturnType<typeof deleteUserContent>> {
+    // Set admission gate before queueing, just like lock. The delete HTTP
+    // handler must not hold the lease this operation waits to drain.
+    if (this.locked) return Promise.reject(new DatabaseError("LOCKED", "Database is locked"));
+    this.#pendingDeletes++;
+    return this.#serialize(async () => {
+      try {
+        if (this.#leases) await new Promise<void>(resolve => { this.#drained = resolve; });
+        this.#assertRunning(); // Shutdown may have queued while requests drained.
+        if (!this.#connection) throw new DatabaseError("LOCKED", "Database is locked");
+        return deleteUserContent(this.#connection);
+      } catch (error) {
+        // Do not resume admission after a failed deletion/compaction. The
+        // transaction rolls back on delete failure; after commit, cleanup
+        // failure is still reported as an error, never a successful reset.
+        this.#connection?.db.close();
+        this.#connection = undefined;
+        if (error instanceof DatabaseError) throw error;
+        throw new DatabaseError("INTERNAL_ERROR", "Unable to delete database content");
+      } finally {
+        this.#drained = undefined;
+        this.#pendingDeletes--;
+      }
+    });
   }
 
   lock(): Promise<void> {

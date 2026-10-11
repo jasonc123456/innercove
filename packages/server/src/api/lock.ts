@@ -1,4 +1,4 @@
-import { SetupRequestSchema, UnlockRequestSchema } from "@innercove/core";
+import { SetupRequestSchema, UnlockRequestSchema, DeleteAllRequestSchema } from "@innercove/core";
 import type { FastifyInstance } from "fastify";
 import { DatabaseError, type DatabaseLease, type DatabaseStore } from "../store/db.js";
 import { sendError } from "./errors.js";
@@ -45,8 +45,8 @@ export function databaseRoutes(app: FastifyInstance, database: DatabaseStore) {
     if (!isApi(route) && !isApi(request.url.split("?")[0]!)) return;
     if (LOCKED_ALLOWLIST.has(`${request.method} ${route}`)) return;
     if (database.locked) return sendError(reply, "LOCKED", "Database is locked");
-    // Lock itself cannot hold the lease it waits to drain.
-    if (request.method === "POST" && route === "/api/lock") return;
+    // Lifecycle operations cannot hold the leases they wait to drain.
+    if (request.method === "POST" && (route === "/api/lock" || route === "/api/delete-all")) return;
     const lease = database.acquire();
     request.databaseLease = lease;
     const release = () => {
@@ -81,6 +81,14 @@ export function databaseRoutes(app: FastifyInstance, database: DatabaseStore) {
     try {
       await database.unlock(parsed.data.passphrase);
       return { locked: false };
+    } catch (error) { return lifecycleError(reply, error); }
+  });
+
+  app.post("/api/delete-all", async (request, reply) => {
+    const parsed = DeleteAllRequestSchema.safeParse(request.body);
+    if (!parsed.success) return sendError(reply, "VALIDATION_ERROR", "Invalid delete request");
+    try {
+      return await database.deleteAll();
     } catch (error) { return lifecycleError(reply, error); }
   });
 

@@ -1,4 +1,5 @@
 import {
+  UpdateSettingsRequestSchema,
   ConversationIdSchema, DiaryEntryIdSchema, MemoryIdSchema,
   CreateMemoryRequestSchema, UpdateMemoryRequestSchema, ReviewMemoryRequestSchema, ListMemoriesQuerySchema,
   CreateConversationRequestSchema, UpdateConversationRequestSchema, ListConversationsQuerySchema, ListMessagesQuerySchema,
@@ -9,6 +10,7 @@ import type { ZodType } from "zod";
 import { NotFoundError } from "../chat/ports.js";
 import { DatabaseError } from "../store/db.js";
 import { ConversationRepository } from "../store/repos/conversations.js";
+import { SettingsRepository } from "../store/repos/settings.js";
 import { MemoryRepository } from "../store/repos/memories.js";
 import { DiaryRepository } from "../store/repos/diary.js";
 import { sendError } from "./errors.js";
@@ -26,6 +28,14 @@ function handle(reply: FastifyReply, action: () => unknown) {
   }
 }
 export function dataRoutes(app: FastifyInstance) {
+  app.get("/api/settings", async (request, reply) => handle(reply, () => {
+    const lease = request.databaseLease!;
+    return new SettingsRepository(lease).get(lease.userId);
+  }));
+  app.patch("/api/settings", async (request, reply) => handle(reply, () => {
+    const lease = request.databaseLease!;
+    return new SettingsRepository(lease).update(lease.userId, parse(UpdateSettingsRequestSchema, request.body));
+  }));
   app.get("/api/conversations", async (request, reply) => handle(reply, () => {
     const query = parse(ListConversationsQuerySchema, request.query);
     const lease = request.databaseLease!;
