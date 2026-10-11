@@ -28,13 +28,13 @@ And "Get help" works before you even sign in.
 
 Don't take our word for it: the model, Qwen 27 billion, runs on this machine's GPU. "This machine only." Encryption: on.
 
-**[Chat: send "I'm nervous about tomorrow and kind of rethinking everything about school."]**
+**[Chat: send "I keep putting off emailing my chem professor about my midterm grade."]**
 
 Meet Jordan, a fictional student. Jordan writes to InnerCove the way they'd write in a journal… and InnerCove answers like a friend who remembers them.
 
-**[Tap "Had access to…", then the "Office hours tomorrow" chip]**
+**[Tap the "Had access to …" line under the reply, then the "Grade posted" chip]**
 
-And InnerCove shows its work. It read the one diary entry Jordan chose to share, and here's exactly what it saw, word for word. Jordan's private entry about switching majors? Never sent. Every entry has its own switch.
+And InnerCove shows its work. It had the entries Jordan chose to share, like "Grade posted", and here's exactly what it saw, word for word. Jordan's private entries, like "Dad's new apartment"? Never sent. Every entry has its own switch.
 
 **[Send "My biology exam is on Friday." Point at "Remembered from what you said."]**
 
@@ -67,5 +67,7 @@ This is InnerCove. Thank you.
 ---
 
 **If you're short on time (2 minutes):** skip the temporary-chat and export paragraphs.
+
+**Before you start:** Jordan's persona loaded (nothing to add by hand); chat on **Save** with **Memories** on; a new chat.
 
 **Remember:** start a new chat after the crisis message; don't say "end-to-end encrypted" or "clinical"; Jordan is fictional.

@@ -10,7 +10,7 @@ Length: about 3 minutes; cuts for 2 minutes are marked **[cut]**. Use the fictio
 
 - [ ] LM Studio running with the model loaded; the site open and signed in on the demo laptop (**Remember me unticked**).
 - [ ] Hub content wiped and Jordan's persona loaded (README "Optional fictional persona seed").
-- [ ] Two diary entries created ahead of time: **Office hours tomorrow** (AI may use this) and **Thinking about switching majors** (private, AI may use this unticked). Text is in `DEMO_SCRIPT.md` step 1.
+- [ ] Nothing to add by hand: the persona's 8 entries are enough. 6 are shared with the AI (e.g. **Grade posted**); 2 are private (**Dad's new apartment**, **Library shift**).
 - [ ] Chat set to **Save** with **Memories** on; tone **Warm**; start a **new chat**.
 - [ ] Tabs ready: Chat, Diary, Memories, Admin (Hub status).
 - [ ] Voice: only if the demo browser has the hub's address allowed (README "Voice input on the local network") and one test recording worked. Otherwise skip it.
@@ -32,17 +32,17 @@ InnerCove is a private companion that runs completely on this ASUS GX10. No clou
 
 ## 3. Open up, and see exactly what the AI saw (40 s)
 
-▶ Chat (Save, Memories on). Send: *"I'm nervous about tomorrow and kind of rethinking everything about school."*
+▶ Chat (Save, Memories on). Send: *"I keep putting off emailing my chem professor about my midterm grade."*
 
 "Jordan writes to InnerCove the way they'd write in a journal. While the reply comes in, look under it."
 
-▶ Tap **Had access to … ⌄** under the reply (it starts collapsed), then tap the *Office hours tomorrow* chip to show **What was sent**.
+▶ Tap **Had access to … ⌄** under the reply (it starts collapsed), then tap the *Grade posted* chip to show **What was sent**.
 
-"InnerCove shows exactly what it read to answer: the office-hours entry Jordan chose to share, word for word. Jordan's private entry about switching majors is right there in the diary, and it was never sent. Every entry has its own switch: **AI may use this**."
+"InnerCove shows exactly what it had: the entries Jordan chose to share, like 'Grade posted', word for word. Jordan's private entries, like 'Dad's new apartment', are right there in the diary, and they were never sent. Every entry has its own switch: **AI may use this**."
 
 ## 4. Change your mind at any time (30 s) [cut: keep only the memory part]
 
-▶ Diary → open **Office hours tomorrow** → untick **AI may use this entry** → back to Chat → send *"Can you help me get ready?"*
+▶ Diary → open **Grade posted** → untick **AI may use this entry** → back to Chat → send *"Can you help me figure out what to ask?"*
 
 "Jordan takes it back. From the next message on, that entry and the earlier exchange that used it are left out, and InnerCove says so."
 
