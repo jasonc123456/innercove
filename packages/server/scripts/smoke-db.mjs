@@ -68,11 +68,42 @@ try {
   assert.equal((await call("GET", "/api/diary?q=runtimefixturetoken", undefined, 200)).entries.length, 0);
   await call("DELETE", `/api/diary/${diary.id}`, undefined, 200);
   assert.equal((await call("GET", "/api/diary?q=updatedruntimefixture", undefined, 200)).entries.length, 0);
+  // Phase 3 through compiled HTTP registration, using only fictional fixtures.
+  const source = await call("POST", "/api/diary", { origin: "manual", content: "chem runtime source", accessLevel: "ai_eligible" }, 201);
+  const memory = await call("POST", "/api/memories", { origin: "user", content: "chem runtime derived", accessLevel: "ai_eligible", sources: [{ sourceType: "diary_entry", sourceId: source.id }] }, 201);
+  assert.equal(memory.status, "approved");
+  const proposal = await call("POST", "/api/memories", { origin: "ai_proposal", content: "fictional proposal", accessLevel: "private", sources: [{ sourceType: "manual", sourceId: null }] }, 201);
+  assert.equal(proposal.status, "proposed");
+  assert.equal((await call("POST", `/api/memories/${proposal.id}/review`, { status: "approved" }, 200)).status, "approved");
+  await call("POST", `/api/memories/${memory.id}/review`, { status: "rejected" }, 409);
+  async function chatTurn(message, conversationId = null, useMemories = true) {
+    const response = await fetch(address + "/api/chat", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ conversationId, message, useMemories, pinnedMemoryIds: [] }) });
+    assert.equal(response.status, 200);
+    const text = await response.text();
+    assert.match(text, /event: done/);
+    return name => { const match = new RegExp(`event: ${name}\\ndata: (.+)`).exec(text); return match ? JSON.parse(match[1]) : null; };
+  }
+  const contextual = await chatTurn("chem");
+  const contextIds = contextual("context").sources.map(item => item.id);
+  assert.ok(contextIds.includes(source.id) && contextIds.includes(memory.id));
+  await call("PATCH", `/api/diary/${source.id}`, { accessLevel: "private" }, 200);
+  assert.equal((await call("GET", `/api/memories/${memory.id}`, undefined, 200)).accessLevel, "private");
+  await call("PATCH", `/api/memories/${memory.id}`, { accessLevel: "ai_eligible" }, 409);
+  const filtered = await chatTurn("continue", contextual("meta").conversationId, false);
+  assert.equal(filtered("historyExcluded").count, 1);
+  assert.deepEqual(filtered("context").sources, []);
+  await call("PATCH", `/api/diary/${source.id}`, { accessLevel: "ai_eligible" }, 200);
+  assert.equal((await call("GET", `/api/memories/${memory.id}`, undefined, 200)).accessLevel, "private");
+  await call("PATCH", `/api/memories/${memory.id}`, { accessLevel: "ai_eligible" }, 200);
+  await call("PATCH", `/api/diary/${source.id}`, { accessLevel: "private" }, 200);
+  await call("DELETE", `/api/memories/${proposal.id}`, undefined, 200);
   running.child.kill("SIGTERM");
   assert.equal(await running.exited, 0, "SIGTERM exit");
   assert.ok(!running.output().includes(passphrase), "credential absent from process output");
   assert.ok(!running.output().includes("runtimefixturetoken"), "diary text absent from process output");
   assert.ok(!running.output().includes("fixture question"), "chat text absent from process output");
+  assert.ok(!running.output().includes("chem runtime"), "memory/source text absent from process output");
   reopened = new DatabaseStore(file);
   await reopened.unlock(passphrase);
   const lease = reopened.acquire();
@@ -81,12 +112,14 @@ try {
     assert.ok(lease.db.prepare("SELECT user_id FROM settings WHERE user_id=?").get(lease.userId));
     assert.equal(lease.db.prepare("SELECT count(*) n FROM messages WHERE user_id=? AND conversation_id=?").get(lease.userId, meta.conversationId).n, 2);
     assert.equal(lease.db.prepare("SELECT count(*) n FROM diary_entries WHERE user_id=? AND id=?").get(lease.userId, diary.id).n, 0);
+    assert.equal(lease.db.prepare("SELECT access_level FROM memories WHERE user_id=? AND id=?").get(lease.userId, memory.id).access_level, "private");
+    assert.equal(lease.db.prepare("SELECT count(*) n FROM provenance WHERE user_id=? AND derived_id=? AND source_id=?").get(lease.userId, memory.id, source.id).n, 1);
   } finally { lease.release(); }
   await reopened.shutdown();
   running = launch("off");
   assert.equal(await running.exited, 1, "plaintext mode explicitly rejected");
   assert.match(running.output(), /supports SQLCipher only/);
-  console.log("PASS: compiled server setup/lock/unlock, diary CRUD/FTS, SQL saved chat/reopen (including legacy demo flag), packaged migrations, SIGTERM, plaintext rejection");
+  console.log("PASS: compiled server setup/lock/unlock, diary CRUD/FTS, SQL saved chat/reopen (including legacy demo flag), memory CRUD/review/provenance, durable revocation/re-confirmation and D33 history, packaged migrations, SIGTERM, plaintext rejection");
 } finally {
   if (running && running.child.exitCode === null && running.child.signalCode === null) {
     running.child.kill("SIGTERM"); await running.exited;

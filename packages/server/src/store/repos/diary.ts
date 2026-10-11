@@ -5,6 +5,7 @@ import {
 } from "@innercove/core";
 import { DatabaseError, type DatabaseLease } from "../db.js";
 import { diaryEntries, messages, provenance, settings } from "../schema.js";
+import { invalidateDependents, PermissionPolicy } from "../permissions.js";
 import { olderThan, owner, page, requireRow, timestamp, tombstone, uuidv7 } from "./common.js";
 
 export class DiaryRepository {
@@ -40,6 +41,7 @@ export class DiaryRepository {
       const now = timestamp();
       const record = DiaryEntryRecordSchema.parse({ ...data, id: uuidv7(), userId, title: data.title ?? null,
         accessLevel: data.accessLevel ?? defaults.diaryDefaultAccessLevel, tags: data.tags ?? [], mood: data.mood ?? null, createdAt: now, updatedAt: now });
+      if (record.accessLevel === "ai_eligible" && !new PermissionPolicy(this.lease, userId).sourcesEligible(sources ?? [])) record.accessLevel = "private";
       this.lease.orm.insert(diaryEntries).values(record).run();
       for (const source of sources ?? []) this.lease.orm.insert(provenance).values({ userId, derivedType: "diary_entry", derivedId: record.id, ...source }).onConflictDoNothing().run();
       return record;
@@ -49,14 +51,19 @@ export class DiaryRepository {
     const data = DiaryEntryUpdateInputSchema.parse(input);
     return this.lease.db.transaction(() => {
       const old = this.get(userId, id);
+      if (data.accessLevel === "ai_eligible") new PermissionPolicy(this.lease, userId).assertGrant("diary_entry", id);
       if (Object.keys(data).length) this.lease.orm.update(diaryEntries).set({ ...data, updatedAt: timestamp() }).where(owner(diaryEntries, userId, id)).run();
-      if (old.accessLevel === "ai_eligible" && data.accessLevel === "private") tombstone(this.lease, userId, "diary_entry", id, "access_revoked");
+      if (old.accessLevel === "ai_eligible" && data.accessLevel === "private") {
+        invalidateDependents(this.lease, userId, "diary_entry", id);
+        tombstone(this.lease, userId, "diary_entry", id, "access_revoked");
+      }
       return this.get(userId, id);
     })();
   }
   delete(userId: UserId, id: string) {
     return this.lease.db.transaction(() => {
       this.get(userId, id);
+      invalidateDependents(this.lease, userId, "diary_entry", id);
       this.lease.orm.delete(diaryEntries).where(owner(diaryEntries, userId, id)).run();
       // Existing FTS triggers remove the indexed content; secure-delete is
       // verified by DatabaseStore's migration gate. Source IDs stay content-free.

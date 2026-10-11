@@ -1,5 +1,6 @@
 import {
-  ConversationIdSchema, DiaryEntryIdSchema,
+  ConversationIdSchema, DiaryEntryIdSchema, MemoryIdSchema,
+  CreateMemoryRequestSchema, UpdateMemoryRequestSchema, ReviewMemoryRequestSchema, ListMemoriesQuerySchema,
   CreateConversationRequestSchema, UpdateConversationRequestSchema, ListConversationsQuerySchema, ListMessagesQuerySchema,
   CreateDiaryEntryRequestSchema, UpdateDiaryEntryRequestSchema, ListDiaryEntriesQuerySchema,
 } from "@innercove/core";
@@ -8,6 +9,7 @@ import type { ZodType } from "zod";
 import { NotFoundError } from "../chat/ports.js";
 import { DatabaseError } from "../store/db.js";
 import { ConversationRepository } from "../store/repos/conversations.js";
+import { MemoryRepository } from "../store/repos/memories.js";
 import { DiaryRepository } from "../store/repos/diary.js";
 import { sendError } from "./errors.js";
 
@@ -73,4 +75,29 @@ export function dataRoutes(app: FastifyInstance) {
     const lease = request.databaseLease!;
     return new DiaryRepository(lease).delete(lease.userId, parse(DiaryEntryIdSchema, (request.params as { id: string }).id));
   }));
+  app.get("/api/memories", async (request, reply) => handle(reply, () => {
+    const lease = request.databaseLease!;
+    return new MemoryRepository(lease).list(lease.userId, parse(ListMemoriesQuerySchema, request.query));
+  }));
+  app.post("/api/memories", async (request, reply) => handle(reply, () => {
+    const lease = request.databaseLease!;
+    return reply.code(201).send(new MemoryRepository(lease).create(lease.userId, parse(CreateMemoryRequestSchema, request.body)));
+  }));
+  app.get("/api/memories/:id", async (request, reply) => handle(reply, () => {
+    const lease = request.databaseLease!;
+    return new MemoryRepository(lease).get(lease.userId, parse(MemoryIdSchema, (request.params as { id: string }).id));
+  }));
+  app.patch("/api/memories/:id", async (request, reply) => handle(reply, () => {
+    const lease = request.databaseLease!;
+    return new MemoryRepository(lease).update(lease.userId, parse(MemoryIdSchema, (request.params as { id: string }).id), parse(UpdateMemoryRequestSchema, request.body));
+  }));
+  app.post("/api/memories/:id/review", async (request, reply) => handle(reply, () => {
+    const lease = request.databaseLease!;
+    return new MemoryRepository(lease).review(lease.userId, parse(MemoryIdSchema, (request.params as { id: string }).id), parse(ReviewMemoryRequestSchema, request.body));
+  }));
+  app.delete("/api/memories/:id", async (request, reply) => handle(reply, () => {
+    const lease = request.databaseLease!;
+    return new MemoryRepository(lease).delete(lease.userId, parse(MemoryIdSchema, (request.params as { id: string }).id));
+  }));
+
 }
