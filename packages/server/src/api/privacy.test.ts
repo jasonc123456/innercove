@@ -8,6 +8,7 @@ import { noSafety } from "../chat/safety.js";
 import { FakeProvider } from "../inference/index.js";
 import { DatabaseStore } from "../store/db.js";
 import { endpointClass, readMemoryUsedGb, systemInfo } from "../system.js";
+import { signedIn } from "../testing/signed-in.js";
 
 const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => { for (const cleanup of cleanups.splice(0)) await cleanup(); });
@@ -18,7 +19,7 @@ async function setup(locked = false) {
   cleanups.push(async () => { await database.shutdown(); rmSync(dir, { recursive: true, force: true }); });
   if (!locked) await database.setup("fixture-only-passphrase");
   const app = await buildApp(
-    {
+    { sessionGuard: signedIn,
       provider: new FakeProvider({ reply: ["Okay. ", "Tell me more."] }),
       safety: noSafety,
       systemPrompt: "SYSTEM",

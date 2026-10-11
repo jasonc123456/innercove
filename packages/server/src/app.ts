@@ -12,6 +12,7 @@ import { healthRoutes } from "./api/health.js";
 import { dataRoutes } from "./api/data.js";
 import { privacyRoutes } from "./api/privacy.js";
 import { databaseRoutes } from "./api/lock.js";
+import { SessionStore, sessionRoutes, type SessionGuard } from "./api/session.js";
 import type { DatabaseStore } from "./store/db.js";
 
 export const CONTENT_SECURITY_POLICY = [
@@ -47,6 +48,8 @@ export interface AppDeps {
   /** Explicit test adapter; production uses the request-bound SQL store. */
   store?: ChatStore;
   webDist?: string;
+  /** Test adapter for route tests that aren't about sign-in; production always uses the real SessionStore (D47). */
+  sessionGuard?: SessionGuard;
 }
 
 export async function buildApp(deps: AppDeps, logger: FastifyServerOptions["logger"] = true) {
@@ -57,6 +60,10 @@ export async function buildApp(deps: AppDeps, logger: FastifyServerOptions["logg
       req: (request: { method: string; url: string }) => ({ method: request.method, url: request.url.split("?")[0]! }),
     },
   } });
+  // D47: the sign-in guard runs before the lock gate and any database lease.
+  const sessions = new SessionStore();
+  const guard = deps.sessionGuard ?? sessions;
+  sessionRoutes(app, deps.database, sessions, guard);
   databaseRoutes(app, deps.database);
 
   // Phase 5 / §3: everything comes from the hub itself; the browser may not call out,
@@ -73,7 +80,7 @@ export async function buildApp(deps: AppDeps, logger: FastifyServerOptions["logg
     return sendError(reply, "INTERNAL_ERROR", "Internal error");
   });
 
-  dataRoutes(app);
+  dataRoutes(app, (request) => guard.isValid(request));
   healthRoutes(app, deps);
   privacyRoutes(app, deps);
   chatRoutes(app, deps);

@@ -11,6 +11,8 @@ declare module "fastify" {
 // methods and look-alike paths do not inherit exemptions from GET routes.
 const LOCKED_ALLOWLIST = new Set([
   "GET /api/health", "GET /api/lock-status", "POST /api/setup", "POST /api/unlock",
+  // D47 sign-in unlocks the database itself (A, api/session.ts).
+  "POST /api/session", "GET /api/session", "DELETE /api/session",
 ]);
 
 export function databaseRoutes(app: FastifyInstance, database: DatabaseStore) {

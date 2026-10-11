@@ -14,6 +14,7 @@ import { FakeProvider } from "../inference/index.js";
 import { fromRoot } from "../paths.js";
 import { loadSafetyConfigs, rulesSafety } from "./rules-safety.js";
 import type { SafetyLayer } from "./safety.js";
+import { signedIn } from "../testing/signed-in.js";
 
 const configs = loadSafetyConfigs();
 const safety = rulesSafety(configs);
@@ -38,7 +39,7 @@ async function chat(provider: FakeProvider, message: string, safetyLayer: Safety
   let app: Awaited<ReturnType<typeof buildApp>> | undefined;
   try {
     await database.setup("fixture-only-passphrase");
-    app = await buildApp({ database, provider, safety: safetyLayer, systemPrompt: "SYSTEM", stats: { lastReply: null } }, false);
+    app = await buildApp({ sessionGuard: signedIn, database, provider, safety: safetyLayer, systemPrompt: "SYSTEM", stats: { lastReply: null } }, false);
     const res = await app.inject({
       method: "POST",
       url: "/api/chat",

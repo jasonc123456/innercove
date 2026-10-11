@@ -9,6 +9,7 @@ import { buildApp } from "../app.js";
 import { FakeProvider, type InferenceProvider } from "../inference/index.js";
 import { noSafety } from "../chat/safety.js";
 import { DatabaseStore } from "../store/db.js";
+import { signedIn } from "../testing/signed-in.js";
 
 const PASSWORD = "test-only-PASSPHRASE-CANARY";
 const cleanups: (() => Promise<void>)[] = [];
@@ -24,7 +25,7 @@ async function fixture({ provider = new FakeProvider({ reply: ["Hello."] }), sta
   if (staticFiles) {
     mkdirSync(webDist); writeFileSync(path.join(webDist, "index.html"), "<html>Static crisis help</html>");
   }
-  const app = await buildApp({ database, provider, safety: noSafety, systemPrompt: "SYSTEM", stats: { lastReply: null },
+  const app = await buildApp({ sessionGuard: signedIn, database, provider, safety: noSafety, systemPrompt: "SYSTEM", stats: { lastReply: null },
     ...(staticFiles ? { webDist } : {}),
   }, { level: "info", stream });
   cleanups.push(async () => { await app.close(); rmSync(dir, { recursive: true, force: true }); });

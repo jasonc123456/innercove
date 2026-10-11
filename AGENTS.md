@@ -7,10 +7,10 @@ Local-first wellness companion for the GX10 hackathon. Read `docs/TEAM_PLAN.md` 
 - Real model: copy `.env.example` to `.env` (untracked), set `LOCAL_AI_API_KEY` from `~/.config/innercove/lmstudio.token`, set `INFERENCE_PROVIDER=lmstudio`.
 - `npm test` (vitest), `npm run typecheck`, `npm run validate` (B's contract checks). `@innercove/core` resolves to its `dist/`, so these scripts build it first.
 - `sudo docker compose up -d --build`: the demo build (web + API in one container, host network, 127.0.0.1:8000).
-- Dev mode on the GX10 (`docker-compose.dev.yml`): `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build`. Vite serves `web/` from source with hot reload on :8000 and proxies `/api` to the API under `tsx watch` on 127.0.0.1:8001, so a `git pull` shows up without a rebuild. A server-code change restarts the API, which locks the DB (unlock again). Back to the demo build: `docker compose up -d --build --remove-orphans`.
+- Dev mode on the GX10 (`docker-compose.dev.yml`): `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build`. Vite serves `web/` from source with hot reload on :8000 and proxies `/api` to the API under `tsx watch` on 127.0.0.1:8001, so a `git pull` shows up without a rebuild. A server-code change restarts the API, which locks the DB and ends sessions (sign in again). Back to the demo build: `docker compose up -d --build --remove-orphans`.
 - Phase 0 scripts: `scripts/run_eval.py`, `scripts/smoke-inference.py` (stdlib Python; env as above).
 - Fictional persona into an encrypted DB (B): stop the API, then `npm run seed:persona --workspace=@innercove/server -- --db <path> --confirm-fictional`.
-- Phase 6 gate: `node scripts/demo-check.mjs [BASE_URL] [--offline] [--delete-all]` (`--delete-all` erases all hub content; use a throwaway hub) runs the demo journey through the API on an unlocked hub (entries A/B, chips, hide A → D33, temporary chat, crisis reply, ports) and cleans up after itself.
+- Phase 6 gate: `read -rs HUB_PASSPHRASE && export HUB_PASSPHRASE`, then `node scripts/demo-check.mjs [BASE_URL] [--offline] [--delete-all]` (`--delete-all` erases all hub content; use a throwaway hub). It signs in as `admin` (D47; this also unlocks the hub) and runs the demo journey through the API (entries A/B, chips, hide A → D33, temporary chat, crisis reply, ports) and cleans up after itself.
 
 ## Layout and owners (D44)
 | Path | What | Owner |
@@ -36,7 +36,7 @@ Single owners for hot files: `packages/core` contracts (B), schema and migration
 - `/api/infer` (temporary chats) never writes anything (D35).
 - Crisis resources come from static config, never from the model (D03). Model output is screened before display (D32).
 - Bind 127.0.0.1 by default. Never use Docker `ports:` (binds 0.0.0.0, bypasses ufw); LM Studio stays on loopback with auth on (D18). The GX10's LAN demo opts in via `.env` with ufw limiting port 8000 to the subnet (D46).
-- Every `/api` route needs a session except health, lock-status, first-run setup and sign-in (D47). No loopback exemption; never add a "dev bypass". Sign-in uses the hub passphrase; two-factor secrets live only in the encrypted DB.
+- Every `/api` route needs a session except health, lock-status, first-run setup, unlock and the `/api/session` routes (D47; `packages/server/src/api/session.ts`). Route tests that aren't about sign-in pass `sessionGuard: signedIn` (`src/testing/signed-in.ts`); `main.ts` never does. No loopback exemption; never add a "dev bypass". Sign-in uses the hub passphrase; two-factor secrets live only in the encrypted DB.
 - The repo is public (D40): no keys, `.env`, tokens, real personal data or private server details. Use the fictional persona only.
 
 ## Conventions

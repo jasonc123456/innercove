@@ -101,7 +101,7 @@ This also switches back from the Compose development overlay. Use `sudo` if requ
 
 ### Loopback and the approved LAN demo
 
-The default UI/API bind is `127.0.0.1:8000`; LM Studio stays on loopback at port 1234. Docker `ports:` publishing is intentionally absent. D46 permits the event's approved demo LAN over plain HTTP, with firewall access restricted to that LAN subnet, fictional data only, and the hub locked when not in use. Traffic is unencrypted and there is no per-device authentication; a home-page name/login UI is not hub database authentication.
+The default UI/API bind is `127.0.0.1:8000`; LM Studio stays on loopback at port 1234. Docker `ports:` publishing is intentionally absent. D46 permits the event's approved demo LAN over plain HTTP, with firewall access restricted to that LAN subnet, fictional data only, and the hub locked when not in use. Traffic is unencrypted and there is no per-device authentication. Every protected API route needs a sign-in session (D47): sign in on the home page with `admin` (or `admin@innercove.local`) and the hub passphrase, or `POST /api/session` with `{ "login", "passphrase" }`; calls without the session cookie get `401`.
 
 For that approved Compose option, edit the local `.env`:
 
@@ -142,7 +142,7 @@ While locked, protected APIs return `423`, including temporary inference, settin
 curl --fail-with-body -X POST http://127.0.0.1:8000/api/lock
 ```
 
-The latest plan still lists real setup/unlock UI integration as pending; the home-page login does not replace these API steps. Settings and content-reset semantics, including D39 retention and VACUUM, are documented in the [backend handoff](packages/server/src/store/README.md#phase-5-settings-content-reset-and-seed-handoff). No delete-all command is part of startup.
+The home-page sign-in (`POST /api/session`) also unlocks a locked hub, so after a restart you can simply sign in again; first-run setup still uses the API step above. Settings and content-reset semantics, including D39 retention and VACUUM, are documented in the [backend handoff](packages/server/src/store/README.md#phase-5-settings-content-reset-and-seed-handoff). No delete-all command is part of startup.
 
 ## Optional fictional persona seed
 

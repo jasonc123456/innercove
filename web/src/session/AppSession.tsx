@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -56,6 +57,8 @@ type AppSessionValue = {
   hasPassphrase: boolean;
   locked: boolean;
   signedIn: boolean;
+  /** False until GET /api/session has answered, so a reload doesn't flash the sign-in page. */
+  sessionChecked: boolean;
   chatMode: ChatMode;
   useMemories: boolean;
   entries: DiaryEntry[];
@@ -65,8 +68,8 @@ type AppSessionValue = {
   completeUnlock: (passphrase: string) => string | null;
   /** The demo hub's only account is its admin (D47: one user, the hub owner). */
   role: "admin";
-  /** Username or email of the hub's admin, plus the hub passphrase, checked on the server
-   * (POST /api/unlock re-verifies even when unlocked). */
+  /** Username or email of the hub's admin plus the hub passphrase (D47): POST /api/session checks
+   * both, unlocks the hub if needed, and sets an HttpOnly session cookie. */
   signIn: (login: string, passphrase: string) => Promise<string | null>;
   signOut: () => void;
   createAccount: (email: string, password: string, confirm: string) => string | null;
@@ -82,7 +85,7 @@ type AppSessionValue = {
   pinMemory: (id: string) => string | null;
 };
 
-/** The hub's single account (D47). Identifiers aren't secrets; the passphrase is. Server-side check comes with Phase 5a sessions. */
+/** The hub's single account (D47), for display; the server checks them. Identifiers aren't secrets; the passphrase is. */
 export const ADMIN_LOGINS = ["admin", "admin@innercove.local"] as const;
 const SIGN_IN_FAILED = "That username or passphrase didn't work.";
 
@@ -94,17 +97,50 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
   const [hasPassphrase, setHasPassphrase] = useState(false);
   const [locked, setLocked] = useState(true);
   const [signedIn, setSignedIn] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [chatMode, setChatModeState] = useState<ChatMode>("temporary");
   const [useMemories, setUseMemoriesState] = useState(false);
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [memories, setMemories] = useState<PracticeMemory[]>([]);
   const [pinnedMemoryIds, setPinnedMemoryIds] = useState<string[]>([]);
 
+  // A reload keeps the session: the cookie is HttpOnly, so ask the hub.
+  useEffect(() => {
+    fetch("/api/session")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body: { signedIn?: boolean } | null) => {
+        if (body?.signedIn) {
+          setSignedIn(true);
+          setLocked(false);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setSessionChecked(true));
+  }, []);
+
+  // Any API answer of 401 (session expired or revoked) or 423 (hub restarted and locked)
+  // returns to the sign-in page, wherever the call came from (chat stream, diary, panels).
+  useEffect(() => {
+    const original = window.fetch;
+    window.fetch = async (input, init) => {
+      const res = await original(input, init);
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+      if ((res.status === 401 || res.status === 423) && url.includes("/api/") && !url.includes("/api/session")) {
+        setSignedIn(false);
+      }
+      return res;
+    };
+    return () => {
+      window.fetch = original;
+    };
+  }, []);
+
   const value = useMemo<AppSessionValue>(() => {
     return {
       hasPassphrase,
       locked,
       signedIn,
+      sessionChecked,
       role: "admin",
       chatMode,
       useMemories,
@@ -135,14 +171,12 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
       async signIn(login, passphrase) {
         if (login.trim().length === 0) return "Enter your username or email.";
         if (passphrase.length < 1) return "Enter the hub passphrase.";
-        // Same message for either mistake, so the page doesn't say which one was wrong.
-        if (!(ADMIN_LOGINS as readonly string[]).includes(login.trim().toLowerCase())) return SIGN_IN_FAILED;
         let res: Response;
         try {
-          res = await fetch("/api/unlock", {
+          res = await fetch("/api/session", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ passphrase }),
+            body: JSON.stringify({ login: login.trim(), passphrase }),
           });
         } catch {
           return "The hub isn't reachable right now.";
@@ -154,10 +188,12 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
         }
         const body = await res.json().catch(() => null);
         if (body?.error?.code === "CONFLICT") return "This hub hasn't been set up yet.";
+        // Same message for a wrong username or passphrase, so the page doesn't say which one was wrong.
         const wait = res.headers.get("retry-after");
         return wait ? `Too many attempts. Try again in ${wait} seconds.` : SIGN_IN_FAILED;
       },
       signOut() {
+        void fetch("/api/session", { method: "DELETE" }).catch(() => {});
         setSignedIn(false);
       },
       createAccount(email, password, confirm) {
@@ -265,7 +301,7 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
         return null;
       },
     };
-  }, [chatMode, entries, hasPassphrase, locked, memories, pinnedMemoryIds, signedIn, useMemories]);
+  }, [chatMode, entries, hasPassphrase, locked, memories, pinnedMemoryIds, sessionChecked, signedIn, useMemories]);
 
   return (
     <AppSessionContext.Provider value={value}>

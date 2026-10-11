@@ -33,9 +33,10 @@ export function AppRouter() {
 }
 
 function RequireSignIn() {
-  const { signedIn } = useAppSession();
+  const { signedIn, sessionChecked } = useAppSession();
   const { pathname } = useLocation();
 
+  if (!sessionChecked) return <div className="h-dvh bg-paper" />;
   if (!signedIn) {
     if (pathname === "/") return <LoginPage />;
     if (pathname === "/help") return <SignedOutHelp />;

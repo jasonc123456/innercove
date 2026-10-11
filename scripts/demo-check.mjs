@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 /**
  * Phase 6 gate: runs the demo journey (plan "End-to-end verification") through the API
- * against a running, UNLOCKED hub, and cleans up what it creates. Node 22+, no deps.
+ * against a running hub, and cleans up what it creates. Node 22+, no deps.
+ * It signs in first (D47) with HUB_PASSPHRASE from the environment (never an argument,
+ * so it stays out of shell history and `ps`); signing in also unlocks a locked hub.
  *
- *   node scripts/demo-check.mjs [BASE_URL] [--offline]
+ *   read -rs HUB_PASSPHRASE && export HUB_PASSPHRASE
+ *   node scripts/demo-check.mjs [BASE_URL] [--offline] [--delete-all]
  *
  * BASE_URL defaults to http://127.0.0.1:8000 (the demo build, or Vite in dev mode).
  * --offline also requires the internet to be unreachable (run it with the network unplugged).
@@ -23,6 +26,7 @@ const base = (args.find((a) => !a.startsWith("--")) ?? "http://127.0.0.1:8000").
 const tag = randomBytes(4).toString("hex");
 let failures = 0;
 const cleanup = [];
+let cookie = "";
 
 function check(name, ok, detail = "") {
   if (!ok) failures++;
@@ -33,7 +37,7 @@ function check(name, ok, detail = "") {
 async function api(method, path, body) {
   const res = await fetch(base + path, {
     method,
-    headers: body ? { "content-type": "application/json" } : {},
+    headers: { ...(body ? { "content-type": "application/json" } : {}), ...(cookie ? { cookie } : {}) },
     body: body ? JSON.stringify(body) : undefined,
   });
   const text = await res.text();
@@ -42,7 +46,7 @@ async function api(method, path, body) {
 
 /** POSTs a chat turn and returns its SSE events as [{ name, data }]. */
 async function turn(path, body) {
-  const res = await fetch(base + path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  const res = await fetch(base + path, { method: "POST", headers: { "content-type": "application/json", ...(cookie ? { cookie } : {}) }, body: JSON.stringify(body) });
   if (res.status !== 200) return { status: res.status, events: [] };
   const events = (await res.text())
     .split("\n\n")
@@ -60,8 +64,21 @@ async function main() {
   console.log(`Demo check against ${base} (tag ${tag})`);
   const health = await api("GET", "/api/health");
   check("hub is up and the model is reachable", health.status === 200 && health.json?.model?.reachable, JSON.stringify(health.json?.model));
+  if (!process.env.HUB_PASSPHRASE) {
+    check("sign in", false, "set HUB_PASSPHRASE (read -rs HUB_PASSPHRASE && export HUB_PASSPHRASE)");
+    return;
+  }
+  const signIn = await fetch(base + "/api/session", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ login: "admin", passphrase: process.env.HUB_PASSPHRASE }),
+  });
+  cookie = (signIn.headers.get("set-cookie") ?? "").split(";")[0];
+  if (!check("sign in as admin (also unlocks the hub)", signIn.status === 200 && cookie.startsWith("innercove_session="), `status ${signIn.status}`)) return;
   const lock = await api("GET", "/api/lock-status");
-  if (!check("hub is unlocked", lock.json?.locked === false, lock.json?.locked === false ? "" : "unlock it first (POST /api/unlock)")) return;
+  if (!check("hub is unlocked", lock.json?.locked === false)) return;
+  // D47: on an unlocked hub, a caller without the cookie is still refused.
+  const anonymous = await fetch(base + "/api/diary");
+  check("without a session, the diary is refused (401)", anonymous.status === 401, `status ${anonymous.status}`);
 
   // 1. Entries A and B; AI access for A only.
   const a = await api("POST", "/api/diary", {
@@ -163,6 +180,7 @@ try {
 } finally {
   for (const undo of cleanup) await undo().catch(() => {});
   if (cleanup.length) console.log(`Cleaned up ${cleanup.length} item(s).`);
+  if (cookie) await api("DELETE", "/api/session").catch(() => {});
 }
 
 // 9. Ports: LM Studio loopback only; the app on loopback, or on the LAN when D46 is on.

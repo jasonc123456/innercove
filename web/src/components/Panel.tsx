@@ -38,7 +38,7 @@ export function Problem({ text }: { text: string | null }) {
   ) : null;
 }
 
-/** JSON calls to the hub. A 423 means the hub restarted and locked: sign in again to unlock it. */
+/** JSON calls to the hub. A 401 or 423 (signed out, or the hub restarted and locked) returns to sign-in. */
 export function useHubApi(setProblem: (text: string) => void) {
   const { signOut } = useAppSession();
   return async function api<T>(path: string, init?: RequestInit): Promise<T | null> {
@@ -47,7 +47,7 @@ export function useHubApi(setProblem: (text: string) => void) {
       setProblem("The hub isn't reachable right now.");
       return null;
     }
-    if (res.status === 423) {
+    if (res.status === 401 || res.status === 423) {
       signOut();
       return null;
     }

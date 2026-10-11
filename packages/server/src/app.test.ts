@@ -7,6 +7,7 @@ import { DatabaseStore } from "./store/db.js";
 import { FakeProvider, ModelUnavailableError, type InferenceProvider } from "./inference/index.js";
 import { buildApp } from "./app.js";
 import { noSafety } from "./chat/safety.js";
+import { signedIn } from "./testing/signed-in.js";
 
 const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => { for (const cleanup of cleanups.splice(0)) await cleanup(); });
@@ -36,7 +37,7 @@ async function setup(provider: InferenceProvider = new FakeProvider({ reply: ["H
   const dir = mkdtempSync(path.join(tmpdir(), "innercove-app-"));
   const database = new DatabaseStore(path.join(dir, "test.db"));
   await database.setup("test-only-passphrase");
-  const app = await buildApp({ database, provider, safety: noSafety, systemPrompt: "SYSTEM", stats }, { level: "info", stream });
+  const app = await buildApp({ sessionGuard: signedIn, database, provider, safety: noSafety, systemPrompt: "SYSTEM", stats }, { level: "info", stream });
   cleanups.push(async () => { await app.close(); rmSync(dir, { recursive: true, force: true }); });
   return { app, logs, stats };
 }

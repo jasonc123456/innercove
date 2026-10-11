@@ -11,6 +11,7 @@ import { buildApp } from "../app.js";
 import { FakeProvider } from "../inference/index.js";
 import { InMemoryChatStore } from "./in-memory-store.js";
 import { noSafety } from "./safety.js";
+import { signedIn } from "../testing/signed-in.js";
 
 const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => { for (const cleanup of cleanups.splice(0)) await cleanup(); });
@@ -32,7 +33,7 @@ async function setup(store = new InMemoryChatStore(), locked = false) {
   cleanups.push(async () => { await database.shutdown(); rmSync(dir, { recursive: true, force: true }); });
   if (!locked) await database.setup("fixture-only-passphrase");
   const app = await buildApp(
-    { provider, safety: noSafety, systemPrompt: "SYSTEM", stats: { lastReply: null }, store, database },
+    { sessionGuard: signedIn, provider, safety: noSafety, systemPrompt: "SYSTEM", stats: { lastReply: null }, store, database },
     false,
   );
   cleanups.unshift(async () => { await app.close(); });

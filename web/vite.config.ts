@@ -12,6 +12,8 @@ export default defineConfig({
     fs: { allow: [".."] },
     // `npm run dev` from the repo root serves the API on 127.0.0.1:8000. From a laptop,
     // point at the GX10 instead: `INNERCOVE_API=http://192.168.2.151:8000 npm run dev` (D46).
-    proxy: { "/api": process.env.INNERCOVE_API ?? "http://127.0.0.1:8000" },
+    // changeOrigin stays false: the API's sign-in Origin check (D47) compares Origin with Host,
+    // and the shorthand string form would rewrite Host to the API's own address.
+    proxy: { "/api": { target: process.env.INNERCOVE_API ?? "http://127.0.0.1:8000", changeOrigin: false } },
   },
 });

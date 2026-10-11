@@ -17,6 +17,7 @@ import { MemoryRepository } from "../store/repos/memories.js";
 import { DiaryRepository } from "../store/repos/diary.js";
 import { uuidv7 } from "../store/repos/common.js";
 import { diaryEntries, memories, messageContext, provenance, settings, users } from "../store/schema.js";
+import { signedIn } from "../testing/signed-in.js";
 
 const cleanup: (() => Promise<void>)[] = [];
 afterEach(async () => { for (const f of cleanup.splice(0)) await f(); });
@@ -31,7 +32,7 @@ async function fixture(provider: InferenceProvider = new FakeProvider({ reply: [
   await database.setup(secret);
   const logs: string[] = [];
   const stream = new Writable({ write(chunk, _encoding, cb) { logs.push(String(chunk)); cb(); } });
-  const app = await buildApp({ database, provider, safety: noSafety, systemPrompt: "SYSTEM", stats: { lastReply: null } }, { level: "info", stream });
+  const app = await buildApp({ sessionGuard: signedIn, database, provider, safety: noSafety, systemPrompt: "SYSTEM", stats: { lastReply: null } }, { level: "info", stream });
   cleanup.push(async () => { await app.close(); rmSync(dir, { recursive: true, force: true }); });
   const lease = database.acquire();
   const userId = lease.userId;

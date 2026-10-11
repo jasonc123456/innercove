@@ -14,6 +14,7 @@ import { MemoryRepository } from "../store/repos/memories.js";
 import { ConversationRepository } from "../store/repos/conversations.js";
 import { uuidv7 } from "../store/repos/common.js";
 import { users, settings, devices } from "../store/schema.js";
+import { signedIn } from "../testing/signed-in.js";
 
 const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => { vi.restoreAllMocks(); for (const f of cleanups.splice(0)) await f(); });
@@ -27,7 +28,7 @@ async function fixture(provider: InferenceProvider = new FakeProvider({ reply: [
   await database.setup(secret);
   const logs: string[] = [];
   const stream = new Writable({ write(chunk, _encoding, cb) { logs.push(String(chunk)); cb(); } });
-  const app = await buildApp({ database, provider, safety: noSafety, systemPrompt: "SYSTEM", stats: { lastReply: null } }, { level: "info", stream });
+  const app = await buildApp({ sessionGuard: signedIn, database, provider, safety: noSafety, systemPrompt: "SYSTEM", stats: { lastReply: null } }, { level: "info", stream });
   cleanups.push(async () => { await app.close(); rmSync(dir, { recursive: true, force: true }); });
   const reset = (payload: object = { confirm: "DELETE" }) => app.inject({ method: "POST", url: "/api/delete-all", payload });
   const patch = (payload: object) => app.inject({ method: "PATCH", url: "/api/settings", payload });

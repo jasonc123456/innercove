@@ -14,6 +14,7 @@ import { DiaryRepository } from "../store/repos/diary.js";
 import { ConversationRepository } from "../store/repos/conversations.js";
 import { uuidv7 } from "../store/repos/common.js";
 import { users, settings, provenance } from "../store/schema.js";
+import { signedIn } from "../testing/signed-in.js";
 
 const cleanup: (() => Promise<void>)[] = [];
 afterEach(async () => { for (const f of cleanup.splice(0)) await f(); });
@@ -29,7 +30,7 @@ async function fixture() {
   const provider = new FakeProvider({ reply: messages => [messages.at(-1)!.content.includes("FIRSTQUESTION") ? "FIRSTREPLYCANARY." : "Fresh fixture reply."] });
   const logs: string[] = [];
   const stream = new Writable({ write(chunk, _encoding, cb) { logs.push(String(chunk)); cb(); } });
-  const app = await buildApp({ database, provider, safety: noSafety, systemPrompt: "SYSTEM", stats: { lastReply: null } }, { level: "info", stream });
+  const app = await buildApp({ sessionGuard: signedIn, database, provider, safety: noSafety, systemPrompt: "SYSTEM", stats: { lastReply: null } }, { level: "info", stream });
   cleanup.push(async () => { await app.close(); rmSync(dir, { recursive: true, force: true }); });
   const memory = (payload: object) => app.inject({ method: "POST", url: "/api/memories", payload });
   const diary = (payload: object) => app.inject({ method: "POST", url: "/api/diary", payload });
