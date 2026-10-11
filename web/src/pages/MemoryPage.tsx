@@ -244,19 +244,3 @@ function MemoryForm({
     </form>
   );
 }
-
-function LockIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className="size-5 shrink-0"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      aria-hidden="true"
-    >
-      <rect x="6" y="10" width="12" height="9" rx="1.5" />
-      <path d="M8.5 10V8a3.5 3.5 0 0 1 7 0v2" />
-    </svg>
-  );
-}
