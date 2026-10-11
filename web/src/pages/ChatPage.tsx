@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import chatTreeBackground from "../assets/chatTreeBackground.png";
 import { streamAssistantReply } from "../chat/streamReply";
 import { MessageInput } from "../components/MessageInput";
+import { MemoryPicker } from "../components/MemoryPicker";
 import { MessageList } from "../components/MessageList";
 import { useAppSession, uuidv7 } from "../session/AppSession";
 
@@ -23,6 +24,7 @@ export function ChatPage() {
     chatConversation.current = { id: null, mode: chatMode };
   }
   const [failed, setFailed] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [openSource, setOpenSource] = useState<{
     messageId: string;
     sourceId: string;
@@ -150,10 +152,25 @@ export function ChatPage() {
             Memories
           </label>
         </div>
-        <p className="text-xs leading-snug text-ink/65" role="status">
-          {chatMode === "saved" ? "Saved in the hub's encrypted database." : "Temporary: not saved on the hub."}
-          {useMemories ? ` Using memories (${pinnedMemoryIds.length} selected).` : ""}
-        </p>
+        {/* Relative so the memory picker lines up with this column. */}
+        <div className="relative flex flex-wrap items-baseline gap-x-1.5 text-xs leading-snug text-ink/65">
+          <p role="status">
+            {chatMode === "saved" ? "Saved in the hub's encrypted database." : "Temporary: not saved on the hub."}
+            {useMemories ? "" : " Memories off: none are sent."}
+          </p>
+          {useMemories ? (
+            <button
+              type="button"
+              aria-expanded={pickerOpen}
+              aria-controls="memory-picker"
+              onClick={() => setPickerOpen((open) => !open)}
+              className="inline-flex min-h-6 items-center text-left font-medium text-cove underline decoration-cove/40 underline-offset-2"
+            >
+              Memories: picked automatically · {pinnedMemoryIds.length} pinned
+            </button>
+          ) : null}
+          {pickerOpen && useMemories ? <MemoryPicker onClose={() => setPickerOpen(false)} /> : null}
+        </div>
       </div>
       <div
         className="flex min-h-0 flex-1 flex-col bg-cover bg-center"
