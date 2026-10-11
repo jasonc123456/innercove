@@ -95,8 +95,8 @@ messages, context links or other table changes, and content is never logged.
 Normal `main.ts` no longer selects the volatile store via `DEV_STORE=demo`;
 the legacy flag is ignored. Existing in-memory adapters/persona helpers stay
 available for A's isolated tests, and no deployed GX10 service/config was
-changed. Fictional persona seeding into SQL remains Phase 5 work; switching
-to this server version does not auto-import demo content.
+changed. Phase 5 now provides an explicit fictional persona seed tool below;
+switching to this server version never auto-imports demo content.
 
 Read ports are scoped to the lease user; approved/eligible memories and
 eligible diary entries are returned only when their provenance resolves to
@@ -175,3 +175,91 @@ pending. C must connect its memory CRUD/access/pin pages to these contracts
 and verify chips, the exact-sent panel and revocation notice against the SQL
 backend. Whole-team Phase 2/3 completion is not claimed. External
 SQLCipher/Android interoperability remains unverified and out of this scope.
+
+## Phase 5 settings, content reset and seed handoff
+
+GET/PATCH `/api/settings` use the existing shared settings schemas. Only
+`useMemoriesDefault` and `diaryDefaultAccessLevel` are editable; strict input
+rejects unknown fields, wrong types and null. Empty PATCH changes nothing;
+omitted fields keep their values. Records are scoped to the lease user and
+persist across encrypted reopen. C reads these defaults when creating new
+saved chats/ordinary diary entries. They do not retrospectively change entry
+permissions or A's separate temporary-chat default. D30 support notes remain
+private by default even when the ordinary diary default is AI-eligible.
+`/api/privacy-status` is reused, including A's runtime/speed fields and B's
+encryption/path; no UI, CSP or inference interface changes are included.
+
+POST `/api/delete-all` requires exactly `{ confirm: "DELETE" }`. It is a
+DatabaseStore lifecycle operation, not an ordinary leased CRUD handler.
+Admission closes immediately after validated confirmation; new protected API
+requests return 423 while admitted saved/temporary streams and other request
+leases finish. Lifecycle operations serialize with lock/unlock/shutdown, and
+the delete handler holds no lease of its own. This prevents a pre-delete
+stream from persisting a reply after a successful reset. Success reopens
+admission on the same unlocked encrypted connection; no passphrase change or
+plaintext fallback occurs. Static help/health/status remain available.
+
+The user-scoped transaction removes conversations, messages, all diary rows
+(including support notes/excerpts), memories of every status/access level,
+provenance, message-context links and existing tombstones. It creates no new
+tombstones. FTS triggers delete postings and both indexes are optimized; WAL
+is checkpointed with TRUNCATE before VACUUM and again afterwards. All required
+cleanup must succeed before returning `{ deleted: { conversations,
+diaryEntries, memories } }`. Identity, credentials, settings, paired devices
+and the migration ledger remain; foreign rows/postings are preserved. Nothing
+is auto-seeded afterwards. C must discard stale saved IDs/visible cached data
+on success; reading an old ID returns 404. Browser-held temporary history is
+not server storage and C manages it separately.
+
+Delete-transaction failure rolls back content changes. Compaction failure
+after commit may mean content was already removed, but returns a generic 500
+and closes the encrypted connection; admission stays locked until explicit
+unlock. Neither case echoes input, SQL, diary text or credentials. A retry
+with explicit confirmation can complete compaction. No error claims success.
+
+**Persona ownership:** Angela explicitly assigned SQL seeding to B on
+2026-10-10, superseding A's earlier gap-table label; TEAM_PLAN and PROJECT_PLAN
+record it. No parallel A implementation was found. `store/seed.ts` and
+`scripts/seed-persona.mjs` load the existing D-handoff fictional fixture in
+`docs/prep/demo-persona.json` unchanged: four user-approved memories, eight
+manual diary entries, original access levels/tags/moods and dates at 12:00 UTC,
+with manual memory provenance. Persona metadata and live-demo/crisis prompts
+are not inserted. Whole-fixture validation and nested repository writes are
+atomic. Any existing user content/links/tombstones causes refusal; no overwrite,
+implicit delete or duplicate seed occurs. Identity/settings/devices remain.
+
+Run `npm run build` from the repo root first. With the API using the target
+database stopped, run:
+
+```sh
+npm run seed:persona --workspace=@innercove/server -- --db /path/to/stopped-hub/innercove.db --confirm-fictional
+```
+
+The target must already be set up with its passphrase. Enter that passphrase
+at the hidden prompt; noninteractive stdin is also supported. Never put it
+in argv, an environment variable, logs or a key file. The CLI uses a separate
+offline DatabaseStore, unlocks with the existing key, prints counts only and
+closes/locks on success or failure. This task tested only scratch databases;
+it did not seed, reset, stop or redeploy the live GX10. The tool does not copy
+from the in-memory demo adapter or change runtime configuration.
+
+`api/lifecycle-data.test.ts` covers strict settings/defaults/reopen, explicit
+reset consent/locking, scoped rows/FTS/derived cleanup, identity/settings/device
+retention, both stream modes, queued lock/shutdown, rollback/compaction errors,
+WAL checkpoints/VACUUM and the next full prompt with no deleted canary.
+`store/seed.test.ts` covers fixture fidelity/private exclusions, atomicity,
+reopen and refusal to overwrite. The compiled smoke now covers Phase 5 HTTP
+routes, empty post-delete context, persisted settings/reset after restart and
+the seed CLI's consent/key/nonempty-store checks. Exact local counts are in
+the Phase log; GX10 ARM64 Phase 5 smoke and real C settings/delete/privacy UI
+integration remain pending. Whole-team Phase 5 completion is not claimed;
+A owns CSP and deployment/offline verification per the latest integration handoff, C owns the UI.
+
+Recovery verification (2026-10-10, local Node v22.22.1): reused the canceled
+run’s implementation and reran all checks; no prior Phase 5 pass was assumed.
+149/149 tests (13 files), typechecks, 52 contract checks, 30 safety cases,
+backend/web builds, SQLCipher spike 18/18 and compiled HTTP/seed smoke passed.
+Python scripts compile and `git diff --check` passed. Docker Desktop WSL
+integration is unavailable, so no local Compose runtime pass is claimed.
+All runtime checks used scratch databases; ARM64/GX10 and real UI checks above
+remain open.

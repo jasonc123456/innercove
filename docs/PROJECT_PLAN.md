@@ -944,7 +944,19 @@ Fill in the ASUS feedback survey before judging ends (D, early).
 | 7. Data controls + privacy panel | ⚠️ `/api/privacy-status` ✅ (A); **`/api/settings` and `/api/delete-all` missing** (B); **no CSP header** | ❌ settings/privacy panel not wired | **B:** settings, delete-all; **A:** CSP; **C:** panel + delete UI |
 | 8. Verified offline demo | ✅ `scripts/demo-check.mjs` passes online | | **A:** `--offline` run with the router's uplink unplugged |
 | Lock screen (Phase 2) | ✅ setup/unlock/lock | ❌ `SetupPage`/`UnlockPage` exist but aren't routed or calling the API | **C** (top priority: every restart locks the hub) |
-| Phase 6 extras | | | seed script for the persona (A), README (B), backup recording (C) |
+| Phase 6 extras | | | seed script for the persona (B, explicitly assigned by Angela after this assessment), README (B), backup recording (C) |
+
+
+**B (Angela), Phase 5 backend handoff (2026-10-10; locally complete, team acceptance pending):**
+- **Recovery:** resumed canceled `p5-settings-delete-all` at `09bc928`; no staged changes or merge in progress. Reused all settings/reset/seed implementations, tests and smoke/handoff edits. No unrelated working-tree edits found; preserved all teammate commits. Previous Phase 5 check completion was unestablished; all results below are fresh on the recovered code.
+- **Settings:** strict GET/PATCH contracts, partial updates and encrypted persistence; ordinary diary defaults respected, D30 support notes remain private, temporary-chat defaults unchanged. Existing `/api/privacy-status` reused.
+- **D39 reset:** exact confirmation, exclusive DatabaseStore admission/draining for saved/temporary streams, serialized lock/unlock/shutdown; removes content, FTS postings, provenance, derived items, context links and tombstones. Keeps identity/passphrase/settings/devices/migrations and stays unlocked on success; checkpoints WAL, optimizes FTS and VACUUMs. Errors fail closed without echoing content.
+- **Persona:** latest explicit Angela ownership handoff assigns SQL seed to B, superseding A’s earlier gap label; no duplicate SQL seed found. D’s existing fictional fixture loads atomically (4 approved memories, 8 diary entries, original access/dates); opt-in offline CLI refuses nonempty content and takes the key via hidden prompt/stdin only.
+- **Fresh local Node v22.22.1 checks:** `npm test` 149/149 across 13 files; root/server and core typechecks PASS; `npm run validate` 52/52; `node scripts/check-safety.mjs` 30/30; Python eval/smoke scripts compile PASS; root backend build and `web` build PASS.
+- **Fresh runtime checks:** SQLCipher spike 18/18 PASS; compiled `smoke:db` PASS including settings/reset/restart, clean post-delete context, seed consent/wrong-key/nonempty-store checks. Tests prove unlocked rows/FTS/provenance/derived cleanup, clean next full FakeProvider prompt, settings/device retention, encrypted reopen, both active stream modes and failure/queue behavior.
+- **Handoff:** API/reset semantics and seed command in `packages/server/src/store/README.md`. No UI, CSP, chat pipeline, live GX10 service/data/config or other-phase implementation changed. `git diff --check` PASS.
+- **Remaining C:** wire/verify real settings/delete/privacy UI, saved-chat defaults, support-note privacy, stale saved IDs and visible caches after reset; handle browser-held temporary history separately. Real setup/unlock, diary, Save/reload and memory/chip/panel checks remain separate.
+- **Remaining A/team:** isolated GX10 ARM64 Phase 5 build/spike/smoke, deployed real-model/UI reset canary and privacy-speed checks, CSP external-fetch block and unplugged offline demo. Local Compose verification unavailable: Docker Desktop WSL integration is disabled. No new Compose or GX10 result claimed; whole-team Phase 5 remains incomplete.
 
 ## End-to-end verification (the Phase 6 demo script)
 **The spine of the demo is one journey that shows the differentiator:**

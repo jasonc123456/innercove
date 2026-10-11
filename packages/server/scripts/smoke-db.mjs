@@ -98,6 +98,17 @@ try {
   await call("PATCH", `/api/memories/${memory.id}`, { accessLevel: "ai_eligible" }, 200);
   await call("PATCH", `/api/diary/${source.id}`, { accessLevel: "private" }, 200);
   await call("DELETE", `/api/memories/${proposal.id}`, undefined, 200);
+  const configured = await call("PATCH", "/api/settings", { useMemoriesDefault: false, diaryDefaultAccessLevel: "ai_eligible" }, 200);
+  assert.equal(configured.useMemoriesDefault, false);
+  await call("POST", "/api/delete-all", { confirm: "delete" }, 400);
+  const counts = await call("POST", "/api/delete-all", { confirm: "DELETE" }, 200);
+  assert.ok(counts.deleted.conversations >= 2 && counts.deleted.diaryEntries >= 1 && counts.deleted.memories >= 1);
+  assert.deepEqual((await call("GET", "/api/diary?q=chem", undefined, 200)).entries, []);
+  assert.deepEqual((await call("GET", "/api/memories", undefined, 200)).memories, []);
+  assert.equal((await call("GET", "/api/settings", undefined, 200)).userId, configured.userId);
+  const cleanTurn = await chatTurn("chem");
+  assert.deepEqual(cleanTurn("context").sources, []);
+  const cleanConversationId = cleanTurn("meta").conversationId;
   running.child.kill("SIGTERM");
   assert.equal(await running.exited, 0, "SIGTERM exit");
   assert.ok(!running.output().includes(passphrase), "credential absent from process output");
@@ -110,16 +121,40 @@ try {
   try {
     assert.equal(lease.db.prepare("SELECT count(*) n FROM __drizzle_migrations").get().n, 1);
     assert.ok(lease.db.prepare("SELECT user_id FROM settings WHERE user_id=?").get(lease.userId));
-    assert.equal(lease.db.prepare("SELECT count(*) n FROM messages WHERE user_id=? AND conversation_id=?").get(lease.userId, meta.conversationId).n, 2);
+    assert.equal(lease.db.prepare("SELECT count(*) n FROM messages WHERE user_id=? AND conversation_id=?").get(lease.userId, meta.conversationId).n, 0);
+    assert.equal(lease.db.prepare("SELECT count(*) n FROM messages WHERE user_id=? AND conversation_id=?").get(lease.userId, cleanConversationId).n, 2);
     assert.equal(lease.db.prepare("SELECT count(*) n FROM diary_entries WHERE user_id=? AND id=?").get(lease.userId, diary.id).n, 0);
-    assert.equal(lease.db.prepare("SELECT access_level FROM memories WHERE user_id=? AND id=?").get(lease.userId, memory.id).access_level, "private");
-    assert.equal(lease.db.prepare("SELECT count(*) n FROM provenance WHERE user_id=? AND derived_id=? AND source_id=?").get(lease.userId, memory.id, source.id).n, 1);
+    assert.equal(lease.db.prepare("SELECT count(*) n FROM memories WHERE user_id=?").get(lease.userId).n, 0);
+    assert.equal(lease.db.prepare("SELECT use_memories_default FROM settings WHERE user_id=?").get(lease.userId).use_memories_default, 0);
+    assert.equal(lease.db.prepare("SELECT count(*) n FROM provenance WHERE user_id=? AND derived_id=? AND source_id=?").get(lease.userId, memory.id, source.id).n, 0);
   } finally { lease.release(); }
   await reopened.shutdown();
+  // Separate encrypted scratch database for the opt-in compiled seed CLI;
+  // no running API shares this file. Credentials are stdin-only, never argv.
+  const seedFile = path.join(dir, "seed.db");
+  const seedStore = new DatabaseStore(seedFile);
+  await seedStore.setup(passphrase); await seedStore.shutdown();
+  async function seed(args, input = passphrase) {
+    const child = spawn(process.execPath, ["scripts/seed-persona.mjs", ...args], { cwd, stdio: ["pipe", "pipe", "pipe"] });
+    let output = ""; child.stdout.on("data", chunk => { output += chunk; }); child.stderr.on("data", chunk => { output += chunk; });
+    const exited = new Promise((resolve, reject) => { child.once("error", reject); child.once("close", resolve); });
+    child.stdin.on("error", () => {}); child.stdin.end(input + "\n");
+    const code = await exited; assert.ok(!output.includes(passphrase));
+    return { code, output };
+  }
+  assert.equal((await seed(["--db", seedFile])).code, 1, "seed requires explicit fictional confirmation");
+  assert.equal((await seed(["--db", seedFile, "--confirm-fictional"], "wrong-fixture")).code, 1, "seed rejects wrong key");
+  const seeded = await seed(["--db", seedFile, "--confirm-fictional"]);
+  assert.equal(seeded.code, 0); assert.deepEqual(JSON.parse(seeded.output), { seeded: { memories: 4, diaryEntries: 8 } });
+  assert.equal((await seed(["--db", seedFile, "--confirm-fictional"])).code, 1, "seed refuses nonempty store");
+  const seededStore = new DatabaseStore(seedFile); await seededStore.unlock(passphrase);
+  const seededLease = seededStore.acquire();
+  try { assert.equal(seededLease.db.prepare("SELECT count(*) n FROM diary_entries WHERE user_id=?").get(seededLease.userId).n, 8); }
+  finally { seededLease.release(); await seededStore.shutdown(); }
   running = launch("off");
   assert.equal(await running.exited, 1, "plaintext mode explicitly rejected");
   assert.match(running.output(), /supports SQLCipher only/);
-  console.log("PASS: compiled server setup/lock/unlock, diary CRUD/FTS, SQL saved chat/reopen (including legacy demo flag), memory CRUD/review/provenance, durable revocation/re-confirmation and D33 history, packaged migrations, SIGTERM, plaintext rejection");
+  console.log("PASS: compiled server setup/lock/unlock, diary CRUD/FTS, SQL saved chat/reopen (including legacy demo flag), memory CRUD/review/provenance, durable revocation/re-confirmation and D33 history, settings/delete-all/VACUUM/prompt cleanup, opt-in fictional seed CLI, packaged migrations, SIGTERM, plaintext rejection");
 } finally {
   if (running && running.child.exitCode === null && running.child.signalCode === null) {
     running.child.kill("SIGTERM"); await running.exited;

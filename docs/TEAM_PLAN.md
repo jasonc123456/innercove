@@ -33,6 +33,7 @@ Compared with the original plan, retrieval and prompt assembly move from D to A,
 | Backup for | D's safety work. |
 
 ### B: data and APIs
+**Explicit handoff (2026-10-10, Angela): persona SQL seeding belongs to B for Phase 5. A should not build a parallel seed implementation; use B’s seed tool for Phase 6 integration. This supersedes the seed-owner label in A’s earlier P0 gap table.**
 | Hours | Task |
 |---|---|
 | 0–1 | Agree the zod schemas in `packages/core` with C. |
