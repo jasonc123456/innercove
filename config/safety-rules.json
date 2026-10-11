@@ -53,7 +53,7 @@
       "id": "not-needing-belongings",
       "tier": 1,
       "category": "passive_self_harm",
-      "patterns": ["\\b(?:no longer|won't|will not) need (?:any of )?(?:my|the|these|all my) (?:things|stuff|belongings)\\b"],
+      "patterns": ["\\b(?:no longer|won't|will not) need (?:any of )?(?:my|the|these|all my) (?:things|stuff|belongings)\\b", "\\b(?:giving|gave|give|given) away (?:some of |all of |a lot of |most of |a bunch of )?(?:my|all my) (?:stuff|things|belongings|possessions|books|guitar|clothes|games)\\b", "\\bgave (?:my|all my) [^.?!]{1,30} away\\b"],
       "excludePatterns": ["\\b(?:trip|travel|vacation|holiday|pack|packing|move|moving|dorm|semester|sell|selling|declutter)\\b"]
     },
     {

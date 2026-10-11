@@ -121,10 +121,12 @@ describe("carried risk across turns", () => {
   ];
 
   it("indirect death wishes are tier 1, travel plans and idioms are not", () => {
-    for (const text of [...conversation, "I want to go to sleep and not wake up", "sometimes I think about ending it"]) {
+    for (const text of [...conversation, "I want to go to sleep and not wake up", "sometimes I think about ending it",
+      "I've been giving away some of my stuff lately, like books and my guitar. Feels lighter."]) {
       expect(safety.assess(text).tier, text).toBe(1);
     }
-    for (const text of ["I won't need my stuff for the trip", "thinking about ending it with my boyfriend", "I need a fresh start this semester"]) {
+    for (const text of ["I won't need my stuff for the trip", "thinking about ending it with my boyfriend", "I need a fresh start this semester",
+      "I'm moving out so I gave away my books"]) {
       expect(safety.assess(text).tier, text).toBe(0);
     }
   });
