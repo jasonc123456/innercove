@@ -1,4 +1,4 @@
-# Hour 1 local transcription prototype
+# Local voice-input prototype
 
 Scope: local transcription into an editable draft, never automatic submission; text replies only. No microphone UI or continuous listening. The user explicitly authorized this timebox despite voice's earlier postponed label. B owns the contract/data API; A owns session/security/deployment integration and C the future recorder/draft UI. No live deployment changes are part of this experiment.
 
@@ -83,3 +83,21 @@ Ready for Hour 2: run the exact ARM64 experiment above; A supplies D47 session v
 Resume verification: recovered final backend/core build exit 0 and safety 33/33. Corrected whisper process failure mapping to content-free 503; focused transcription tests 10/10, server typecheck and core/backend build passed afterward. The prior full 167-test suite and shared validation 52/52 were verified from the interrupted run; no synthetic-audio experiment was repeated.
 
 Integration verification: preserved upstream exercise/breathing changes through `f38f463`; combined backend suite 176/176 across 17 files, typecheck, contract validation 52/52 and core/backend build passed. Documentation shell blocks/link and `git diff --check` passed. Live deployment/Compose and microphone/browser acceptance were not run.
+
+## Hour 2 checkpoint — 2026-10-10
+
+User-reported GX10 CLI results: whisper.cpp v1.8.2, base.en, ARM64 CPU/two threads. Short fictional synthetic clip: elapsed 2.85 s, user 5.33 s, system 0.16 s, peak RSS 288000 KiB. Repeated 59-second clip: elapsed 8.38 s, user 16.11 s, system 0.21 s, peak RSS 336380 KiB. Recognizable fixture text, combined exit 0. Runtime/model live under `~/innercove-stt-hour1`; live app unchanged. These supersede the pending ARM64 CLI item above; they do not establish API/browser or natural-speech performance.
+
+The composer now offers Microphone → Stop recording, elapsed time, automatic stop at 60 seconds, Cancel, processing and content-free errors. It probes supported audio containers, uploads a raw Blob through the shared contract and appends the transcript to the latest editable draft, preserving text entered before/during recording. Send remains explicit and disabled while voice work is active. Tracks are released on stop/cancel, and pending permission results/uploads are invalidated on cancellation, unmount, lock/sign-in/mode changes. Audio exists only in memory; no playback URLs, browser storage, content logging or speech output.
+
+Ownership: user explicitly authorized this minimal edit to C's MessageInput after inspecting latest UI work; AppSession, App/router and A's policy/session code remain unchanged. C should review composer UX and connect real session/lock transitions. Existing AppSession flags are interim UI state, not server authorization. Backend D47 gate remains fail-closed.
+
+Exact deployment/integration steps (A, then C/B; not executed here):
+1. Wire A's real verified session callback into `dataRoutes(app, hasValidSession)` and establish authenticated same-origin cookies/Origin protection. Never substitute UI signedIn flags or a dev bypass.
+2. Approve a secure same-origin recorder context (localhost or HTTPS) and permit microphone only for that origin, e.g. `microphone=(self)`, preserving every other Permissions-Policy/CSP directive. Current policy still blocks capture; no security header changed here. See [getUserMedia requirements](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia).
+3. Configure absolute native paths: STT_WHISPER_BIN under the experiment's whisper.cpp/build/bin, STT_MODEL_PATH under whisper.cpp/models, STT_FFMPEG_BIN from `command -v ffmpeg`; use README env-file startup. For a container, A must explicitly package/mount tools and model read-only and ensure tmpfs `/dev/shm` capacity; current image lacks STT. Do not redeploy live GX10 as part of this handoff.
+4. On an isolated unlocked fictional hub, verify real authenticated Blob API, then supported Chrome/Safari/Firefox microphone formats, stop/60-second boundary (including codec padding), cancellation/lock/sign-out/unmount, existing draft preservation, explicit Send, empty/quiet/noisy audio and text-only replies. Background-tab timer throttling may exceed 60 seconds: server sample-measured limit rejects overlong audio rather than truncating.
+
+Provisioning evidence received: the GX10 apt-history transaction at 20:17:25–20:17:30 confirms 71 newly installed ffmpeg/eSpeak packages (including automatic dependencies) and one upgrade to pre-existing libssh-4. SETUP_LOG records the exact new-package list, versions of the requested tools, simulated targeted undo and preservation of the pre-existing upgraded package. No undo executed.
+
+Hour 2 local verification: 189/189 tests across 18 files, including 13 controlled recorder/API-client tests (supported format/raw Blob/draft append, 60-second stop, cancellation/late permission, late response suppression, HTTP 400/401/409/423/503, permission failure, oversized recording/error, client deadline/invalid response). Server typecheck, core/backend build, web production build, validate 52/52, safety 33/33 and diff whitespace checks passed. These use mocked media devices/MediaRecorder/fetch; no actual browser microphone or authenticated API end-to-end result claimed. Existing Hour 1 server tests separately cover persistence/privacy/cleanup. C should additionally verify rendered controls, keyboard/accessibility and mobile layout.
